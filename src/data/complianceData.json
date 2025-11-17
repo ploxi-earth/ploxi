@@ -1,0 +1,357 @@
+
+{
+  "regions": {
+    "india": {
+      "name": "India",
+      "code": "IN",
+      "flag": "🇮🇳",
+      "primaryFrameworks": ["BRSR", "Companies Act 2013", "SEBI Guidelines"],
+      "categories": {
+        "environmental": {
+          "name": "Environmental Compliance",
+          "color": "text-green-700",
+          "bgColor": "bg-green-50",
+          "borderColor": "border-green-200",
+          "tasks": [
+            {
+              "id": "brsr_env_disclosure",
+              "title": "BRSR Environmental Disclosure",
+              "description": "Complete annual environmental impact reporting as per BRSR guidelines",
+              "priority": "high",
+              "deadline": "2025-03-31",
+              "status": "pending",
+              "authority": "Ministry of Corporate Affairs",
+              "category": "Reporting"
+            },
+            {
+              "id": "cpcb_consent",
+              "title": "CPCB Consent to Operate Renewal",
+              "description": "Renew Central Pollution Control Board consent for manufacturing operations",
+              "priority": "critical",
+              "deadline": "2025-02-15",
+              "status": "in-progress",
+              "authority": "Central Pollution Control Board",
+              "category": "Permits"
+            },
+            {
+              "id": "water_audit",
+              "title": "Water Usage Audit & Report",
+              "description": "Conduct comprehensive water consumption audit and submit report to state board",
+              "priority": "medium",
+              "deadline": "2025-04-30",
+              "status": "not-started",
+              "authority": "State Pollution Control Board",
+              "category": "Auditing"
+            }
+          ]
+        },
+        "social": {
+          "name": "Social Compliance",
+          "color": "text-purple-700",
+          "bgColor": "bg-purple-50",
+          "borderColor": "border-purple-200",
+          "tasks": [
+            {
+              "id": "csr_compliance",
+              "title": "CSR Fund Allocation & Reporting",
+              "description": "Allocate 2% of net profit to CSR activities and submit detailed report",
+              "priority": "high",
+              "deadline": "2025-07-31",
+              "status": "in-progress",
+              "authority": "Ministry of Corporate Affairs",
+              "category": "CSR"
+            },
+            {
+              "id": "labor_compliance",
+              "title": "Labour Law Compliance Audit",
+              "description": "Annual audit of compliance with Contract Labour Act and other labor laws",
+              "priority": "medium",
+              "deadline": "2025-06-30",
+              "status": "pending",
+              "authority": "Ministry of Labour & Employment",
+              "category": "Labor"
+            }
+          ]
+        },
+        "governance": {
+          "name": "Governance Compliance",
+          "color": "text-blue-700",
+          "bgColor": "bg-blue-50",
+          "borderColor": "border-blue-200",
+          "tasks": [
+            {
+              "id": "board_diversity",
+              "title": "Board Diversity Compliance",
+              "description": "Ensure board composition meets SEBI diversity requirements",
+              "priority": "high",
+              "deadline": "2025-05-31",
+              "status": "completed",
+              "authority": "SEBI",
+              "category": "Governance"
+            },
+            {
+              "id": "annual_return",
+              "title": "Annual Return Filing",
+              "description": "File annual return with ROC including ESG disclosures",
+              "priority": "critical",
+              "deadline": "2025-09-30",
+              "status": "not-started",
+              "authority": "Registrar of Companies",
+              "category": "Filing"
+            }
+          ]
+        }
+      },
+      "documents": [
+        {
+          "id": "brsr_template",
+          "title": "BRSR Reporting Template 2025",
+          "type": "Excel",
+          "size": "2.4 MB",
+          "category": "Templates",
+          "description": "Official BRSR reporting template with all required metrics and KPIs",
+          "downloadUrl": "/documents/brsr-template-2025.xlsx",
+          "lastUpdated": "2025-01-15"
+        },
+        {
+          "id": "csr_policy_template",
+          "title": "CSR Policy Framework Template",
+          "type": "Word",
+          "size": "1.2 MB",
+          "category": "Policies",
+          "description": "Comprehensive CSR policy template compliant with Companies Act 2013",
+          "downloadUrl": "/documents/csr-policy-template.docx",
+          "lastUpdated": "2024-12-20"
+        },
+        {
+          "id": "compliance_calendar",
+          "title": "India Compliance Calendar 2025",
+          "type": "PDF",
+          "size": "890 KB",
+          "category": "Calendars",
+          "description": "Complete annual calendar with all ESG and regulatory compliance deadlines",
+          "downloadUrl": "/documents/compliance-calendar-2025.pdf",
+          "lastUpdated": "2025-01-01"
+        }
+      ],
+      "regulations": [
+        {
+          "id": "companies_act_2013",
+          "title": "Companies Act 2013",
+          "authority": "Ministry of Corporate Affairs",
+          "description": "Primary corporate law governing ESG disclosures and CSR requirements",
+          "applicability": "All companies above specified thresholds",
+          "lastAmendment": "2024-08-15"
+        },
+        {
+          "id": "sebi_lodr",
+          "title": "SEBI LODR Regulations",
+          "authority": "Securities and Exchange Board of India",
+          "description": "Listing obligations including ESG disclosures for listed companies",
+          "applicability": "All listed companies",
+          "lastAmendment": "2024-10-01"
+        }
+      ]
+    },
+    "usa": {
+      "name": "United States",
+      "code": "US",
+      "flag": "🇺🇸",
+      "primaryFrameworks": ["SASB", "SEC Climate Disclosure", "EPA Requirements"],
+      "categories": {
+        "environmental": {
+          "name": "Environmental Compliance",
+          "color": "text-green-700",
+          "bgColor": "bg-green-50",
+          "borderColor": "border-green-200",
+          "tasks": [
+            {
+              "id": "sec_climate_disclosure",
+              "title": "SEC Climate-Related Disclosures",
+              "description": "Submit climate-related financial risk disclosures as per SEC requirements",
+              "priority": "critical",
+              "deadline": "2025-03-15",
+              "status": "in-progress",
+              "authority": "Securities and Exchange Commission",
+              "category": "Climate"
+            },
+            {
+              "id": "epa_emissions_report",
+              "title": "EPA GHG Emissions Reporting",
+              "description": "Annual greenhouse gas emissions reporting to EPA",
+              "priority": "high",
+              "deadline": "2025-04-01",
+              "status": "pending",
+              "authority": "Environmental Protection Agency",
+              "category": "Emissions"
+            }
+          ]
+        },
+        "social": {
+          "name": "Social Compliance",
+          "color": "text-purple-700",
+          "bgColor": "bg-purple-50",
+          "borderColor": "border-purple-200",
+          "tasks": [
+            {
+              "id": "eeo_reporting",
+              "title": "EEO-1 Diversity Reporting",
+              "description": "Submit annual workforce diversity data to EEOC",
+              "priority": "high",
+              "deadline": "2025-05-31",
+              "status": "not-started",
+              "authority": "Equal Employment Opportunity Commission",
+              "category": "Diversity"
+            }
+          ]
+        },
+        "governance": {
+          "name": "Governance Compliance",
+          "color": "text-blue-700",
+          "bgColor": "bg-blue-50",
+          "borderColor": "border-blue-200",
+          "tasks": [
+            {
+              "id": "sox_compliance",
+              "title": "Sarbanes-Oxley Compliance",
+              "description": "Annual SOX compliance audit and certification",
+              "priority": "critical",
+              "deadline": "2025-08-15",
+              "status": "pending",
+              "authority": "SEC/PCAOB",
+              "category": "Audit"
+            }
+          ]
+        }
+      },
+      "documents": [
+        {
+          "id": "sasb_template",
+          "title": "SASB Reporting Template",
+          "type": "Excel",
+          "size": "3.1 MB",
+          "category": "Templates",
+          "description": "Industry-specific SASB disclosure template with materiality assessment",
+          "downloadUrl": "/documents/sasb-template-2025.xlsx",
+          "lastUpdated": "2025-01-10"
+        }
+      ],
+      "regulations": [
+        {
+          "id": "sec_climate_rule",
+          "title": "SEC Climate Disclosure Rules",
+          "authority": "Securities and Exchange Commission",
+          "description": "New climate-related disclosure requirements for public companies",
+          "applicability": "All SEC registrants",
+          "lastAmendment": "2024-12-15"
+        }
+      ]
+    },
+    "eu": {
+      "name": "European Union",
+      "code": "EU",
+      "flag": "🇪🇺",
+      "primaryFrameworks": ["ESRS", "CSRD", "EU Taxonomy"],
+      "categories": {
+        "environmental": {
+          "name": "Environmental Compliance",
+          "color": "text-green-700",
+          "bgColor": "bg-green-50",
+          "borderColor": "border-green-200",
+          "tasks": [
+            {
+              "id": "csrd_reporting",
+              "title": "CSRD Sustainability Reporting",
+              "description": "Prepare comprehensive sustainability report under CSRD requirements",
+              "priority": "critical",
+              "deadline": "2025-04-30",
+              "status": "in-progress",
+              "authority": "European Commission",
+              "category": "Reporting"
+            },
+            {
+              "id": "taxonomy_alignment",
+              "title": "EU Taxonomy Alignment Assessment",
+              "description": "Assess and report on EU Taxonomy alignment for eligible activities",
+              "priority": "high",
+              "deadline": "2025-06-30",
+              "status": "pending",
+              "authority": "European Commission",
+              "category": "Assessment"
+            }
+          ]
+        }
+      },
+      "documents": [
+        {
+          "id": "esrs_template",
+          "title": "ESRS Reporting Template",
+          "type": "Excel",
+          "size": "4.2 MB",
+          "category": "Templates",
+          "description": "Complete ESRS reporting template with all disclosure requirements",
+          "downloadUrl": "/documents/esrs-template-2025.xlsx",
+          "lastUpdated": "2025-01-20"
+        }
+      ],
+      "regulations": [
+        {
+          "id": "csrd",
+          "title": "Corporate Sustainability Reporting Directive",
+          "authority": "European Commission",
+          "description": "Comprehensive sustainability reporting requirements for large companies",
+          "applicability": "Large and listed companies",
+          "lastAmendment": "2024-11-30"
+        }
+      ]
+    },
+    "uae": {
+      "name": "United Arab Emirates",
+      "code": "AE",
+      "flag": "🇦🇪",
+      "primaryFrameworks": ["UAE ESG Guidelines", "ADX ESG Requirements"],
+      "categories": {
+        "environmental": {
+          "name": "Environmental Compliance",
+          "color": "text-green-700",
+          "bgColor": "bg-green-50",
+          "borderColor": "border-green-200",
+          "tasks": [
+            {
+              "id": "uae_esg_report",
+              "title": "UAE ESG Annual Report",
+              "description": "Submit annual ESG performance report to regulatory authorities",
+              "priority": "high",
+              "deadline": "2025-05-31",
+              "status": "not-started",
+              "authority": "UAE Ministry of Climate Change",
+              "category": "Reporting"
+            }
+          ]
+        }
+      },
+      "documents": [
+        {
+          "id": "uae_esg_template",
+          "title": "UAE ESG Reporting Template",
+          "type": "Word",
+          "size": "1.8 MB",
+          "category": "Templates",
+          "description": "Official ESG reporting template for UAE companies",
+          "downloadUrl": "/documents/uae-esg-template.docx",
+          "lastUpdated": "2025-01-05"
+        }
+      ],
+      "regulations": [
+        {
+          "id": "uae_vision_2071",
+          "title": "UAE Vision 2071",
+          "authority": "UAE Government",
+          "description": "National sustainability framework and ESG guidelines",
+          "applicability": "All corporate entities",
+          "lastAmendment": "2024-09-15"
+        }
+      ]
+    }
+  }
+}

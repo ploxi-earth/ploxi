@@ -1,0 +1,96 @@
+{
+  "frameworks": [
+    {
+      "id": "brsr",
+      "name": "BRSR (Business Responsibility and Sustainability Reporting)",
+      "regionApplicability": ["IN"],
+      "focusAreas": [
+        "Business responsibility principles",
+        "CSR spending",
+        "Employee well-being",
+        "Air & water pollution levels",
+        "Local compliance metrics"
+      ],
+      "metricsExamples": [
+        "Total CSR expenditure",
+        "Carbon emissions (Scope 1 & 2)",
+        "Percentage of treated effluents",
+        "Employee gender diversity",
+        "Community development projects"
+      ],
+      "description": "Mandatory ESG disclosure framework issued by SEBI for top 1000 listed companies in India, covering environmental, social, and governance aspects."
+    },
+    {
+      "id": "sasb",
+      "name": "SASB (Sustainability Accounting Standards Board)",
+      "regionApplicability": ["US", "EU", "IN", "AE"],
+      "focusAreas": [
+        "Industry-specific financial materiality",
+        "Sustainability risks and opportunities",
+        "Investor-relevant ESG factors"
+      ],
+      "metricsExamples": [
+        "Water withdrawal by business activity",
+        "Absolute energy use",
+        "Waste generated & recycled",
+        "Product lifecycle emissions",
+        "Workforce safety incident rate"
+      ],
+      "description": "Framework focused on financially material ESG factors by sector. Common in the US; often referenced globally for investor communications."
+    },
+    {
+      "id": "tcfd",
+      "name": "TCFD (Task Force on Climate-related Financial Disclosures)",
+      "regionApplicability": ["EU", "US", "AE", "IN"],
+      "focusAreas": [
+        "Climate risk governance",
+        "Scenario analysis",
+        "Physical & transition risk",
+        "Emissions reduction plans"
+      ],
+      "metricsExamples": [
+        "Board oversight of climate risk",
+        "Climate scenario stress testing",
+        "Scope 1, 2, & 3 GHG emissions",
+        "Proportion of low-carbon investments"
+      ],
+      "description": "Global climate-risk disclosure framework focused on financial risks and opportunities associated with climate change. Mandatory in some regions."
+    },
+    {
+      "id": "gri",
+      "name": "GRI (Global Reporting Initiative)",
+      "regionApplicability": ["IN", "US", "EU", "AE"],
+      "focusAreas": [
+        "Comprehensive ESG disclosures",
+        "Stakeholder impact",
+        "Global best practices"
+      ],
+      "metricsExamples": [
+        "Total energy consumption",
+        "Water discharged by quality and destination",
+        "Material used and sourced sustainably",
+        "Incidents of discrimination",
+        "Board diversity metrics"
+      ],
+      "description": "Most widely used global standard for sustainability and ESG reporting. Designed for all sectors and organization sizes with broad stakeholder emphasis."
+    },
+    {
+      "id": "esrs",
+      "name": "ESRS (European Sustainability Reporting Standards)",
+      "regionApplicability": ["EU"],
+      "focusAreas": [
+        "Double materiality: impact & financial",
+        "Climate, environment, workers, society",
+        "EU CSRD/Green Deal legal requirements"
+      ],
+      "metricsExamples": [
+        "Carbon intensity per product",
+        "Use of renewable energy",
+        "Biodiversity measures",
+        "Gender pay gap",
+        "Anti-corruption initiatives"
+      ],
+      "description": "EU-mandated reporting under CSRD with detailed topical & cross-cutting ESG standards. Applies to large EU companies and value chain partners."
+    }
+  ]
+}

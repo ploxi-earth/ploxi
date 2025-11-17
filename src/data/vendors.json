@@ -1,0 +1,180 @@
+{
+  "vendors": [
+    {
+      "id": "furaat",
+      "name": "Furaat",
+      "type": "Water",
+      "description": "Leading water treatment and recycling solutions provider specializing in industrial wastewater management. Offers advanced membrane technologies and IoT-enabled monitoring systems.",
+      "solutions": ["water_treatment", "water_monitoring", "industrial_recycling"],
+      "targetIndustries": ["manufacturing", "steel", "cement", "healthcare"],
+      "targetRegions": ["IN", "AE"],
+      "contact": { "email": "info@furaat.com", "phone": "+91-80-4567-8901" },
+      "website": "https://furaat.com"
+    },
+    {
+      "id": "plastic_fischer",
+      "name": "Plastic Fischer",
+      "type": "Waste",
+      "description": "Innovative plastic waste collection and recycling company using AI-powered sorting and blockchain tracking. Focuses on ocean plastic prevention and circular economy solutions.",
+      "solutions": ["plastic_recycling", "waste_tracking", "circular_economy"],
+      "targetIndustries": ["manufacturing", "logistics", "real_estate"],
+      "targetRegions": ["IN", "EU", "AE"],
+      "contact": { "email": "contact@plasticfischer.com", "phone": "+49-30-1234-5678" },
+      "website": "https://plasticfischer.com"
+    },
+    {
+      "id": "biofuture_additives",
+      "name": "BioFuture Additives",
+      "type": "Energy",
+      "description": "Biofuel additives and alternative energy solutions for industrial applications. Specializes in bio-based fuel enhancement and renewable energy integration for heavy industries.",
+      "solutions": ["alternative_fuels", "energy_efficiency", "renewable_integration"],
+      "targetIndustries": ["cement", "steel", "manufacturing", "logistics"],
+      "targetRegions": ["IN", "US", "EU"],
+      "contact": { "email": "sales@biofutureadditives.com", "phone": "+91-22-9876-5432" },
+      "website": "https://biofutureadditives.com"
+    },
+    {
+      "id": "quark_solar",
+      "name": "Quark Solar",
+      "type": "Energy",
+      "description": "Solar power company delivering rooftop, utility-scale, and hybrid renewable energy systems. Known for its efficient PV panel installations and smart grid integration.",
+      "solutions": ["solar_energy", "grid_integration", "energy_storage"],
+      "targetIndustries": ["real_estate", "manufacturing", "education", "finance"],
+      "targetRegions": ["IN", "US", "EU", "AE"],
+      "contact": { "email": "support@quarksolar.com", "phone": "+91-44-2345-6789" },
+      "website": "https://quarksolar.com"
+    },
+    {
+      "id": "kishan_infrastructure",
+      "name": "Kishan Infrastructure",
+      "type": "Construction",
+      "description": "Sustainable infrastructure company focused on green building materials, eco-friendly construction, and urban development aligned with ESG standards.",
+      "solutions": ["green_building", "energy_efficiency", "waste_management"],
+      "targetIndustries": ["real_estate", "cement", "steel"],
+      "targetRegions": ["IN", "AE"],
+      "contact": { "email": "info@kishaninfrastructure.com", "phone": "+91-40-7654-3210" },
+      "website": "https://kishaninfrastructure.com"
+    },
+    {
+      "id": "apollo_power_systems",
+      "name": "Apollo Power Systems",
+      "type": "Energy",
+      "description": "Provider of clean energy and power backup solutions, offering solar-diesel hybrid systems, microgrids, and battery storage for industrial applications.",
+      "solutions": ["hybrid_energy", "battery_storage", "energy_efficiency"],
+      "targetIndustries": ["manufacturing", "it_datacenter", "automotive"],
+      "targetRegions": ["IN", "AE"],
+      "contact": { "email": "info@apollopower.com", "phone": "+91-80-1122-3344" },
+      "website": "https://apollopower.com"
+    },
+    {
+      "id": "radiance_energy",
+      "name": "Radiance Energy",
+      "type": "Energy",
+      "description": "Developer of renewable energy projects focusing on solar, wind, and energy storage. Provides tailored clean energy solutions for businesses and institutions.",
+      "solutions": ["solar_energy", "wind_energy", "energy_storage"],
+      "targetIndustries": ["education", "finance", "manufacturing", "real_estate"],
+      "targetRegions": ["IN", "US", "EU"],
+      "contact": { "email": "contact@radianceenergy.com", "phone": "+91-22-4433-5566" },
+      "website": "https://radianceenergy.com"
+    },
+    {
+      "id": "advent_envirotech",
+      "name": "Advent Envirotech",
+      "type": "Waste",
+      "description": "Environmental technology firm specializing in hazardous waste management, e-waste recycling, and sustainable disposal solutions.",
+      "solutions": ["hazardous_waste", "ewaste_recycling", "circular_economy"],
+      "targetIndustries": ["it_datacenter", "manufacturing", "healthcare"],
+      "targetRegions": ["IN", "EU", "AE"],
+      "contact": { "email": "info@adventenvirotech.com", "phone": "+91-33-8765-4321" },
+      "website": "https://adventenvirotech.com"
+    },
+    {
+      "id": "digital_paani",
+      "name": "Digital Paani",
+      "type": "Water",
+      "description": "Smart water management startup offering IoT-enabled monitoring and AI analytics for water conservation in urban and industrial setups.",
+      "solutions": ["water_monitoring", "smart_meters", "water_efficiency"],
+      "targetIndustries": ["real_estate", "education", "healthcare"],
+      "targetRegions": ["IN", "US", "AE"],
+      "contact": { "email": "hello@digitalpaani.com", "phone": "+91-11-9988-7766" },
+      "website": "https://digitalpaani.com"
+    },
+    {
+      "id": "earth_sync",
+      "name": "Earth Sync",
+      "type": "Analytics",
+      "description": "Climate intelligence and sustainability analytics firm providing real-time environmental monitoring and carbon footprint tracking tools.",
+      "solutions": ["carbon_tracking", "climate_risk", "esg_analytics"],
+      "targetIndustries": ["finance", "manufacturing", "logistics"],
+      "targetRegions": ["IN", "US", "EU"],
+      "contact": { "email": "support@earthsync.com", "phone": "+91-44-6655-7788" },
+      "website": "https://earthsync.com"
+    },
+    {
+      "id": "snowkap",
+      "name": "Snowkap",
+      "type": "Analytics",
+      "description": "Supply chain sustainability and emissions tracking platform. Provides carbon accounting, compliance management, and ESG reporting support.",
+      "solutions": ["supply_chain", "carbon_accounting", "esg_reporting"],
+      "targetIndustries": ["logistics", "manufacturing", "automotive"],
+      "targetRegions": ["IN", "US", "EU"],
+      "contact": { "email": "info@snowkap.com", "phone": "+91-22-3344-5566" },
+      "website": "https://snowkap.com"
+    },
+    {
+      "id": "breathe_esg",
+      "name": "Breathe ESG",
+      "type": "Analytics",
+      "description": "ESG data analytics and reporting platform enabling companies to manage sustainability metrics, generate reports, and ensure compliance with frameworks.",
+      "solutions": ["esg_reporting", "carbon_accounting", "compliance_tools"],
+      "targetIndustries": ["finance", "education", "manufacturing", "it_datacenter"],
+      "targetRegions": ["IN", "US", "EU", "AE"],
+      "contact": { "email": "contact@breatheesg.com", "phone": "+91-80-4455-6677" },
+      "website": "https://breatheesg.com"
+    },
+    {
+      "id": "aqverium",
+      "name": "Aqverium",
+      "type": "Water",
+      "description": "Smart water solutions company with focus on digital water infrastructure, leakage prevention, and sustainable municipal systems.",
+      "solutions": ["water_infrastructure", "smart_meters", "water_efficiency"],
+      "targetIndustries": ["real_estate", "logistics", "manufacturing"],
+      "targetRegions": ["IN", "AE"],
+      "contact": { "email": "support@aqverium.com", "phone": "+91-22-7788-9900" },
+      "website": "https://aqverium.com"
+    },
+    {
+      "id": "causal_dynamics",
+      "name": "Causal Dynamics",
+      "type": "Analytics",
+      "description": "AI-driven platform providing predictive analytics for energy usage, emissions reduction, and sustainability optimization.",
+      "solutions": ["predictive_analytics", "carbon_tracking", "energy_efficiency"],
+      "targetIndustries": ["it_datacenter", "automotive", "manufacturing"],
+      "targetRegions": ["IN", "US", "EU"],
+      "contact": { "email": "hello@causaldynamics.com", "phone": "+91-40-3344-2211" },
+      "website": "https://causaldynamics.com"
+    },
+    {
+      "id": "outdid_unified",
+      "name": "Outdid Unified",
+      "type": "Waste",
+      "description": "Sustainable waste solutions company focusing on digital waste tracking, recycling networks, and ESG compliance for corporates.",
+      "solutions": ["waste_tracking", "plastic_recycling", "circular_economy"],
+      "targetIndustries": ["logistics", "real_estate", "manufacturing"],
+      "targetRegions": ["IN", "EU"],
+      "contact": { "email": "contact@outdidunified.com", "phone": "+91-11-2233-4455" },
+      "website": "https://outdidunified.com"
+    },
+    {
+      "id": "solairgen",
+      "name": "Solairgen",
+      "type": "Energy",
+      "description": "Renewable energy company delivering solar, wind, and hybrid power plants with expertise in grid stability and microgrid solutions.",
+      "solutions": ["solar_energy", "wind_energy", "microgrids"],
+      "targetIndustries": ["steel", "cement", "real_estate", "education"],
+      "targetRegions": ["IN", "US", "EU", "AE"],
+      "contact": { "email": "info@solairgen.com", "phone": "+91-22-8899-1122" },
+      "website": "https://solairgen.com"
+    }
+  ]
+}

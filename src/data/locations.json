@@ -1,0 +1,40 @@
+{
+  "locations": [
+    {
+      "id": "india",
+      "name": "India",
+      "code": "IN",
+      "reportingFrameworks": ["BRSR", "GRI"],
+      "regionFocus": "India emphasizes BRSR compliance for listed companies and focuses on business responsibility across environmental, social, and governance parameters.",
+      "currency": "INR",
+      "timezone": "IST"
+    },
+    {
+      "id": "usa",
+      "name": "United States",
+      "code": "US",
+      "reportingFrameworks": ["SASB", "GRI", "TCFD"],
+      "regionFocus": "USA prioritizes SASB industry-specific standards and SEC climate disclosure requirements for material ESG risks.",
+      "currency": "USD",
+      "timezone": "EST/PST"
+    },
+    {
+      "id": "eu",
+      "name": "European Union",
+      "code": "EU",
+      "reportingFrameworks": ["TCFD", "ESRS", "GRI"],
+      "regionFocus": "EU mandates CSRD compliance with ESRS standards, emphasizing double materiality and comprehensive sustainability reporting.",
+      "currency": "EUR",
+      "timezone": "CET"
+    },
+    {
+      "id": "uae",
+      "name": "United Arab Emirates",
+      "code": "AE",
+      "reportingFrameworks": ["GRI", "TCFD"],
+      "regionFocus": "UAE promotes Vision 2071 sustainability goals with focus on carbon neutrality, circular economy, and green finance initiatives.",
+      "currency": "AED",
+      "timezone": "GST"
+    }
+  ]
+}

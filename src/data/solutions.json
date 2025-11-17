@@ -1,0 +1,46 @@
+{
+  "solutions": [
+    {
+      "id": "energy_management",
+      "name": "Energy Management",
+      "description": "Advanced energy monitoring, optimization, and integration of renewables such as solar and wind for industrial and commercial sectors.",
+      "applicableIndustries": ["manufacturing", "real_estate", "cement", "steel", "healthcare", "logistics", "automotive", "education", "finance", "it_datacenter"],
+      "exampleVendors": ["quark_solar", "biofuture_additives", "radiance_energy", "apollo_power_systems", "kishan_infrastructure"]
+    },
+    {
+      "id": "water_treatment",
+      "name": "Water Treatment",
+      "description": "Industrial water reuse, recycling, digital water quality monitoring, and conservation solutions for sustainable operations.",
+      "applicableIndustries": ["manufacturing", "steel", "cement", "healthcare", "education", "real_estate"],
+      "exampleVendors": ["furaat", "aqverium", "digital_paani", "flow_dynamics"]
+    },
+    {
+      "id": "waste_management",
+      "name": "Waste Management",
+      "description": "Circular economy platforms, recycling technologies, AI-driven waste segregation, plastic removal, and upcycling solutions.",
+      "applicableIndustries": ["manufacturing", "real_estate", "cement", "steel", "automotive", "logistics", "education", "healthcare"],
+      "exampleVendors": ["plastic_fischer", "advent_envirotech", "circular_waste_solutions", "outdid_unified"]
+    },
+    {
+      "id": "esg_analytics",
+      "name": "ESG Analytics",
+      "description": "Reporting dashboards, automated ESG data collection, carbon accounting, scenario analysis, and regulatory compliance tools.",
+      "applicableIndustries": ["finance", "it_datacenter", "manufacturing", "education", "real_estate", "logistics", "healthcare"],
+      "exampleVendors": ["breathe_esg", "snowkap", "causal_dynamics", "earth_sync"]
+    },
+    {
+      "id": "building_automation",
+      "name": "Building Automation",
+      "description": "IoT management of HVAC, smart lighting, occupancy sensors, and building energy controls for green and smart buildings.",
+      "applicableIndustries": ["real_estate", "education", "healthcare", "finance", "manufacturing"],
+      "exampleVendors": ["smart_building_automation", "kishan_infrastructure"]
+    },
+    {
+      "id": "ev_fleet_management",
+      "name": "EV Fleet Management",
+      "description": "Electric vehicle fleet transition, charging infrastructure, route optimization, and real-time fleet analytics.",
+      "applicableIndustries": ["logistics", "automotive", "education", "healthcare"],
+      "exampleVendors": ["green_fleet_solutions", "outdid_unified"]
+    }
+  ]
+}

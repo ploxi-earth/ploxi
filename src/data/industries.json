@@ -1,0 +1,64 @@
+{
+  "industries": [
+    {
+      "id": "healthcare",
+      "name": "Healthcare",
+      "solutionCategories": ["Energy Management", "Waste Management", "Water Treatment", "ESG Analytics"],
+      "keyChallenges": ["Medical waste disposal", "Energy-intensive facilities", "Water consumption", "Pharmaceutical pollution"]
+    },
+    {
+      "id": "real_estate",
+      "name": "Real Estate",
+      "solutionCategories": ["Building Automation", "Energy Efficiency", "Waste Management", "Water Treatment"],
+      "keyChallenges": ["Building energy consumption", "Construction waste", "Water usage optimization", "Green building certifications"]
+    },
+    {
+      "id": "cement",
+      "name": "Cement",
+      "solutionCategories": ["Energy Management", "Waste Heat Recovery", "Alternative Fuels", "ESG Analytics"],
+      "keyChallenges": ["High CO2 emissions", "Energy-intensive processes", "Raw material sustainability", "Air quality impact"]
+    },
+    {
+      "id": "steel",
+      "name": "Steel",
+      "solutionCategories": ["Energy Management", "Carbon Capture", "Waste Heat Recovery", "Water Treatment"],
+      "keyChallenges": ["Carbon-intensive production", "Water cooling requirements", "Steel slag management", "Energy efficiency"]
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing",
+      "solutionCategories": ["Energy Management", "Waste Management", "Water Treatment", "Building Automation"],
+      "keyChallenges": ["Production waste", "Energy optimization", "Supply chain sustainability", "Process water usage"]
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics",
+      "solutionCategories": ["EV Fleet Management", "Energy Management", "ESG Analytics", "Route Optimization"],
+      "keyChallenges": ["Fleet emissions", "Last-mile delivery", "Fuel consumption", "Packaging waste"]
+    },
+    {
+      "id": "automotive",
+      "name": "Automotive",
+      "solutionCategories": ["EV Fleet Management", "Energy Management", "Waste Management", "ESG Analytics"],
+      "keyChallenges": ["Vehicle emissions", "Battery recycling", "Manufacturing waste", "Supply chain transparency"]
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "solutionCategories": ["Building Automation", "Energy Management", "Waste Management", "ESG Analytics"],
+      "keyChallenges": ["Campus energy usage", "Student transportation", "Food waste", "Sustainability education"]
+    },
+    {
+      "id": "finance",
+      "name": "Finance",
+      "solutionCategories": ["ESG Analytics", "Building Automation", "Energy Management", "Green Finance Tools"],
+      "keyChallenges": ["ESG risk assessment", "Office energy consumption", "Digital infrastructure", "Sustainable investment tracking"]
+    },
+    {
+      "id": "it_datacenter",
+      "name": "IT / Data Center",
+      "solutionCategories": ["Energy Management", "Water Cooling", "Renewable Energy", "ESG Analytics"],
+      "keyChallenges": ["Server cooling", "Energy consumption", "E-waste management", "Renewable energy integration"]
+    }
+  ]
+}
