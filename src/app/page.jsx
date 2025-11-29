@@ -66,7 +66,7 @@ export default function MainLandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      {/* <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="flex flex-col sm:flex-row items-center justify-center text-center sm:text-left">
             <Image
@@ -85,7 +85,47 @@ export default function MainLandingPage() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
+      <header className="bg-white shadow-sm">
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+
+    {/* Centered Logo + Text */}
+    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      <div className="flex flex-col sm:flex-row items-center text-center sm:text-left">
+        <Image
+          src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+          alt="Ploxi"
+          width={64}
+          height={64}
+          className="h-16 w-16 object-contain rounded-xl mb-3 sm:mb-0 sm:mr-4"
+          priority
+        />
+        <div className='text-center'>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 ">Ploxi</h1>
+          <p className="text-md sm:text-lg text-green-600 font-medium">
+            Empowering Sustainable Business Growth
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Right-side Button */}
+    <div className="flex justify-end">
+      <a
+        href="https://www.ploxiconsult.com/"  
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center px-5 py-3 rounded-xl 
+                   bg-green-600 text-white font-semibold text-sm sm:text-base 
+                   shadow-md hover:bg-green-700 transition-all"
+      >
+        Go to Website
+      </a>
+    </div>
+  </div>
+</header>
+
+
 
       {/* Hero Section */}
       <section className="py-10 sm:py-14 bg-gradient-to-br from-blue-50 to-cyan-50">
