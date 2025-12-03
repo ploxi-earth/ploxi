@@ -518,10 +518,16 @@ const handleResendOTP = async () => {
       {/* Header */}
       <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/climate-finance/registration')}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              ← Back to Ploxi
+            </button>
+            <div className="flex items-center space-x-4 sm:space-x-3 sm:pl-4 sm:border-l border-gray-300">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={48}
                 height={48}
@@ -529,18 +535,13 @@ const handleResendOTP = async () => {
                 priority
               />
               <div>
-                <h1 className="text-3xl font-bold text-white">Ploxi Climate Finance</h1>
+                <h1 className="text-3xl font-bold text-white">Ploxi Earth</h1>
                 <p className="text-purple-300">
                   {isEditMode ? 'Update Investor Profile' : 'Investor Registration'}
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => router.push('/climate-finance')}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              ← Back
-            </button>
+            
           </div>
         </div>
       </header>

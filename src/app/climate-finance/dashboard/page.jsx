@@ -229,7 +229,7 @@ export default function InvestorDashboard() {
                 <Menu className="w-6 h-6" />
               </button>
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={48}
                 height={48}

@@ -199,7 +199,7 @@ export default function ConsultationRequest() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center space-x-4">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={48}
                 height={48}
@@ -280,7 +280,7 @@ export default function ConsultationRequest() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={48}
                 height={48}

@@ -17,7 +17,7 @@ export default function ClimateFinancePage() {
             </Link>
             <div className="border-l border-gray-700 pl-0 sm:pl-4 flex items-center space-x-3">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={48}
                 height={48}
@@ -26,7 +26,7 @@ export default function ClimateFinancePage() {
               />
               <div className="text-center sm:text-left">
                 <h1 className="text-xl sm:text-2xl font-bold text-white">
-                  Ploxi Climate Finance
+                  Ploxi Earth
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-400">
                   Investment & Funding
@@ -34,7 +34,14 @@ export default function ClimateFinancePage() {
               </div>
             </div>
           </div>
+          <Link
+                  href="https://www.ploxiconsult.com/"
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md text-sm sm:text-base"
+                >
+                  Go to Website
+                </Link>
         </div>
+        
       </div>
     </header>
 

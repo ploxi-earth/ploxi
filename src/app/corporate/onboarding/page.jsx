@@ -396,7 +396,7 @@ export default function CorporateOnboarding() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <Image
-              src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+              src="/images/ploxi earth logo.jpeg"
               alt="Ploxi"
               width={48}
               height={48}

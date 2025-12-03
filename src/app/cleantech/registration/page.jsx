@@ -454,8 +454,14 @@ const handleResendOTP = async () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
           <div className="flex items-center space-x-3 sm:space-x-4">
+             <button
+            onClick={() => router.push('/cleantech')}
+            className="text-blue-600 hover:text-blue-800 font-medium transition-colors text-sm sm:text-base"
+          >
+            ← Back to Ploxi
+          </button>
             <Image
-              src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+              src="/images/ploxi earth logo.jpeg"
               alt="Ploxi"
               width={48}
               height={48}
@@ -463,16 +469,11 @@ const handleResendOTP = async () => {
               priority
             />
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Ploxi Clean Tech</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Ploxi Earth</h1>
               <p className="text-sm text-gray-600">Vendor Registration</p>
             </div>
           </div>
-          <button
-            onClick={() => router.push('/cleantech')}
-            className="text-blue-600 hover:text-blue-800 font-medium transition-colors text-sm sm:text-base"
-          >
-            ← Cancel
-          </button>
+         
         </div>
       </div>
     </header>

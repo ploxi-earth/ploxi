@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Target, Mail } from 'lucide-react';
 import OTPModal from '@/components/OTPModal';
+import Link from 'next/link';
+import Image from 'next/image';
+
 
 export default function ParticipantRegistration() {
   const router = useRouter();
@@ -53,7 +56,7 @@ export default function ParticipantRegistration() {
   // Handle form submission (sends OTP)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       alert('Please fill all required fields');
       return;
@@ -110,7 +113,7 @@ export default function ParticipantRegistration() {
 
       // Success
       setShowOTPModal(false);
-      
+
       // Redirect to success page
       setTimeout(() => {
         router.push('/climate-finance/participant/success');
@@ -140,115 +143,157 @@ export default function ParticipantRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex justify-center items-center p-6">
-      <div className="bg-gray-900 border-2 border-gray-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
-        <h2 className="text-3xl font-bold text-white mb-2 flex items-center">
-          <Users className="w-8 h-8 text-blue-400 mr-2" /> Participant Registration
-        </h2>
-        <p className="text-gray-400 mb-6">Join events or request consultations</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 ">
+      <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* First Name & Last Name */}
-          <div className="grid grid-cols-2 gap-4">
+            {/* Left section */}
+            <div className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-4 space-y-2 sm:space-y-0">
+              <Link
+                href="/climate-finance/registration"
+                className="text-purple-400 hover:text-purple-300 text-sm sm:text-base"
+              >
+                ← Back to Ploxi
+              </Link>
+
+              <div className="border-l border-gray-700 pl-0 sm:pl-4 flex items-center space-x-3">
+                <Image
+                  src="/images/ploxi earth logo.jpeg"
+                  alt="Ploxi"
+                  width={48}
+                  height={48}
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-xl bg-white p-1"
+                  priority
+                />
+
+                <div className="text-center sm:text-left">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    Ploxi Earth
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-400">
+                    Participant Registration
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right section */}
+            <Link
+              href="https://www.ploxiconsult.com/"
+              className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md text-sm sm:text-base"
+            >
+              Go to Website
+            </Link>
+          </div>
+        </div>
+      </header>
+      <div className="flex items-center justify-center py-16 px-4">
+        <div className="bg-gray-900 border-2 border-gray-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+          <h2 className="text-3xl font-bold text-white mb-2 flex items-center">
+            <Users className="w-8 h-8 text-blue-400 mr-2" /> Participant Registration
+          </h2>
+          <p className="text-gray-400 mb-6">Join events or request consultations</p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* First Name & Last Name */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="First Name *"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className={`w-full px-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${errors.firstName ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                />
+                {errors.firstName && (
+                  <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
+                )}
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Last Name *"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className={`w-full px-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${errors.lastName ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                />
+                {errors.lastName && (
+                  <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="Email *"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={`w-full pl-10 pr-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${errors.email ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                />
+              </div>
+              {errors.email && (
+                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            {/* Organization */}
             <div>
               <input
                 type="text"
-                placeholder="First Name *"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className={`w-full px-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${
-                  errors.firstName ? 'border-red-500' : 'border-gray-700'
-                }`}
+                placeholder="Organization (optional)"
+                value={formData.organization}
+                onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white"
               />
-              {errors.firstName && (
-                <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
-              )}
             </div>
+
+            {/* Intent Selection */}
             <div>
-              <input
-                type="text"
-                placeholder="Last Name *"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className={`w-full px-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${
-                  errors.lastName ? 'border-red-500' : 'border-gray-700'
-                }`}
-              />
-              {errors.lastName && (
-                <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>
+              <p className="text-gray-300 mb-3 font-semibold">Your Intent *</p>
+              {errors.intentType && (
+                <p className="text-red-400 text-sm mb-2">{errors.intentType}</p>
               )}
+              <div className="space-y-3">
+                {INTENT_OPTIONS.map(item => (
+                  <label
+                    key={item.value}
+                    className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.intentType.includes(item.value)
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : 'border-gray-700 hover:border-gray-600'
+                      }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.intentType.includes(item.value)}
+                      onChange={() => toggleIntent(item.value)}
+                      className="w-5 h-5 text-blue-500 border-gray-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                    <Target className="w-5 h-5 text-blue-400 mx-3" />
+                    <span className="text-white font-medium">{item.label}</span>
+                    <span className="ml-auto text-2xl">{item.icon}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Email */}
-          <div>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                placeholder="Email *"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={`w-full pl-10 pr-4 py-3 bg-gray-800 border-2 rounded-xl text-white ${
-                  errors.email ? 'border-red-500' : 'border-gray-700'
-                }`}
-              />
-            </div>
-            {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Organization */}
-          <div>
-            <input
-              type="text"
-              placeholder="Organization (optional)"
-              value={formData.organization}
-              onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white"
-            />
-          </div>
-
-          {/* Intent Selection */}
-          <div>
-            <p className="text-gray-300 mb-3 font-semibold">Your Intent *</p>
-            {errors.intentType && (
-              <p className="text-red-400 text-sm mb-2">{errors.intentType}</p>
-            )}
-            <div className="space-y-3">
-              {INTENT_OPTIONS.map(item => (
-                <label
-                  key={item.value}
-                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                    formData.intentType.includes(item.value)
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 hover:border-gray-600'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.intentType.includes(item.value)}
-                    onChange={() => toggleIntent(item.value)}
-                    className="w-5 h-5 text-blue-500 border-gray-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <Target className="w-5 h-5 text-blue-400 mx-3" />
-                  <span className="text-white font-medium">{item.label}</span>
-                  <span className="ml-auto text-2xl">{item.icon}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-8 w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Sending OTP...' : 'Submit & Verify Email'}
-          </button>
-        </form>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-8 w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Sending OTP...' : 'Submit & Verify Email'}
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* OTP Modal */}

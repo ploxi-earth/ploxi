@@ -93,7 +93,7 @@ export default function MainLandingPage() {
     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
       <div className="flex flex-col sm:flex-row items-center text-center sm:text-left">
         <Image
-          src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+          src="https://i.postimg.cc/hGF7X7Xc/ploxi-earth-logo.jpg"
           alt="Ploxi"
           width={64}
           height={64}
@@ -198,7 +198,7 @@ export default function MainLandingPage() {
           <div className="text-center">
             <div className="flex flex-col sm:flex-row items-center justify-center mb-6">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={32}
                 height={32}

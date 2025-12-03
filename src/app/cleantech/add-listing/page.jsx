@@ -251,7 +251,7 @@ export default function AddListingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Image
-                src="https://i.postimg.cc/QM8fvftG/IMG-20250819-WA0002.jpg"
+                src="/images/ploxi earth logo.jpeg"
                 alt="Ploxi"
                 width={40}
                 height={40}
