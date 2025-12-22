@@ -415,7 +415,7 @@ const [pendingEmail, setPendingEmail] = useState('');
 
     // Redirect based on requirement
     if (requirement === 'listing') {
-      router.push('/cleantech/thank-you');
+      router.push('/cleantech/registration/thank-you');
     } else if (requirement === 'funding') {
       router.push('/climate-finance/registration');
     }
