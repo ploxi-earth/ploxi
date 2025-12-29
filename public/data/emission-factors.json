@@ -1,0 +1,287 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-28",
+  "sources": [
+    "EPA GHG Emission Factors Hub 2024",
+    "India GHG Program (indiaghgp.org)",
+    "Central Electricity Authority (CEA) India 2024",
+    "IPCC Guidelines"
+  ],
+  "emissionFactors": {
+    "scope1": {
+      "stationaryCombustion": {
+        "naturalGas": {
+          "factor": 0.202,
+          "unit": "kg CO2e per kWh",
+          "source": "EPA 2024",
+          "description": "Natural gas combustion in stationary equipment"
+        },
+        "diesel": {
+          "factor": 2.68,
+          "unit": "kg CO2e per liter",
+          "source": "EPA 2024",
+          "description": "Diesel fuel combustion"
+        },
+        "petrol": {
+          "factor": 2.31,
+          "unit": "kg CO2e per liter",
+          "source": "EPA 2024",
+          "description": "Gasoline/Petrol combustion"
+        },
+        "lpg": {
+          "factor": 1.51,
+          "unit": "kg CO2e per kg",
+          "source": "EPA 2024",
+          "description": "Liquefied Petroleum Gas combustion"
+        },
+        "coal": {
+          "factor": 2.42,
+          "unit": "kg CO2e per kg",
+          "source": "IPCC 2024",
+          "description": "Coal combustion"
+        }
+      },
+      "mobileCombustion": {
+        "dieselVehicle": {
+          "factor": 2.68,
+          "unit": "kg CO2e per liter",
+          "source": "EPA 2024",
+          "description": "Diesel vehicle fuel combustion"
+        },
+        "petrolVehicle": {
+          "factor": 2.31,
+          "unit": "kg CO2e per liter",
+          "source": "EPA 2024",
+          "description": "Petrol vehicle fuel combustion"
+        },
+        "cng": {
+          "factor": 1.96,
+          "unit": "kg CO2e per kg",
+          "source": "India GHG Program",
+          "description": "Compressed Natural Gas for vehicles"
+        }
+      },
+      "fugitiveEmissions": {
+        "r134a": {
+          "factor": 1430,
+          "unit": "kg CO2e per kg",
+          "source": "IPCC AR6",
+          "description": "R-134a refrigerant (common in AC systems)"
+        },
+        "r410a": {
+          "factor": 2088,
+          "unit": "kg CO2e per kg",
+          "source": "IPCC AR6",
+          "description": "R-410A refrigerant"
+        }
+      }
+    },
+    "scope2": {
+      "electricity": {
+        "indiaGrid": {
+          "factor": 0.82,
+          "unit": "kg CO2e per kWh",
+          "source": "CEA India 2024",
+          "description": "Indian national grid average"
+        },
+        "karnataka": {
+          "factor": 0.79,
+          "unit": "kg CO2e per kWh",
+          "source": "CEA India 2024",
+          "description": "Karnataka state grid"
+        },
+        "maharashtra": {
+          "factor": 0.85,
+          "unit": "kg CO2e per kWh",
+          "source": "CEA India 2024",
+          "description": "Maharashtra state grid"
+        },
+        "tamilNadu": {
+          "factor": 0.77,
+          "unit": "kg CO2e per kWh",
+          "source": "CEA India 2024",
+          "description": "Tamil Nadu state grid"
+        },
+        "renewable": {
+          "factor": 0,
+          "unit": "kg CO2e per kWh",
+          "source": "Standard",
+          "description": "100% renewable energy sources"
+        }
+      },
+      "districtHeating": {
+        "steam": {
+          "factor": 0.065,
+          "unit": "kg CO2e per kWh",
+          "source": "EPA 2024",
+          "description": "Purchased steam"
+        },
+        "hotWater": {
+          "factor": 0.045,
+          "unit": "kg CO2e per kWh",
+          "source": "EPA 2024",
+          "description": "Purchased hot water"
+        }
+      }
+    },
+    "scope3": {
+      "businessTravel": {
+        "airTravel_domestic": {
+          "factor": 0.255,
+          "unit": "kg CO2e per km",
+          "source": "EPA 2024",
+          "description": "Domestic air travel per passenger-km"
+        },
+        "airTravel_international": {
+          "factor": 0.195,
+          "unit": "kg CO2e per km",
+          "source": "EPA 2024",
+          "description": "International air travel per passenger-km"
+        },
+        "rail": {
+          "factor": 0.041,
+          "unit": "kg CO2e per km",
+          "source": "India GHG Program",
+          "description": "Rail travel per passenger-km"
+        },
+        "taxi": {
+          "factor": 0.171,
+          "unit": "kg CO2e per km",
+          "source": "EPA 2024",
+          "description": "Taxi/cab per passenger-km"
+        }
+      },
+      "employeeCommuting": {
+        "car": {
+          "factor": 0.192,
+          "unit": "kg CO2e per km",
+          "source": "EPA 2024",
+          "description": "Average car commute per km"
+        },
+        "bus": {
+          "factor": 0.089,
+          "unit": "kg CO2e per km",
+          "source": "India GHG Program",
+          "description": "Bus commute per passenger-km"
+        },
+        "metro": {
+          "factor": 0.028,
+          "unit": "kg CO2e per km",
+          "source": "India GHG Program",
+          "description": "Metro/subway per passenger-km"
+        }
+      },
+      "wasteDisposal": {
+        "landfill": {
+          "factor": 0.57,
+          "unit": "kg CO2e per kg",
+          "source": "EPA 2024",
+          "description": "Waste sent to landfill"
+        },
+        "recycled": {
+          "factor": 0.021,
+          "unit": "kg CO2e per kg",
+          "source": "EPA 2024",
+          "description": "Waste recycled"
+        },
+        "composted": {
+          "factor": 0.015,
+          "unit": "kg CO2e per kg",
+          "source": "EPA 2024",
+          "description": "Organic waste composted"
+        }
+      }
+    }
+  },
+  "equivalencies": {
+    "description": "Conversions to help contextualize CO2e emissions",
+    "factors": {
+      "passengerVehiclesPerYear": {
+        "factor": 0.000222,
+        "unit": "vehicles per kg CO2e",
+        "description": "Passenger vehicles driven for one year",
+        "source": "EPA Equivalencies Calculator"
+      },
+      "treesNeeded": {
+        "factor": 0.06,
+        "unit": "trees per kg CO2e",
+        "description": "Tree seedlings grown for 10 years to sequester this amount",
+        "source": "EPA Equivalencies Calculator"
+      },
+      "homesEnergyUse": {
+        "factor": 0.000113,
+        "unit": "homes per kg CO2e",
+        "description": "Homes' energy use for one year",
+        "source": "EPA Equivalencies Calculator"
+      },
+      "smartphoneCharges": {
+        "factor": 121.73,
+        "unit": "charges per kg CO2e",
+        "description": "Smartphone charges",
+        "source": "EPA Equivalencies Calculator"
+      },
+      "milesOnFlight": {
+        "factor": 0.00385,
+        "unit": "miles per kg CO2e",
+        "description": "Miles on a flight",
+        "source": "EPA Equivalencies Calculator"
+      }
+    }
+  },
+  "categories": {
+    "scope1": [
+      {
+        "id": "stationary",
+        "name": "Stationary Combustion",
+        "description": "Fuel burned in boilers, furnaces, generators at your facilities",
+        "icon": "\ud83c\udfed"
+      },
+      {
+        "id": "mobile",
+        "name": "Mobile Combustion",
+        "description": "Company-owned vehicles and equipment",
+        "icon": "\ud83d\ude97"
+      },
+      {
+        "id": "fugitive",
+        "name": "Fugitive Emissions",
+        "description": "Refrigerants, air conditioning leaks, fire suppression",
+        "icon": "\u2744\ufe0f"
+      }
+    ],
+    "scope2": [
+      {
+        "id": "electricity",
+        "name": "Purchased Electricity",
+        "description": "Electricity bought from the grid for your operations",
+        "icon": "\u26a1"
+      },
+      {
+        "id": "heating",
+        "name": "Purchased Heating/Cooling",
+        "description": "Steam, hot water, or chilled water purchased",
+        "icon": "\ud83c\udf21\ufe0f"
+      }
+    ],
+    "scope3": [
+      {
+        "id": "businessTravel",
+        "name": "Business Travel",
+        "description": "Employee travel for business purposes",
+        "icon": "\u2708\ufe0f"
+      },
+      {
+        "id": "commuting",
+        "name": "Employee Commuting",
+        "description": "Employees traveling to and from work",
+        "icon": "\ud83d\ude8c"
+      },
+      {
+        "id": "waste",
+        "name": "Waste Disposal",
+        "description": "Waste generated by your operations",
+        "icon": "\ud83d\uddd1\ufe0f"
+      }
+    ]
+  }
+}

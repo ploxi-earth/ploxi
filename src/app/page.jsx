@@ -110,7 +110,7 @@ export default function MainLandingPage() {
     </div>
 
     {/* Right-side Button */}
-    <div className="flex justify-end">
+    <div className="flex justify-end gap-5">
       <a
         href="https://www.ploxiconsult.com/"  
         target="_blank"
@@ -120,6 +120,16 @@ export default function MainLandingPage() {
                    shadow-md hover:bg-green-700 transition-all"
       >
         Go to Website
+      </a>
+      <a
+        href="/tools/ghg-calculator"  
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center px-5 py-3 rounded-xl 
+                   bg-green-600 text-white font-semibold text-sm sm:text-base 
+                   shadow-md hover:bg-green-700 transition-all"
+      >
+        GHG Calculator 🌱
       </a>
     </div>
   </div>
