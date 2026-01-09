@@ -19,7 +19,7 @@
         "diesel": {
           "factor": 2.68,
           "unit": "kg CO2e per liter",
-          "source": "EPA 2024",
+          "source": "EPA ADEME & GHG Protocol",
           "description": "Diesel fuel combustion"
         },
         "petrol": {
@@ -35,9 +35,9 @@
           "description": "Liquefied Petroleum Gas combustion"
         },
         "coal": {
-          "factor": 2.42,
+          "factor": 2.41,
           "unit": "kg CO2e per kg",
-          "source": "IPCC 2024",
+          "source": "IPCC & Industrial Combustion Standards",
           "description": "Coal combustion"
         }
       },
@@ -45,7 +45,7 @@
         "dieselVehicle": {
           "factor": 2.68,
           "unit": "kg CO2e per liter",
-          "source": "EPA 2024",
+          "source": "ADEME & GHG Protocol",
           "description": "Diesel vehicle fuel combustion"
         },
         "petrolVehicle": {
@@ -79,7 +79,7 @@
     "scope2": {
       "electricity": {
         "indiaGrid": {
-          "factor": 0.82,
+          "factor": 0.727,
           "unit": "kg CO2e per kWh",
           "source": "CEA India 2024",
           "description": "Indian national grid average"

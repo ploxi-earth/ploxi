@@ -33,3 +33,34 @@ input, select, textarea {
 ::placeholder {
   color: #9CA3AF; /* Tailwind's gray-400 */
 }
+
+/* React Quill Custom Styles */
+@import 'react-quill/dist/quill.snow.css';
+
+.ql-editor {
+  min-height: 200px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.ql-editor p {
+  margin-bottom: 1em;
+}
+
+.ql-editor strong {
+  font-weight: 600;
+}
+
+.ql-toolbar.ql-snow {
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.ql-container.ql-snow {
+  border-radius: 0 0 0.5rem 0.5rem;
+  border-color: #d1d5db;
+}
+.ql-editor {
+  color: #111827;
+}
