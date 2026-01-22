@@ -11,9 +11,9 @@
     "scope1": {
       "stationaryCombustion": {
         "naturalGas": {
-          "factor": 0.202,
+          "factor": 0.18296,
           "unit": "kg CO2e per kWh",
-          "source": "EPA 2024",
+          "source": "UK Government GHG Conversion Factors",
           "description": "Natural gas combustion in stationary equipment"
         },
         "diesel": {
@@ -29,13 +29,13 @@
           "description": "Gasoline/Petrol combustion"
         },
         "lpg": {
-          "factor": 1.51,
+          "factor":  0.21450,
           "unit": "kg CO2e per kg",
-          "source": "EPA 2024",
+          "source": "UK Government GHG Conversion Factors",
           "description": "Liquefied Petroleum Gas combustion"
         },
         "coal": {
-          "factor": 2.42,
+          "factor": 2.41,
           "unit": "kg CO2e per kg",
           "source": "IPCC 2024",
           "description": "Coal combustion"

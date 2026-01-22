@@ -1,45 +1,52 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-// DELETE live project
-export async function DELETE(request, { params }) {
+// GET all documents for a vendor
+export async function GET(request, { params }) {
   try {
     const supabase = await createClient();
-    const { projectId } = params;
-    
-    const { error } = await supabase
-      .from('vendor_live_projects')
-      .delete()
-      .eq('id', projectId);
-    
+    const { id } = params;
+
+    const { data, error } = await supabase
+      .from('vendor_documents')
+      .select('*')
+      .eq('vendor_id', id)
+      .order('uploaded_at', { ascending: false });
+
     if (error) throw error;
-    
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Error deleting live project:', error);
-    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
+    console.error('Error fetching documents:', error);
+    return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
   }
 }
 
-// PATCH update live project
-export async function PATCH(request, { params }) {
+// POST create a new document
+export async function POST(request, { params }) {
   try {
     const supabase = await createClient();
-    const { projectId } = params;
+    const { id } = params;
     const body = await request.json();
-    
+
+    const documentData = {
+      vendor_id: id,
+      file_name: body.file_name || body.document_name || 'Untitled Document',
+      file_url: body.file_url || body.document_url,
+      document_type: body.document_type || body.file_type || 'other',
+    };
+
     const { data, error } = await supabase
-      .from('vendor_live_projects')
-      .update(body)
-      .eq('id', projectId)
+      .from('vendor_documents')
+      .insert(documentData)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error updating live project:', error);
-    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
+    console.error('Error creating document:', error);
+    return NextResponse.json({ error: 'Failed to create document' }, { status: 500 });
   }
 }

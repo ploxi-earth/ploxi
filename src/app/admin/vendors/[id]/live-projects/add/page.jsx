@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AddLiveProjectPage() {
@@ -11,12 +11,10 @@ export default function AddLiveProjectPage() {
   const vendorId = params.id;
 
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     project_name: '',
     project_url: '',
-    thumbnail_url: '',
     short_description: '',
     capacity: '',
     location: '',
@@ -26,35 +24,6 @@ export default function AddLiveProjectPage() {
   });
 
   const [errors, setErrors] = useState({});
-
-  // Handle thumbnail upload
-  const handleThumbnailUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-
-    try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
-      formDataUpload.append('folder', 'live-projects');
-
-      const response = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-
-      const data = await response.json();
-      setFormData({ ...formData, thumbnail_url: data.url });
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload thumbnail');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const validate = () => {
     const newErrors = {};
@@ -66,7 +35,7 @@ export default function AddLiveProjectPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       alert('Please fill in required fields');
       return;
@@ -114,37 +83,6 @@ export default function AddLiveProjectPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-6">
-          {/* Thumbnail Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project Thumbnail
-            </label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleThumbnailUpload}
-                className="hidden"
-                id="thumbnail-upload"
-              />
-              <label
-                htmlFor="thumbnail-upload"
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-              >
-                <Upload className="w-4 h-4" />
-                {uploading ? 'Uploading...' : 'Upload Thumbnail'}
-              </label>
-              
-              {formData.thumbnail_url && (
-                <img
-                  src={formData.thumbnail_url}
-                  alt="Thumbnail preview"
-                  className="w-32 h-20 object-cover border rounded-lg"
-                />
-              )}
-            </div>
-          </div>
-
           {/* Project Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -155,9 +93,8 @@ export default function AddLiveProjectPage() {
               value={formData.project_name}
               onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
               placeholder="e.g., Solar Park Phase 2"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.project_name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.project_name ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
           </div>
 
@@ -185,9 +122,8 @@ export default function AddLiveProjectPage() {
               onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
               placeholder="Brief description of the project..."
               rows={3}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.short_description ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.short_description ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
           </div>
 

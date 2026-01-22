@@ -6,11 +6,12 @@ import KeyStatsSection from '@/components/vendor-dashboard/KeyStatsSection';
 import PastProjectsSlider from '@/components/vendor-dashboard/PastProjectsSlider';
 import LiveProjectsGrid from '@/components/vendor-dashboard/LiveProjectsGrid';
 import ResourcesSection from '@/components/vendor-dashboard/ResourcesSection';
+import PublicNavbar from '@/components/PublicNavbar';
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }) {
   const supabase = await createClient();
-  
+
   const { data: vendor } = await supabase
     .from('vendors')
     .select('name, tagline, category')
@@ -68,32 +69,46 @@ export default async function VendorPage({ params }) {
     .order('uploaded_at', { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <VendorHero vendor={vendor} />
+    <>
+      {/* Ploxi Navbar */}
+      <PublicNavbar />
 
-      {/* Key Statistics */}
-      {vendor.key_stats && Object.keys(vendor.key_stats).length > 0 && (
-        <KeyStatsSection stats={vendor.key_stats} />
-      )}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 relative overflow-hidden">
+        {/* Decorative background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
+          <div className="absolute top-60 right-10 w-96 h-96 bg-green-200/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-40 left-1/3 w-80 h-80 bg-purple-200/20 rounded-full blur-3xl"></div>
+        </div>
 
-      {/* About Section */}
-      <AboutSection vendor={vendor} />
+        <div className="relative z-10">
+          {/* Hero Section */}
+          <VendorHero vendor={vendor} />
 
-      {/* Past Projects Slider */}
-      {pastProjects && pastProjects.length > 0 && (
-        <PastProjectsSlider projects={pastProjects} />
-      )}
+          {/* Key Statistics */}
+          {vendor.key_stats && Object.keys(vendor.key_stats).length > 0 && (
+            <KeyStatsSection stats={vendor.key_stats} />
+          )}
 
-      {/* Live Projects Grid */}
-      {liveProjects && liveProjects.length > 0 && (
-        <LiveProjectsGrid projects={liveProjects} />
-      )}
+          {/* About Section */}
+          <AboutSection vendor={vendor} />
 
-      {/* Resources & Documents */}
-      {documents && documents.length > 0 && (
-        <ResourcesSection documents={documents} vendor={vendor} />
-      )}
-    </div>
+          {/* Past Projects Slider */}
+          {pastProjects && pastProjects.length > 0 && (
+            <PastProjectsSlider projects={pastProjects} />
+          )}
+
+          {/* Live Projects Grid */}
+          {liveProjects && liveProjects.length > 0 && (
+            <LiveProjectsGrid projects={liveProjects} />
+          )}
+
+          {/* Resources & Documents */}
+          {documents && documents.length > 0 && (
+            <ResourcesSection documents={documents} vendor={vendor} />
+          )}
+        </div>
+      </div>
+    </>
   );
 }

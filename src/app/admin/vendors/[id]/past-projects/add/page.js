@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AddPastProjectPage() {
@@ -11,50 +11,18 @@ export default function AddPastProjectPage() {
   const vendorId = params.id;
 
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     project_name: '',
     client_name: '',
-    client_logo_url: '',
     capacity: '',
     location: '',
-    completion_year: '',
     project_type: '',
     description: '',
     display_order: 0,
   });
 
   const [errors, setErrors] = useState({});
-
-  // Handle file upload
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-
-    try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
-      formDataUpload.append('folder', 'past-projects');
-
-      const response = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-
-      const data = await response.json();
-      setFormData({ ...formData, client_logo_url: data.url });
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload logo');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const validate = () => {
     const newErrors = {};
@@ -65,7 +33,7 @@ export default function AddPastProjectPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       alert('Please fill in required fields');
       return;
@@ -113,37 +81,6 @@ export default function AddPastProjectPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-6">
-          {/* Client Logo Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Client Logo *
-            </label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="hidden"
-                id="logo-upload"
-              />
-              <label
-                htmlFor="logo-upload"
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-              >
-                <Upload className="w-4 h-4" />
-                {uploading ? 'Uploading...' : 'Upload Logo'}
-              </label>
-              
-              {formData.client_logo_url && (
-                <img
-                  src={formData.client_logo_url}
-                  alt="Logo preview"
-                  className="w-20 h-20 object-contain border rounded-lg"
-                />
-              )}
-            </div>
-          </div>
-
           {/* Project Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -154,9 +91,8 @@ export default function AddPastProjectPage() {
               value={formData.project_name}
               onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
               placeholder="e.g., Shahi Exports, Bidar"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.project_name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.project_name ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {errors.project_name && (
               <p className="mt-1 text-sm text-red-600">{errors.project_name}</p>
@@ -207,7 +143,7 @@ export default function AddPastProjectPage() {
             </div>
 
             {/* Completion Year */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Completion Year
               </label>
@@ -218,7 +154,7 @@ export default function AddPastProjectPage() {
                 placeholder="2024"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </div>
+            </div> */}
 
             {/* Project Type */}
             <div>
@@ -255,7 +191,7 @@ export default function AddPastProjectPage() {
           </div>
 
           {/* Display Order */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Display Order
             </label>
@@ -267,7 +203,7 @@ export default function AddPastProjectPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <p className="mt-1 text-sm text-gray-500">Lower numbers appear first in the slider</p>
-          </div>
+          </div> */}
 
           {/* Submit Button */}
           <div className="flex gap-3 justify-end">

@@ -4,8 +4,8 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, File } from 'lucide-react';
 
-export default function FileUpload({ 
-  onUpload, 
+export default function FileUpload({
+  onUpload,
   accept = 'image/*',
   maxSize = 5242880, // 5MB
   label = 'Upload File',
@@ -15,9 +15,14 @@ export default function FileUpload({
   const [uploadedFile, setUploadedFile] = useState(null);
   const [error, setError] = useState(null);
 
+  // Convert accept string to object format for react-dropzone
+  const acceptConfig = typeof accept === 'string'
+    ? { [accept]: [] }
+    : accept;
+
   const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
     setError(null);
-    
+
     if (rejectedFiles.length > 0) {
       setError('File rejected. Please check file type and size.');
       return;
@@ -41,7 +46,7 @@ export default function FileUpload({
       if (!response.ok) throw new Error('Upload failed');
 
       const data = await response.json();
-      
+
       setUploadedFile({
         name: file.name,
         url: data.url,
@@ -59,7 +64,7 @@ export default function FileUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept,
+    accept: acceptConfig,
     maxSize,
     multiple: false,
   });
@@ -78,18 +83,16 @@ export default function FileUpload({
       {!uploadedFile ? (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-            isDragActive
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive
               ? 'border-blue-500 bg-blue-50'
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+            }`}
         >
           <input {...getInputProps()} />
-          
-          <Upload className={`w-12 h-12 mx-auto mb-4 ${
-            isDragActive ? 'text-blue-500' : 'text-gray-400'
-          }`} />
-          
+
+          <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragActive ? 'text-blue-500' : 'text-gray-400'
+            }`} />
+
           {uploading ? (
             <p className="text-gray-600">Uploading...</p>
           ) : (

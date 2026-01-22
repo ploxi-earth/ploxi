@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 
 export default function AdminVendorsPage() {
@@ -20,9 +21,11 @@ export default function AdminVendorsPage() {
     try {
       const response = await fetch('/api/admin/vendors');
       const data = await response.json();
-      setVendors(data);
+      // Ensure data is an array
+      setVendors(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching vendors:', error);
+      setVendors([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -30,12 +33,12 @@ export default function AdminVendorsPage() {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-    
+
     try {
       const response = await fetch(`/api/admin/vendors/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         alert('Vendor deleted successfully');
         fetchVendors();
@@ -50,7 +53,7 @@ export default function AdminVendorsPage() {
 
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.category.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || vendor.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -64,22 +67,45 @@ export default function AdminVendorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
-              <p className="text-gray-600 mt-1">Manage vendor profiles and information</p>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-4">
+              <Image
+                src="/images/ploxi earth logo.jpeg"
+                alt="Ploxi Earth"
+                width={56}
+                height={56}
+                className="rounded-lg object-contain"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Ploxi Earth Admin</h1>
+                <p className="text-sm text-green-600 font-medium">Sustainability Platform Management</p>
+              </div>
             </div>
             <Link
-              href="/admin/vendors/add"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              href="/"
+              className="px-4 py-2 text-green-600 hover:text-green-700 font-medium transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              Add New Vendor
+              ← Back to Home
             </Link>
+          </div>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Vendor Management</h2>
+                <p className="text-gray-600 mt-1">Manage vendor profiles and information</p>
+              </div>
+              <Link
+                href="/admin/vendors/add"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+              >
+                <Plus className="w-5 h-5" />
+                Add New Vendor
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -155,13 +181,12 @@ export default function AdminVendorsPage() {
                     </td>
                     <td className="py-4 px-6 text-gray-700">{vendor.category}</td>
                     <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        vendor.status === 'published' 
-                          ? 'bg-green-100 text-green-700'
-                          : vendor.status === 'draft'
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${vendor.status === 'published'
+                        ? 'bg-green-100 text-green-700'
+                        : vendor.status === 'draft'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-gray-100 text-gray-700'
-                      }`}>
+                        }`}>
                         {vendor.status}
                       </span>
                     </td>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import FileUpload from '@/components/admin/FileUpload';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { generateSlug } from '@/lib/utils/slugify';
@@ -12,7 +13,7 @@ export default function AddVendorPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -27,6 +28,7 @@ export default function AddVendorPage() {
     about_company: '',
     vision: '',
     mission: '',
+    address: '',
     key_stats: {},
     strengths: [],
     services: [],
@@ -35,7 +37,7 @@ export default function AddVendorPage() {
   });
 
   const [errors, setErrors] = useState({});
-  
+
   // Dynamic fields
   const [strengthInput, setStrengthInput] = useState('');
   const [serviceInput, setServiceInput] = useState('');
@@ -134,11 +136,11 @@ export default function AddVendorPage() {
   // Validate form
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Vendor name is required';
     if (!formData.slug.trim()) newErrors.slug = 'Slug is required';
     if (!formData.category.trim()) newErrors.category = 'Category is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -179,43 +181,61 @@ export default function AddVendorPage() {
   const tabs = [
     { id: 'basic', label: 'Basic Info' },
     { id: 'details', label: 'Company Details' },
+    { id: 'address', label: 'Address' },
     { id: 'content', label: 'Content' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <Link
-                href="/admin/vendors"
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
+              <Image
+                src="/images/ploxi earth logo.jpeg"
+                alt="Ploxi Earth"
+                width={56}
+                height={56}
+                className="rounded-lg object-contain"
+              />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Add New Vendor</h1>
-                <p className="text-gray-600 text-sm mt-1">Create a new vendor profile</p>
+                <h1 className="text-2xl font-bold text-gray-900">Ploxi Earth Admin</h1>
+                <p className="text-sm text-green-600 font-medium">Sustainability Platform Management</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleSubmit('draft')}
-                disabled={saving}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Save as Draft
-              </button>
-              <button
-                onClick={() => handleSubmit('published')}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {saving ? 'Publishing...' : 'Publish'}
-              </button>
+            <Link
+              href="/admin/vendors"
+              className="px-4 py-2 text-green-600 hover:text-green-700 font-medium transition-colors"
+            >
+              ← Back to Vendors
+            </Link>
+          </div>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Add New Vendor</h2>
+                  <p className="text-gray-600 text-sm mt-1">Create a new vendor profile</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleSubmit('draft')}
+                  disabled={saving}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Save as Draft
+                </button>
+                <button
+                  onClick={() => handleSubmit('published')}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  {saving ? 'Publishing...' : 'Publish'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -228,11 +248,10 @@ export default function AddVendorPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-6 py-4 font-medium transition-colors ${activeTab === tab.id
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -261,9 +280,8 @@ export default function AddVendorPage() {
                     value={formData.name}
                     onChange={handleNameChange}
                     placeholder="e.g., Dexler Energy"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
@@ -278,9 +296,8 @@ export default function AddVendorPage() {
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     placeholder="dexler-energy"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.slug ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.slug ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Will be accessible at: /vendors/{formData.slug || 'your-vendor-name'}
@@ -311,9 +328,8 @@ export default function AddVendorPage() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     placeholder="e.g., Solar Energy, EV Charging, ESG Software"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.category ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.category ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                 </div>
               </div>
@@ -570,6 +586,27 @@ export default function AddVendorPage() {
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Address Tab */}
+            {activeTab === 'address' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Address
+                  </label>
+                  <textarea
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Enter complete address (street, city, state, country, postal code)"
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Enter the complete physical address of the company
+                  </p>
                 </div>
               </div>
             )}

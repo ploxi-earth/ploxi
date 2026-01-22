@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Plus, X, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import FileUpload from '@/components/admin/FileUpload';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { generateSlug } from '@/lib/utils/slugify';
@@ -16,7 +17,7 @@ export default function EditVendorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -31,6 +32,7 @@ export default function EditVendorPage() {
     about_company: '',
     vision: '',
     mission: '',
+    address: '',
     key_stats: {},
     strengths: [],
     services: [],
@@ -41,15 +43,27 @@ export default function EditVendorPage() {
   const [pastProjects, setPastProjects] = useState([]);
   const [liveProjects, setLiveProjects] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [milestones, setMilestones] = useState([]);
+  const [clients, setClients] = useState([]);
 
   const [errors, setErrors] = useState({});
-  
+
   // Dynamic fields
   const [strengthInput, setStrengthInput] = useState('');
   const [serviceInput, setServiceInput] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [statKey, setStatKey] = useState('');
   const [statValue, setStatValue] = useState('');
+
+  // Milestone fields
+  const [milestoneTitle, setMilestoneTitle] = useState('');
+  const [milestoneDescription, setMilestoneDescription] = useState('');
+  const [milestoneDate, setMilestoneDate] = useState('');
+
+  // Client fields
+  const [clientName, setClientName] = useState('');
+  const [clientLogoUrl, setClientLogoUrl] = useState('');
+  const [clientDescription, setClientDescription] = useState('');
 
   // Load vendor data
   useEffect(() => {
@@ -60,7 +74,7 @@ export default function EditVendorPage() {
     try {
       const response = await fetch(`/api/admin/vendors/${vendorId}`);
       const data = await response.json();
-      
+
       setFormData({
         name: data.name || '',
         slug: data.slug || '',
@@ -75,6 +89,7 @@ export default function EditVendorPage() {
         about_company: data.about_company || '',
         vision: data.vision || '',
         mission: data.mission || '',
+        address: data.address || '',
         key_stats: data.key_stats || {},
         strengths: data.strengths || [],
         services: data.services || [],
@@ -86,6 +101,8 @@ export default function EditVendorPage() {
       await fetchPastProjects();
       await fetchLiveProjects();
       await fetchDocuments();
+      await fetchMilestones();
+      await fetchClients();
 
     } catch (error) {
       console.error('Error fetching vendor:', error);
@@ -122,6 +139,26 @@ export default function EditVendorPage() {
       setDocuments(data);
     } catch (error) {
       console.error('Error fetching documents:', error);
+    }
+  };
+
+  const fetchMilestones = async () => {
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/milestones`);
+      const data = await response.json();
+      setMilestones(data);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/clients`);
+      const data = await response.json();
+      setClients(data);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
     }
   };
 
@@ -213,11 +250,11 @@ export default function EditVendorPage() {
   // Validate form
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Vendor name is required';
     if (!formData.slug.trim()) newErrors.slug = 'Slug is required';
     if (!formData.category.trim()) newErrors.category = 'Category is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -307,9 +344,105 @@ export default function EditVendorPage() {
     }
   };
 
+  // Add milestone
+  const addMilestone = async () => {
+    if (!milestoneTitle.trim()) {
+      alert('Please enter a milestone title');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/milestones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: milestoneTitle,
+          description: milestoneDescription,
+          milestone_date: milestoneDate || null,
+          display_order: milestones.length,
+        }),
+      });
+
+      if (response.ok) {
+        setMilestoneTitle('');
+        setMilestoneDescription('');
+        setMilestoneDate('');
+        fetchMilestones();
+      }
+    } catch (error) {
+      console.error('Error adding milestone:', error);
+      alert('Failed to add milestone');
+    }
+  };
+
+  // Delete milestone
+  const deleteMilestone = async (milestoneId) => {
+    if (!confirm('Delete this milestone?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/milestones/${milestoneId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchMilestones();
+      }
+    } catch (error) {
+      console.error('Error deleting milestone:', error);
+    }
+  };
+
+  // Add client
+  const addClient = async () => {
+    if (!clientName.trim()) {
+      alert('Please enter a client name');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/clients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name: clientName,
+          client_logo_url: clientLogoUrl,
+          description: clientDescription,
+          display_order: clients.length,
+        }),
+      });
+
+      if (response.ok) {
+        setClientName('');
+        setClientLogoUrl('');
+        setClientDescription('');
+        fetchClients();
+      }
+    } catch (error) {
+      console.error('Error adding client:', error);
+      alert('Failed to add client');
+    }
+  };
+
+  // Delete client
+  const deleteClient = async (clientId) => {
+    if (!confirm('Delete this client?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/vendors/${vendorId}/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchClients();
+      }
+    } catch (error) {
+      console.error('Error deleting client:', error);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-gray-600">Loading vendor data...</div>
       </div>
     );
@@ -318,46 +451,66 @@ export default function EditVendorPage() {
   const tabs = [
     { id: 'basic', label: 'Basic Info' },
     { id: 'details', label: 'Company Details' },
+    { id: 'address', label: 'Address' },
     { id: 'content', label: 'Content' },
-    { id: 'projects', label: 'Past Projects' },
-    { id: 'live', label: 'Live Projects' },
+    { id: 'milestones', label: 'Milestones' },
+    { id: 'clients', label: 'Clients' },
+    { id: 'delivered', label: 'Delivered Projects' },
+    { id: 'current', label: 'Current Projects' },
     { id: 'documents', label: 'Documents' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <Link
-                href="/admin/vendors"
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
+              <Image
+                src="/images/ploxi earth logo.jpeg"
+                alt="Ploxi Earth"
+                width={56}
+                height={56}
+                className="rounded-lg object-contain"
+              />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Vendor</h1>
-                <p className="text-gray-600 text-sm mt-1">{formData.name}</p>
+                <h1 className="text-2xl font-bold text-gray-900">Ploxi Earth Admin</h1>
+                <p className="text-sm text-green-600 font-medium">Sustainability Platform Management</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleSubmit('draft')}
-                disabled={saving}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Save as Draft
-              </button>
-              <button
-                onClick={() => handleSubmit('published')}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {saving ? 'Saving...' : 'Save & Publish'}
-              </button>
+            <Link
+              href="/admin/vendors"
+              className="px-4 py-2 text-green-600 hover:text-green-700 font-medium transition-colors"
+            >
+              ← Back to Vendors
+            </Link>
+          </div>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Edit Vendor</h2>
+                  <p className="text-gray-600 text-sm mt-1">{formData.name}</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleSubmit('draft')}
+                  disabled={saving}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Save as Draft
+                </button>
+                <button
+                  onClick={() => handleSubmit('published')}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  {saving ? 'Saving...' : 'Save & Publish'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -370,11 +523,10 @@ export default function EditVendorPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -406,9 +558,8 @@ export default function EditVendorPage() {
                     type="text"
                     value={formData.name}
                     onChange={handleNameChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                 </div>
 
@@ -733,8 +884,211 @@ export default function EditVendorPage() {
               </div>
             )}
 
-            {/* Past Projects Tab */}
-            {activeTab === 'projects' && (
+            {/* Address Tab */}
+            {activeTab === 'address' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Address
+                  </label>
+                  <textarea
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Enter complete address (street, city, state, country, postal code)"
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Enter the complete physical address of the company
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Milestones Tab */}
+            {activeTab === 'milestones' && (
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Milestone</h3>
+                  <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={milestoneTitle}
+                        onChange={(e) => setMilestoneTitle(e.target.value)}
+                        placeholder="e.g., Reached 100 MW Capacity"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        value={milestoneDescription}
+                        onChange={(e) => setMilestoneDescription(e.target.value)}
+                        placeholder="Brief description of the milestone"
+                        rows={2}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={milestoneDate}
+                        onChange={(e) => setMilestoneDate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <button
+                      onClick={addMilestone}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Milestone
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {milestones.length === 0 ? (
+                    <div className="col-span-full text-center py-12 text-gray-500">
+                      No milestones added yet
+                    </div>
+                  ) : (
+                    milestones.map((milestone) => (
+                      <div key={milestone.id} className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-blue-300 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-semibold text-gray-900 text-lg">{milestone.title}</h4>
+                          <button
+                            onClick={() => deleteMilestone(milestone.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                        {milestone.milestone_date && (
+                          <p className="text-sm text-blue-600 font-medium mb-2">
+                            {new Date(milestone.milestone_date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        )}
+                        {milestone.description && (
+                          <p className="text-sm text-gray-600">{milestone.description}</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Clients Tab */}
+            {activeTab === 'clients' && (
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Client</h3>
+                  <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Client Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        placeholder="e.g., Tata Power"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Client Logo
+                      </label>
+                      <FileUpload
+                        label="Upload Client Logo"
+                        accept="image/*"
+                        onUpload={(url) => setClientLogoUrl(url)}
+                      />
+                      {clientLogoUrl && (
+                        <div className="mt-2">
+                          <img src={clientLogoUrl} alt="Preview" className="w-24 h-24 object-contain border rounded-lg" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Description (Optional)
+                      </label>
+                      <textarea
+                        value={clientDescription}
+                        onChange={(e) => setClientDescription(e.target.value)}
+                        placeholder="Brief description or project details"
+                        rows={2}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <button
+                      onClick={addClient}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Client
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {clients.length === 0 ? (
+                    <div className="col-span-full text-center py-12 text-gray-500">
+                      No clients added yet
+                    </div>
+                  ) : (
+                    clients.map((client) => (
+                      <div key={client.id} className="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors">
+                        <div className="flex justify-end mb-2">
+                          <button
+                            onClick={() => deleteClient(client.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {client.client_logo_url && (
+                          <div className="w-full h-20 flex items-center justify-center mb-3 bg-gray-50 rounded-lg">
+                            <img
+                              src={client.client_logo_url}
+                              alt={client.client_name}
+                              className="max-w-full max-h-full object-contain p-2"
+                            />
+                          </div>
+                        )}
+                        <h4 className="font-semibold text-gray-900 text-center text-sm mb-1">
+                          {client.client_name}
+                        </h4>
+                        {client.description && (
+                          <p className="text-xs text-gray-600 text-center line-clamp-2">
+                            {client.description}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Delivered Projects Tab (formerly Past Projects) */}
+            {activeTab === 'delivered' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Past Projects</h3>
@@ -750,27 +1104,35 @@ export default function EditVendorPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {pastProjects.map((project) => (
                     <div key={project.id} className="border border-gray-200 rounded-xl p-4">
-                      {project.client_logo_url && (
-                        <img
-                          src={project.client_logo_url}
-                          alt={project.project_name}
-                          className="w-full h-32 object-contain mb-3 border rounded-lg"
-                        />
-                      )}
-                      <h4 className="font-semibold text-gray-900 mb-2">{project.project_name}</h4>
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="font-semibold text-gray-900">{project.project_name}</h4>
+                        <button
+                          onClick={() => deletePastProject(project.id)}
+                          className="text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                       {project.capacity && (
-                        <p className="text-sm text-gray-600 mb-1">Capacity: {project.capacity}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          <span className="font-medium">Capacity:</span> {project.capacity}
+                        </p>
                       )}
                       {project.location && (
-                        <p className="text-sm text-gray-600 mb-3">Location: {project.location}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          <span className="font-medium">Location:</span> {project.location}
+                        </p>
                       )}
-                      <button
-                        onClick={() => deletePastProject(project.id)}
-                        className="text-red-600 hover:text-red-700 text-sm flex items-center gap-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </button>
+                      {project.completion_year && (
+                        <p className="text-sm text-gray-600 mb-1">
+                          <span className="font-medium">Completion Year:</span> {project.completion_year}
+                        </p>
+                      )}
+                      {project.display_order !== undefined && (
+                        <p className="text-sm text-gray-500 mb-1">
+                          <span className="font-medium">Display Order:</span> {project.display_order}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -783,8 +1145,8 @@ export default function EditVendorPage() {
               </div>
             )}
 
-            {/* Live Projects Tab */}
-            {activeTab === 'live' && (
+            {/* Current Projects Tab (formerly Live Projects) */}
+            {activeTab === 'current' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Live Projects</h3>
