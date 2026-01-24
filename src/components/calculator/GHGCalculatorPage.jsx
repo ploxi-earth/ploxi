@@ -4,6 +4,7 @@
 // Main calculator component – stacked layout (inputs → results)
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import ScopeSelector from './ScopeSelector';
 import EmissionInputForm from './EmissionInputForm';
 import ResultsDisplay from './ResultsDisplay';
@@ -152,16 +153,32 @@ export default function GHGCalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            GHG Emissions Calculator
-          </h1>
-          <p className="text-gray-600">
-            Calculate your organization's greenhouse gas emissions across Scope 1, 2, and 3
-          </p>
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <Image
+              src="/images/ploxi earth logo.jpeg"
+              alt="Ploxi Earth"
+              width={64}
+              height={64}
+              className="rounded-lg object-contain"
+            />
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Ploxi Earth - Comprehensive Sustainability Tools
+              </h1>
+              <p className="text-sm text-green-600 font-medium mt-1">
+                GHG Emissions Calculator
+              </p>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-gray-600">
+              Calculate your organization's greenhouse gas emissions across Scope 1, 2, and 3
+            </p>
+          </div>
         </div>
 
         {/* Scope Selector */}
