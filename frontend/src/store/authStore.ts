@@ -1,0 +1,45 @@
+'use client';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'platform_admin' | 'vendor' | 'consultant' | 'manager';
+}
+
+interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  setAuth: (user: User, accessToken: string) => void;
+  clearAuth: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+      setAuth: (user, accessToken) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', accessToken);
+        }
+        set({ user, accessToken, isAuthenticated: true });
+      },
+      clearAuth: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
+        set({ user: null, accessToken: null, isAuthenticated: false });
+      },
+    }),
+    {
+      name: 'ploxi-auth',
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+    }
+  )
+);
