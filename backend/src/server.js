@@ -31,8 +31,25 @@ connectDB();
 
 // ── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet());
+
+// ── CORS Configuration ────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:3000',           // Local development
+  'http://localhost:3001',           // Local fallback
+  'https://ploxi-sable.vercel.app',  // Production frontend
+  'https://ploxi-earth.vercel.app',  // Alternative production URL
+  process.env.CLIENT_URL,            // Environment variable (if set)
+].filter(Boolean); // Remove undefined/null values
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
