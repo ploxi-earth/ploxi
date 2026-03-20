@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
-const upload = require('../middleware/upload.middleware');
 
 // All admin routes require authentication and platform_admin role
 router.use(protect, restrictTo('platform_admin'));
@@ -17,9 +16,10 @@ router.post('/vendors', adminController.addVendor);
 router.patch('/vendors/:id/approve', adminController.approveVendor);
 router.patch('/vendors/:id/reject', adminController.rejectVendor);
 router.patch('/vendors/:id/schedule-meeting', adminController.scheduleMeeting);
-router.patch('/vendors/:id/send-agreement', upload.single('agreement'), adminController.sendAgreement);
+router.patch('/vendors/:id/send-agreement', adminController.sendAgreement);
 router.patch('/vendors/:id/mark-signed', adminController.markAgreementSigned);
 router.patch('/vendors/:id/complete-onboarding', adminController.completeOnboarding);
+router.patch('/vendors/:id/portal-access', adminController.setVendorPortalAccess);
 
 // ── Registrations ─────────────────────────────────────────────────────────
 router.get('/registrations/corporate', adminController.getCorporateRegistrations);

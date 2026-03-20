@@ -3,92 +3,245 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { vendorService } from '@/services/vendor.service';
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  EditIcon,
+  CalendarIcon,
+  FileIcon,
+  BriefcaseIcon,
+  RocketIcon,
+  ChevronRightIcon,
+} from '@/components/vendor/VendorIcons';
 
-const STAGES = ['invited','profile_submitted','company_details_submitted','meeting_scheduled','agreement_sent','agreement_signed','onboarded'];
+const STAGES = [
+  'registration',
+  'admin_review',
+  'company_details_submitted',
+  'intro_meeting_scheduled',
+  'agreement_sent',
+  'agreement_signed',
+  'onboarded',
+];
+
 const STAGE_LABELS: Record<string, string> = {
-  invited: 'Invited', profile_submitted: 'Profile Submitted', company_details_submitted: 'Details Submitted',
-  meeting_scheduled: 'Meeting Scheduled', agreement_sent: 'Agreement Sent',
-  agreement_signed: 'Agreement Signed', onboarded: 'Onboarded',
+  registration: 'Registration Submitted',
+  admin_review: 'Admin Review',
+  company_details_submitted: 'Company Details Submitted',
+  intro_meeting_scheduled: 'Intro Meeting Scheduled',
+  agreement_sent: 'Agreement Sent',
+  agreement_signed: 'Agreement Signed',
+  onboarded: 'Vendor Onboarded',
 };
 
-interface OnboardingStatus { status: string; stage: string; profileCompletion: number }
+interface OnboardingData {
+  status: string;
+  onboardingStage: string;
+  profileCompletion: number;
+  meetingDate?: string;
+  meetingTime?: string;
+  meetingLink?: string;
+  agreementStatus?: string;
+  agreementSentAt?: string;
+}
 
 export default function VendorDashboard() {
   const { user } = useAuthStore();
-  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+  const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    vendorService.getOnboardingStatus().then((r: { data: { data: OnboardingStatus } }) => setOnboarding(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+    vendorService
+      .getOnboardingStatus()
+      .then((r: { data: { data: OnboardingData } }) => setData(r.data.data))
+      .catch(() => { })
+      .finally(() => setLoading(false));
   }, []);
 
-  const stageIndex = onboarding ? STAGES.indexOf(onboarding.stage) : -1;
+  const stageIndex = data ? STAGES.indexOf(data.onboardingStage) : -1;
+
+  // Determine pending actions
+  const pendingActions: Array<{ label: string; href: string; icon: React.ReactNode }> = [];
+  if (data) {
+    if (data.profileCompletion < 100) {
+      pendingActions.push({ label: 'Complete your company profile', href: '/vendor/profile', icon: <EditIcon className="w-5 h-5" /> });
+    }
+    if (data.meetingDate) {
+      pendingActions.push({ label: `Meeting scheduled: ${data.meetingDate} at ${data.meetingTime}`, href: data.meetingLink || '/vendor/onboarding', icon: <CalendarIcon className="w-5 h-5" /> });
+    }
+    if (data.agreementStatus === 'sent' && data.onboardingStage !== 'agreement_signed' && data.onboardingStage !== 'onboarded') {
+      pendingActions.push({ label: 'Agreement sent – Pending your signature', href: '/vendor/onboarding', icon: <FileIcon className="w-5 h-5" /> });
+    }
+  }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name || 'Vendor'} 👋</h1>
-        <p className="text-gray-500 mt-1">Track your onboarding progress and manage your profile.</p>
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-slate-900">Welcome, {user?.name || 'Vendor'}</h1>
+        <p className="text-slate-600 mt-2 text-lg">Track your onboarding progress and complete your profile to get started.</p>
       </div>
 
+      {/* Status Cards */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          {[1,2,3].map((i) => <div key={i} className="bg-white rounded-xl p-6 animate-pulse h-24 border border-gray-100" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 animate-pulse h-32 border border-slate-200 shadow-sm" />
+          ))}
         </div>
-      ) : onboarding && (
+      ) : data && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <p className="text-sm text-gray-500">Account Status</p>
-              <p className={`text-lg font-bold mt-1 capitalize ${onboarding.status === 'onboarded' ? 'text-primary-600' : onboarding.status === 'approved' ? 'text-green-600' : 'text-yellow-600'}`}>{onboarding.status}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            {/* Account Status */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200 p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-600 mb-1">Account Status</p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      data.status === 'onboarded'
+                        ? 'text-green-600'
+                        : data.status === 'approved' || data.status === 'onboarding'
+                        ? 'text-blue-700'
+                        : 'text-amber-600'
+                    }`}
+                  >
+                    {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  {data.status === 'onboarded' ? (
+                    <CheckCircleIcon className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <ClockIcon className="w-6 h-6 text-blue-600" />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <p className="text-sm text-gray-500">Current Stage</p>
-              <p className="text-lg font-bold text-gray-900 mt-1">{STAGE_LABELS[onboarding.stage] || onboarding.stage}</p>
+
+            {/* Current Stage */}
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-emerald-600 mb-1">Current Stage</p>
+                  <p className="text-2xl font-bold text-emerald-700">{STAGE_LABELS[data.onboardingStage]?.split(' ')[0] || 'Stage'}</p>
+                  <p className="text-xs text-emerald-600 mt-1">{STAGE_LABELS[data.onboardingStage]}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-xl">
+                  {stageIndex + 1}
+                </div>
+              </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <p className="text-sm text-gray-500 mb-2">Profile Completion</p>
-              <p className="text-lg font-bold text-gray-900">{onboarding.profileCompletion}%</p>
-              <div className="h-2 bg-gray-100 rounded-full mt-2">
-                <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${onboarding.profileCompletion}%` }} />
+
+            {/* Profile Completion */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-purple-600 mb-2">Profile Completion</p>
+                  <p className="text-2xl font-bold text-purple-700">{data.profileCompletion}%</p>
+                  <div className="h-2 bg-white rounded-full mt-3 border border-purple-200">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        data.profileCompletion === 100 ? 'bg-green-500' : 'bg-gradient-to-r from-purple-500 to-purple-600'
+                      }`}
+                      style={{ width: `${data.profileCompletion}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Onboarding progress */}
-          <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
-            <h2 className="font-semibold text-gray-900 mb-5">Onboarding Progress</h2>
-            <div className="flex items-start gap-0">
+          {/* Onboarding Progress Stepper */}
+          <div className="bg-white rounded-xl border border-slate-200 p-8 mb-10 shadow-sm">
+            <h2 className="font-bold text-slate-900 mb-8 text-lg">Onboarding Progress</h2>
+            <div className="flex items-center gap-0">
               {STAGES.map((s, i) => {
                 const done = i < stageIndex;
                 const cur = i === stageIndex;
                 return (
                   <div key={s} className="flex-1 relative">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold z-10 relative ${done ? 'bg-primary-500 text-white' : cur ? 'bg-white border-2 border-primary-500 text-primary-600' : 'bg-gray-100 text-gray-400'}`}>
-                        {done ? '✓' : i + 1}
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold z-10 relative transition-all ${
+                          done
+                            ? 'bg-green-500 text-white shadow-md'
+                            : cur
+                            ? 'bg-white border-2 border-emerald-500 text-emerald-700 shadow-md'
+                            : 'bg-slate-100 text-slate-400 border border-slate-300'
+                        }`}
+                      >
+                        {done ? <CheckCircleIcon className="w-5 h-5" /> : cur ? '◉' : i + 1}
                       </div>
-                      <p className={`text-xs mt-2 text-center leading-tight ${cur ? 'text-primary-600 font-medium' : done ? 'text-gray-700' : 'text-gray-400'}`}>{STAGE_LABELS[s]}</p>
+                      <p
+                        className={`text-xs mt-3 text-center leading-tight font-medium transition-colors ${
+                          cur
+                            ? 'text-emerald-700'
+                            : done
+                            ? 'text-slate-700'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {STAGE_LABELS[s]}
+                      </p>
                     </div>
                     {i < STAGES.length - 1 && (
-                      <div className={`absolute top-4 left-1/2 w-full h-0.5 ${i < stageIndex ? 'bg-primary-400' : 'bg-gray-200'}`} style={{ zIndex: 0 }} />
+                      <div
+                        className={`absolute top-5 left-1/2 w-full h-1 transition-colors ${
+                          i < stageIndex ? 'bg-green-500' : 'bg-slate-300'
+                        }`}
+                        style={{ zIndex: 0 }}
+                      />
                     )}
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {/* Pending actions */}
+          {pendingActions.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 mb-10 shadow-sm">
+              <h2 className="font-bold text-slate-900 mb-6">Pending Actions</h2>
+              <div className="space-y-3">
+                {pendingActions.map((a) => (
+                  <Link
+                    key={a.label}
+                    href={a.href}
+                    className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300/50 rounded-xl hover:from-amber-100 hover:to-orange-100 hover:shadow-md transition-all group"
+                  >
+                    <div className="flex-shrink-0 text-amber-600">{a.icon}</div>
+                    <span className="text-sm font-medium text-amber-900 flex-1">{a.label}</span>
+                    <ChevronRightIcon className="w-5 h-5 text-amber-600 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link href="/vendor/profile" className="bg-white rounded-xl border border-gray-100 p-5 hover:border-primary-200 hover:shadow-sm transition-all">
-          <p className="font-semibold text-gray-900">🏢 Update Profile</p>
-          <p className="text-sm text-gray-500 mt-1">Add company details to advance your onboarding</p>
+      {/* Quick Links */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Link href="/vendor/profile" className="bg-white rounded-xl border border-slate-200 p-6 hover:border-emerald-300 hover:shadow-md transition-all group">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <BriefcaseIcon className="w-5 h-5 text-emerald-600" />
+            </div>
+            <ChevronRightIcon className="w-5 h-5 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+          </div>
+          <p className="font-semibold text-slate-900">Update Profile</p>
+          <p className="text-sm text-slate-600 mt-1">Add company details to advance your onboarding</p>
         </Link>
-        <Link href="/vendor/onboarding" className="bg-white rounded-xl border border-gray-100 p-5 hover:border-primary-200 hover:shadow-sm transition-all">
-          <p className="font-semibold text-gray-900">🚀 View Onboarding Steps</p>
-          <p className="text-sm text-gray-500 mt-1">See what&apos;s next in your onboarding journey</p>
+        <Link href="/vendor/onboarding" className="bg-white rounded-xl border border-slate-200 p-6 hover:border-emerald-300 hover:shadow-md transition-all group">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <RocketIcon className="w-5 h-5 text-emerald-600" />
+            </div>
+            <ChevronRightIcon className="w-5 h-5 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+          </div>
+          <p className="font-semibold text-slate-900">View Onboarding Steps</p>
+          <p className="text-sm text-slate-600 mt-1">See what&apos;s next in your onboarding journey</p>
         </Link>
       </div>
     </div>

@@ -8,8 +8,10 @@ const validate = require('../middleware/validate');
 router.post(
   '/register',
   [
-    body('name').notEmpty().withMessage('Name is required'),
+    body('companyName').notEmpty().withMessage('Company name is required'),
+    body('contactPerson').notEmpty().withMessage('Contact person name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
+    body('phone').notEmpty().withMessage('Phone number is required'),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   ],
   validate,

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
+const Vendor = require('../models/Vendor.model');
 const AppError = require('../utils/AppError');
+const { assertVendorPortalAccess } = require('../utils/vendorAccess');
 
 /**
  * Verify JWT and attach user to req.user
@@ -29,6 +31,11 @@ const protect = async (req, res, next) => {
 
   if (!user.isActive) {
     return next(new AppError('Your account has been deactivated.', 403));
+  }
+
+  if (user.role === 'vendor') {
+    const vendor = await Vendor.findOne({ user: user._id }).select('portalAccessStatus');
+    assertVendorPortalAccess(vendor);
   }
 
   req.user = user;

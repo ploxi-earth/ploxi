@@ -1,21 +1,69 @@
 const crypto = require('crypto');
 const User = require('../models/User.model');
+const Vendor = require('../models/Vendor.model');
 const AppError = require('../utils/AppError');
-const { sendTokenResponse, signAccessToken } = require('../utils/tokenUtils');
+const { sendTokenResponse } = require('../utils/tokenUtils');
 const { sendTemplatedEmail } = require('../utils/emailService');
+const { assertVendorCanLogin } = require('../utils/vendorAccess');
 
-// ── Register (vendor self-registration entry point) ────────────────────────
+// ── Register (vendor self-registration) ────────────────────────────────────
 exports.register = async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  const { companyName, contactPerson, email, phone, password } = req.body;
 
-  // Only vendor self-registration allowed via this endpoint
-  const allowedRoles = ['vendor'];
-  if (role && !allowedRoles.includes(role)) {
-    return next(new AppError('Invalid role for self-registration.', 400));
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return next(new AppError('An account with this email already exists.', 400));
   }
 
-  const user = await User.create({ name, email, password, role: role || 'vendor' });
-  sendTokenResponse(user, 201, res);
+  // Create user with vendor role (inactive until admin approves)
+  const user = await User.create({
+    name: contactPerson,
+    email,
+    password,
+    role: 'vendor',
+    isActive: false, // Cannot log in until approved
+  });
+
+  // Create vendor record
+  const vendor = await Vendor.create({
+    user: user._id,
+    companyName,
+    contactPerson,
+    email,
+    phone,
+    status: 'pending',
+    onboardingStage: 'registration',
+    onboardingHistory: [
+      {
+        stage: 'registration',
+        note: 'Vendor self-registered',
+      },
+    ],
+  });
+
+  // Send registration confirmation email to vendor
+  try {
+    await sendTemplatedEmail('vendorRegistration', email, companyName);
+  } catch (err) {
+    // Don't fail registration if email fails
+    console.error('Failed to send registration email:', err.message);
+  }
+
+  // Notify admin of new vendor application
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      await sendTemplatedEmail('adminNewVendor', adminEmail, companyName, contactPerson, email);
+    }
+  } catch (err) {
+    console.error('Failed to send admin notification:', err.message);
+  }
+
+  res.status(201).json({
+    success: true,
+    message: 'Registration submitted successfully! Your application is under review. You will be notified once approved.',
+  });
 };
 
 // ── Login ──────────────────────────────────────────────────────────────────
@@ -25,6 +73,12 @@ exports.login = async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
   if (!user || !(await user.comparePassword(password))) {
     return next(new AppError('Invalid email or password.', 401));
+  }
+
+  // For vendor users, check vendor status before allowing login
+  if (user.role === 'vendor') {
+    const vendor = await Vendor.findOne({ user: user._id });
+    assertVendorCanLogin(vendor);
   }
 
   if (!user.isActive) {

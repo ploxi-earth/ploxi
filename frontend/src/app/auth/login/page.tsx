@@ -1,18 +1,27 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { authService } from '@/services/auth.service';
+import { VENDOR_PORTAL_PAUSED_MESSAGE, VENDOR_PORTAL_PAUSED_REASON } from '@/lib/vendorAccess';
 import { useAuthStore } from '@/store/authStore';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const redirectedReason = searchParams.get('reason');
+
+  useEffect(() => {
+    if (redirectedReason === VENDOR_PORTAL_PAUSED_REASON) {
+      setError(VENDOR_PORTAL_PAUSED_MESSAGE);
+    }
+  }, [redirectedReason]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,28 +34,55 @@ export default function LoginPage() {
       else if (user.role === 'vendor') router.push('/vendor');
       else router.push('/consultant');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg || 'Login failed. Please check your credentials.');
+      const errData = (err as { response?: { data?: { message?: string }; status?: number } })?.response;
+      const msg = errData?.data?.message;
+      const status = errData?.status;
+
+      if (status === 403) {
+        // Vendor pending/rejected — show specific message
+        setError(msg || 'Your account is not active. Please contact support.');
+      } else {
+        setError(msg || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const isPausedError = error === VENDOR_PORTAL_PAUSED_MESSAGE;
+  const isWarning = isPausedError || error.includes('under review') || error.includes('rejected');
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/" className="flex justify-center mb-6">
           <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={120} height={48} className="h-12 w-auto object-contain" />
         </Link>
         <h2 className="text-center text-2xl font-bold text-gray-900">Sign in to your account</h2>
         <p className="mt-2 text-center text-sm text-gray-500">
-          Authorised personnel only
+          Vendor &amp; Admin Portal
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm rounded-2xl sm:px-10 border border-gray-100">
-          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
+          {error && (
+            <div className={`mb-4 p-3 rounded-lg text-sm flex items-start gap-2 ${isWarning
+                ? 'bg-amber-50 border border-amber-200 text-amber-800'
+                : 'bg-red-50 border border-red-200 text-red-700'
+              }`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+                {error.includes('under review') ? (
+                  <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>
+                ) : isPausedError ? (
+                  <><circle cx="12" cy="12" r="10" /><path d="M10 15V9" /><path d="M14 15V9" /></>
+                ) : (
+                  <><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></>
+                )}
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label">Email address</label>
@@ -60,11 +96,43 @@ export default function LoginPage() {
               <input className="input-field" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
             </div>
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </form>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              New vendor?{' '}
+              <Link href="/vendor/register" className="font-medium text-primary-600 hover:text-primary-500">
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 flex items-center gap-3 text-sm text-gray-500">
+            <span className="w-5 h-5 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
+            Loading sign-in page...
+          </div>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

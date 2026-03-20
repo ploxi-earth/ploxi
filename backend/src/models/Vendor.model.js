@@ -22,13 +22,10 @@ const vendorSchema = new mongoose.Schema(
 
     // ── Company Profile ───────────────────────────────────────────────────────
     website: { type: String, trim: true },
-    solutionType: { type: String, trim: true },
-    targetIndustries: [{ type: String }],
-    geographicRegions: [{ type: String }],
     companyDescription: { type: String, maxlength: 1000 },
-    servicesOffered: [{ type: String }],
-    sector: { type: String },
-    location: { type: String },
+    servicesOffered: { type: String, trim: true },
+    sector: { type: String, trim: true },
+    location: { type: String, trim: true },
 
     // ── Status & Onboarding ───────────────────────────────────────────────────
     status: {
@@ -53,10 +50,15 @@ const vendorSchema = new mongoose.Schema(
     // ── Meeting ───────────────────────────────────────────────────────────────
     meetingDate: Date,
     meetingTime: String,
+    meetingLink: String,
     meetingNote: String,
 
     // ── Agreement ─────────────────────────────────────────────────────────────
-    agreementFileUrl: String,
+    agreementStatus: {
+      type: String,
+      enum: ['not_sent', 'sent', 'pending_signature', 'signed'],
+      default: 'not_sent',
+    },
     agreementSentAt: Date,
     agreementSignedAt: Date,
 
@@ -66,6 +68,16 @@ const vendorSchema = new mongoose.Schema(
     approvedAt: Date,
     rejectedAt: Date,
     onboardedAt: Date,
+    portalAccessStatus: {
+      type: String,
+      enum: ['active', 'paused'],
+      default: 'active',
+    },
+    portalAccessPausedAt: Date,
+    portalAccessPauseReason: { type: String, trim: true, maxlength: 500 },
+    portalAccessPausedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    portalAccessResumedAt: Date,
+    portalAccessResumedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
     // ── Source ────────────────────────────────────────────────────────────────
     registrationSource: {
@@ -86,8 +98,9 @@ vendorSchema.virtual('profileCompletion').get(function () {
     this.email,
     this.phone,
     this.website,
-    this.solutionType,
     this.companyDescription,
+    this.servicesOffered,
+    this.sector,
     this.location,
   ];
   const filled = fields.filter(Boolean).length;

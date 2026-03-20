@@ -22,6 +22,7 @@ const cleantechRoutes = require('./routes/cleantech.routes');
 const climateFinanceRoutes = require('./routes/climateFinance.routes');
 const consultantRoutes = require('./routes/consultant.routes');
 const ghgRoutes = require('./routes/ghg.routes');
+const portalRoutes = require('./routes/portal.routes');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use('/api/cleantech', cleantechRoutes);
 app.use('/api/climate-finance', climateFinanceRoutes);
 app.use('/api/consultant', consultantRoutes);
 app.use('/api/ghg', ghgRoutes);
+app.use('/api/portal', portalRoutes);
 
 // ── Error Handling ────────────────────────────────────────────────────────────
 app.use(notFound);

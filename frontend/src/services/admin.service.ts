@@ -18,14 +18,16 @@ export const adminService = {
     api.patch(`/admin/vendors/${id}/approve`, { note }),
   rejectVendor: (id: string, note: string) =>
     api.patch(`/admin/vendors/${id}/reject`, { note }),
-  scheduleMeeting: (id: string, data: { date: string; time: string; note?: string }) =>
+  scheduleMeeting: (id: string, data: { date: string; time: string; link?: string; note?: string }) =>
     api.patch(`/admin/vendors/${id}/schedule-meeting`, data),
-  sendAgreement: (id: string, formData: FormData) =>
-    api.patch(`/admin/vendors/${id}/send-agreement`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  sendAgreement: (id: string, data: { note?: string }) =>
+    api.patch(`/admin/vendors/${id}/send-agreement`, data),
   markAgreementSigned: (id: string) => api.patch(`/admin/vendors/${id}/mark-signed`),
   completeOnboarding: (id: string) => api.patch(`/admin/vendors/${id}/complete-onboarding`),
+  setVendorPortalAccess: (
+    id: string,
+    data: { portalAccessStatus: 'active' | 'paused'; reason?: string }
+  ) => api.patch(`/admin/vendors/${id}/portal-access`, data),
 
   // Registrations
   getCorporateRegistrations: (params?: { status?: string; page?: number }) =>

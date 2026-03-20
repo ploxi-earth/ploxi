@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'ploxi-auth',
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ user: state.user, accessToken: state.accessToken, isAuthenticated: state.isAuthenticated }),
     }
   )
 );

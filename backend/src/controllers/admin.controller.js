@@ -6,14 +6,16 @@ const CleantechRegistration = require('../models/CleantechRegistration.model');
 const ClimateFinanceRegistration = require('../models/ClimateFinanceRegistration.model');
 const AppError = require('../utils/AppError');
 const { sendTemplatedEmail } = require('../utils/emailService');
+const { MANAGEABLE_VENDOR_STATUSES } = require('../utils/vendorAccess');
 
 // ── Dashboard Stats ────────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
-  const [total, pending, approved, rejected, onboarded] = await Promise.all([
+  const [total, pending, approved, rejected, onboarding, onboarded] = await Promise.all([
     Vendor.countDocuments(),
     Vendor.countDocuments({ status: 'pending' }),
     Vendor.countDocuments({ status: 'approved' }),
     Vendor.countDocuments({ status: 'rejected' }),
+    Vendor.countDocuments({ status: 'onboarding' }),
     Vendor.countDocuments({ status: 'onboarded' }),
   ]);
 
@@ -26,7 +28,7 @@ exports.getDashboardStats = async (req, res) => {
   res.json({
     success: true,
     data: {
-      vendors: { total, pending, approved, rejected, onboarded },
+      vendors: { total, pending, approved, rejected, onboarding, onboarded },
       registrations: {
         corporate: corporateCount,
         cleantech: cleantechCount,
@@ -130,8 +132,15 @@ exports.approveVendor = async (req, res, next) => {
   });
   await vendor.save();
 
-  const loginUrl = `${process.env.CLIENT_URL}/auth/login`;
-  await sendTemplatedEmail('vendorApproved', vendor.email, vendor.companyName, loginUrl);
+  // Activate user account so vendor can log in
+  await User.findByIdAndUpdate(vendor.user, { isActive: true });
+
+  try {
+    const loginUrl = `${process.env.CLIENT_URL}/auth/login`;
+    await sendTemplatedEmail('vendorApproved', vendor.email, vendor.companyName, loginUrl);
+  } catch (err) {
+    console.error('Failed to send approval email:', err.message);
+  }
 
   res.json({ success: true, data: vendor, message: 'Vendor approved successfully.' });
 };
@@ -152,20 +161,29 @@ exports.rejectVendor = async (req, res, next) => {
   });
   await vendor.save();
 
-  await sendTemplatedEmail('vendorRejected', vendor.email, vendor.companyName, req.body.note);
+  // Deactivate user account
+  await User.findByIdAndUpdate(vendor.user, { isActive: false });
+
+  try {
+    await sendTemplatedEmail('vendorRejected', vendor.email, vendor.companyName, req.body.note);
+  } catch (err) {
+    console.error('Failed to send rejection email:', err.message);
+  }
 
   res.json({ success: true, data: vendor, message: 'Vendor rejected.' });
 };
 
 // ── Schedule Meeting ───────────────────────────────────────────────────────
 exports.scheduleMeeting = async (req, res, next) => {
-  const { date, time, note } = req.body;
+  const { date, time, link, note } = req.body;
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) return next(new AppError('Vendor not found.', 404));
 
   vendor.meetingDate = date;
   vendor.meetingTime = time;
+  vendor.meetingLink = link || '';
   vendor.meetingNote = note;
+  vendor.status = 'onboarding';
   vendor.onboardingStage = 'intro_meeting_scheduled';
   vendor.onboardingHistory.push({
     stage: 'intro_meeting_scheduled',
@@ -174,7 +192,11 @@ exports.scheduleMeeting = async (req, res, next) => {
   });
   await vendor.save();
 
-  await sendTemplatedEmail('meetingScheduled', vendor.email, vendor.companyName, date, time);
+  try {
+    await sendTemplatedEmail('meetingScheduled', vendor.email, vendor.companyName, date, time, vendor.meetingLink);
+  } catch (err) {
+    console.error('Failed to send meeting email:', err.message);
+  }
 
   res.json({ success: true, data: vendor });
 };
@@ -184,24 +206,25 @@ exports.sendAgreement = async (req, res, next) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) return next(new AppError('Vendor not found.', 404));
 
-  // File path set by upload middleware
-  const fileUrl = req.file ? `/uploads/${req.file.filename}` : req.body.agreementUrl;
-  if (!fileUrl) return next(new AppError('Please provide an agreement file.', 400));
+  const { note } = req.body;
 
-  vendor.agreementFileUrl = fileUrl;
+  vendor.agreementStatus = 'sent';
   vendor.agreementSentAt = Date.now();
   vendor.onboardingStage = 'agreement_sent';
   vendor.onboardingHistory.push({
     stage: 'agreement_sent',
     updatedBy: req.user._id,
-    note: 'Agreement sent to vendor',
+    note: note || 'Agreement sent to vendor via email',
   });
   await vendor.save();
 
-  const agreementUrl = `${process.env.CLIENT_URL}${fileUrl}`;
-  await sendTemplatedEmail('agreementSent', vendor.email, vendor.companyName, agreementUrl);
+  try {
+    await sendTemplatedEmail('agreementSent', vendor.email, vendor.companyName, note);
+  } catch (err) {
+    console.error('Failed to send agreement email:', err.message);
+  }
 
-  res.json({ success: true, data: vendor });
+  res.json({ success: true, data: vendor, message: 'Agreement sent to vendor via email.' });
 };
 
 // ── Mark Agreement Signed ──────────────────────────────────────────────────
@@ -209,12 +232,13 @@ exports.markAgreementSigned = async (req, res, next) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) return next(new AppError('Vendor not found.', 404));
 
+  vendor.agreementStatus = 'signed';
   vendor.agreementSignedAt = Date.now();
   vendor.onboardingStage = 'agreement_signed';
   vendor.onboardingHistory.push({
     stage: 'agreement_signed',
     updatedBy: req.user._id,
-    note: 'Agreement signed',
+    note: 'Agreement confirmed as signed',
   });
   await vendor.save();
 
@@ -237,6 +261,61 @@ exports.completeOnboarding = async (req, res, next) => {
   await vendor.save();
 
   res.json({ success: true, data: vendor, message: 'Vendor onboarding completed.' });
+};
+
+// ── Pause / Resume Vendor Portal Access ───────────────────────────────────
+exports.setVendorPortalAccess = async (req, res, next) => {
+  const { portalAccessStatus, reason } = req.body;
+
+  if (!['active', 'paused'].includes(portalAccessStatus)) {
+    return next(new AppError('Invalid vendor portal access status.', 400));
+  }
+
+  const vendor = await Vendor.findById(req.params.id);
+  if (!vendor) return next(new AppError('Vendor not found.', 404));
+
+  if (!MANAGEABLE_VENDOR_STATUSES.includes(vendor.status)) {
+    return next(new AppError('Portal access can only be managed after the vendor has been approved.', 400));
+  }
+
+  const currentPortalAccessStatus = vendor.portalAccessStatus || 'active';
+  if (currentPortalAccessStatus === portalAccessStatus) {
+    return res.json({
+      success: true,
+      data: vendor,
+      message:
+        portalAccessStatus === 'paused'
+          ? 'Vendor portal access is already paused.'
+          : 'Vendor portal access is already active.',
+    });
+  }
+
+  vendor.portalAccessStatus = portalAccessStatus;
+
+  if (portalAccessStatus === 'paused') {
+    vendor.portalAccessPausedAt = Date.now();
+    vendor.portalAccessPauseReason = reason?.trim() || undefined;
+    vendor.portalAccessPausedBy = req.user._id;
+    vendor.portalAccessResumedAt = undefined;
+    vendor.portalAccessResumedBy = undefined;
+  } else {
+    vendor.portalAccessPausedAt = undefined;
+    vendor.portalAccessPauseReason = undefined;
+    vendor.portalAccessPausedBy = undefined;
+    vendor.portalAccessResumedAt = Date.now();
+    vendor.portalAccessResumedBy = req.user._id;
+  }
+
+  await vendor.save();
+
+  res.json({
+    success: true,
+    data: vendor,
+    message:
+      portalAccessStatus === 'paused'
+        ? 'Vendor portal access paused.'
+        : 'Vendor portal access reactivated.',
+  });
 };
 
 // ── List All Corporate Registrations ───────────────────────────────────────
