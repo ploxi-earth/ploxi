@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 /**
- * Sign a JWT access token
+ * Sign a JWT access token (uses UUID-based user IDs from Supabase)
  */
 const signAccessToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -20,19 +20,18 @@ const signRefreshToken = (userId) => {
 
 /**
  * Send token response with standard shape
+ * Works with plain Supabase row objects (no Mongoose document methods)
  */
 const sendTokenResponse = (user, statusCode, res) => {
-  const accessToken = signAccessToken(user._id);
-  const refreshToken = signRefreshToken(user._id);
-
-  user.password = undefined;
+  const accessToken = signAccessToken(user.id);
+  const refreshToken = signRefreshToken(user.id);
 
   res.status(statusCode).json({
     success: true,
     accessToken,
     refreshToken,
     user: {
-      _id: user._id,
+      _id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,

@@ -8,7 +8,9 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-const connectDB = require('./config/db');
+// Initialize Supabase client (loaded once, cached)
+require('./config/db');
+
 const logger = require('./config/logger');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
@@ -25,9 +27,6 @@ const ghgRoutes = require('./routes/ghg.routes');
 const portalRoutes = require('./routes/portal.routes');
 
 const app = express();
-
-// ── Connect Database ──────────────────────────────────────────────────────────
-connectDB();
 
 // ── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet());
@@ -84,7 +83,7 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ── Health Check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Ploxi Earth API is running', timestamp: new Date() });
+  res.json({ success: true, message: 'Ploxi Earth API is running (Supabase)', timestamp: new Date() });
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -105,7 +104,7 @@ app.use(errorHandler);
 // ── Start Server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  logger.info(`Ploxi Earth API running on port ${PORT} [${process.env.NODE_ENV}]`);
+  logger.info(`Ploxi Earth API running on port ${PORT} [${process.env.NODE_ENV}] (Supabase)`);
 });
 
 module.exports = app;

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authService } from '@/services/auth.service';
+import { vendorService } from '@/services/vendor.service';
 import { VENDOR_PORTAL_PAUSED_MESSAGE, VENDOR_PORTAL_PAUSED_REASON } from '@/lib/vendorAccess';
 import { useAuthStore } from '@/store/authStore';
 
@@ -27,12 +28,16 @@ function LoginPageContent() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const res = await authService.login({ email, password });
+      const res = await authService.vendorLogin({ email, password });
       const { user, accessToken } = res.data;
       setAuth(user, accessToken);
-      if (user.role === 'platform_admin') router.push('/admin');
-      else if (user.role === 'vendor') router.push('/vendor');
-      else router.push('/consultant');
+      try {
+        const statusRes = await vendorService.getOnboardingStatus();
+        const status = statusRes.data?.data?.status;
+        router.push(status === 'onboarded' ? '/vendor/portal' : '/vendor');
+      } catch {
+        router.push('/vendor');
+      }
     } catch (err: unknown) {
       const errData = (err as { response?: { data?: { message?: string }; status?: number } })?.response;
       const msg = errData?.data?.message;
@@ -58,9 +63,9 @@ function LoginPageContent() {
         <Link href="/" className="flex justify-center mb-6">
           <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={120} height={48} className="h-12 w-auto object-contain" />
         </Link>
-        <h2 className="text-center text-2xl font-bold text-gray-900">Sign in to your account</h2>
+        <h2 className="text-center text-2xl font-bold text-gray-900">Vendor Sign In</h2>
         <p className="mt-2 text-center text-sm text-gray-500">
-          Vendor &amp; Admin Portal
+          Sign in to your vendor portal
         </p>
       </div>
 

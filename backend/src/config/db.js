@@ -1,16 +1,14 @@
-const mongoose = require('mongoose');
+const { createClient } = require('@supabase/supabase-js');
 const logger = require('./logger');
 
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    logger.info(`MongoDB connected: ${conn.connection.host}`);
-  } catch (error) {
-    logger.error(`MongoDB connection error: ${error.message}`);
-    process.exit(1);
-  }
-};
+// Service-role client — bypasses RLS, use for all server-side operations
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
-module.exports = connectDB;
+// Log connection status
+logger.info(`Supabase client initialized for: ${process.env.SUPABASE_URL}`);
+
+module.exports = supabase;

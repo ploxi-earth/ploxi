@@ -3,7 +3,7 @@ import { VENDOR_PORTAL_PAUSED_MESSAGE, VENDOR_PORTAL_PAUSED_REASON } from '@/lib
 import { useAuthStore } from '@/store/authStore';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: false,
 });

@@ -1,4 +1,4 @@
-const GhgCalculation = require('../models/GhgCalculation.model');
+const supabase = require('../config/db');
 
 // ── Emission Factors (India-based defaults) ───────────────────────────────
 const FACTORS = {
@@ -37,8 +37,8 @@ function calcScope1(s1) {
 function calcScope2(s2) {
   let total = 0;
   if (s2?.purchasedElectricity?.value) {
-    const factor = s2.purchasedElectricity.emissionFactor || FACTORS.electricity * 1000; // stored as kg CO2e/kWh
-    total += s2.purchasedElectricity.value * (factor / 1000); // convert to tCO2e
+    const factor = s2.purchasedElectricity.emissionFactor || FACTORS.electricity * 1000;
+    total += s2.purchasedElectricity.value * (factor / 1000);
   }
   if (s2?.purchasedHeat?.value) total += s2.purchasedHeat.value * FACTORS.heat_GJ;
   return parseFloat(total.toFixed(4));
@@ -70,25 +70,50 @@ exports.calculate = async (req, res) => {
 
   const results = { scope1: s1Total, scope2: s2Total, scope3: s3Total, total: grandTotal };
 
-  // Persist calculation
-  const calculation = await GhgCalculation.create({
-    user: req.user?._id,
-    sessionId,
-    companyName,
-    reportingYear,
-    scope1: { ...scope1, totalScope1_tCO2e: s1Total },
-    scope2: { ...scope2, totalScope2_tCO2e: s2Total },
-    scope3: { ...scope3, totalScope3_tCO2e: s3Total },
-    totalEmissions_tCO2e: grandTotal,
-    results,
-  });
+  // Persist to Supabase
+  const { data: calculation, error } = await supabase
+    .from('ghg_calculations')
+    .insert({
+      user_id: req.user?.id || req.user?._id || null,
+      session_id: sessionId,
+      company_name: companyName,
+      reporting_year: reportingYear,
+      scope1: scope1 || {},
+      scope2: scope2 || {},
+      scope3: scope3 || {},
+      total_scope1_tco2e: s1Total,
+      total_scope2_tco2e: s2Total,
+      total_scope3_tco2e: s3Total,
+      total_emissions_tco2e: grandTotal,
+      results,
+    })
+    .select('id')
+    .single();
 
-  res.json({ success: true, data: { ...results, id: calculation._id } });
+  if (error) {
+    console.error('GHG calculation save error:', error);
+    // Still return results even if save fails
+    return res.json({ success: true, data: results });
+  }
+
+  res.json({ success: true, data: { ...results, id: calculation.id } });
 };
 
 // ── Get Past Calculations ─────────────────────────────────────────────────
 exports.getHistory = async (req, res) => {
-  const filter = req.user ? { user: req.user._id } : { sessionId: req.query.sessionId };
-  const calculations = await GhgCalculation.find(filter).sort({ createdAt: -1 }).limit(20);
-  res.json({ success: true, data: calculations });
+  let query = supabase.from('ghg_calculations').select('*');
+
+  if (req.user) {
+    query = query.eq('user_id', req.user.id || req.user._id);
+  } else if (req.query.sessionId) {
+    query = query.eq('session_id', req.query.sessionId);
+  }
+
+  const { data: calculations, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+
+  res.json({ success: true, data: calculations || [] });
 };

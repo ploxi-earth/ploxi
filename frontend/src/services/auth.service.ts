@@ -11,6 +11,8 @@ export interface AuthResponse {
 
 export const authService = {
   login: (data: LoginPayload) => api.post<AuthResponse>('/auth/login', data),
+  vendorLogin: (data: LoginPayload) => api.post<AuthResponse>('/vendor/login', data),
+  adminLogin: (data: LoginPayload) => api.post<AuthResponse>('/admin/login', data),
   register: (data: RegisterPayload) => api.post<AuthResponse>('/auth/register', data),
   getMe: () => api.get('/auth/me'),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),

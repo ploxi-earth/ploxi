@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { vendorService } from '@/services/vendor.service';
+import { getLifecycleStageIndex } from '@/lib/vendorLifecycle';
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -51,14 +52,39 @@ export default function VendorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    vendorService
-      .getOnboardingStatus()
-      .then((r: { data: { data: OnboardingData } }) => setData(r.data.data))
-      .catch(() => { })
-      .finally(() => setLoading(false));
+    let alive = true;
+
+    const load = async () => {
+      try {
+        const r: { data: { data: OnboardingData } } = await vendorService.getOnboardingStatus();
+        if (alive) setData(r.data.data);
+      } catch {
+        /* ignore */
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+
+    load();
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', load);
+
+    return () => {
+      alive = false;
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', load);
+    };
   }, []);
 
-  const stageIndex = data ? STAGES.indexOf(data.onboardingStage) : -1;
+  const stageIndex = data
+    ? getLifecycleStageIndex(STAGES, data.onboardingStage, data.status)
+    : 0;
+  const progressPct =
+    stageIndex >= STAGES.length ? 100 : Math.round(((stageIndex + 1) / STAGES.length) * 100);
 
   // Determine pending actions
   const pendingActions: Array<{ label: string; href: string; icon: React.ReactNode }> = [];
@@ -128,7 +154,11 @@ export default function VendorDashboard() {
                   <p className="text-xs text-emerald-600 mt-1">{STAGE_LABELS[data.onboardingStage]}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-xl">
-                  {stageIndex + 1}
+                  {stageIndex >= STAGES.length ? (
+                    <CheckCircleIcon className="w-7 h-7 text-emerald-600" />
+                  ) : (
+                    stageIndex + 1
+                  )}
                 </div>
               </div>
             </div>

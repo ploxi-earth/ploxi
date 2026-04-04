@@ -8,6 +8,9 @@ const VENDOR_REJECTED_MESSAGE =
   'Your application has been rejected. Please contact support for more information.';
 const MANAGEABLE_VENDOR_STATUSES = ['approved', 'onboarding', 'onboarded'];
 
+/**
+ * Assert vendor can login (works with plain Supabase row objects)
+ */
 const assertVendorCanLogin = (vendor) => {
   if (!vendor) {
     throw new AppError('Vendor profile not found. Please contact support.', 404);
@@ -20,18 +23,18 @@ const assertVendorCanLogin = (vendor) => {
   if (vendor.status === 'rejected') {
     throw new AppError(VENDOR_REJECTED_MESSAGE, 403);
   }
-
-  if (vendor.portalAccessStatus === 'paused') {
-    throw new AppError(VENDOR_PORTAL_PAUSED_MESSAGE, 403);
-  }
 };
 
+/**
+ * Assert vendor portal access (works with plain Supabase row objects)
+ */
 const assertVendorPortalAccess = (vendor) => {
   if (!vendor) {
     throw new AppError('Vendor profile not found.', 404);
   }
 
-  if (vendor.portalAccessStatus === 'paused') {
+  // portal_access_status comes from vendor_profiles table
+  if (vendor.portal_access_status === 'paused') {
     throw new AppError(VENDOR_PORTAL_PAUSED_MESSAGE, 403);
   }
 };

@@ -1,268 +1,390 @@
-const Service = require('../models/Service.model');
-const Project = require('../models/Project.model');
-const Document = require('../models/Document.model');
-const Notification = require('../models/Notification.model');
-const Vendor = require('../models/Vendor.model');
+const supabase = require('../config/db');
 const AppError = require('../utils/AppError');
 
-// ── Helper: get vendor for current user ────────────────────────────────────
-const getVendor = async (userId) => {
-    const vendor = await Vendor.findOne({ user: userId });
-    if (!vendor) throw new AppError('Vendor profile not found.', 404);
-    return vendor;
+// ── Helper: get vendor ID for current user ─────────────────────────────────
+const getVendorId = (req) => {
+  return req.user.vendorId || req.user._id;
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  PORTAL DASHBOARD                                                      ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getDashboardStats = async (req, res, next) => {
-    const vendor = await getVendor(req.user._id);
+  const vendorId = getVendorId(req);
 
-    const [
-        totalServices,
-        activeServices,
-        totalProjects,
-        activeProjects,
-        completedProjects,
-        totalDocs,
-        unreadNotifications,
-    ] = await Promise.all([
-        Service.countDocuments({ vendor: vendor._id }),
-        Service.countDocuments({ vendor: vendor._id, status: 'active' }),
-        Project.countDocuments({ vendor: vendor._id }),
-        Project.countDocuments({ vendor: vendor._id, status: { $in: ['opportunity', 'proposal', 'in_progress'] } }),
-        Project.countDocuments({ vendor: vendor._id, status: 'completed' }),
-        Document.countDocuments({ vendor: vendor._id }),
-        Notification.countDocuments({ user: req.user._id, isRead: false }),
-    ]);
+  const [
+    { count: totalServices },
+    { count: activeServices },
+    { count: totalProjects },
+    { count: activeProjects },
+    { count: completedProjects },
+    { count: totalDocs },
+    { count: unreadNotifications },
+  ] = await Promise.all([
+    supabase.from('services').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+    supabase.from('services').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).eq('status', 'active'),
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).in('status', ['opportunity', 'proposal', 'in_progress']),
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).eq('status', 'completed'),
+    supabase.from('documents').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+    supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', req.user._id).eq('is_read', false),
+  ]);
 
-    // Calculate total revenue from completed projects
-    const revenueResult = await Project.aggregate([
-        { $match: { vendor: vendor._id, status: 'completed' } },
-        { $group: { _id: null, total: { $sum: '$value' } } },
-    ]);
-    const totalRevenue = revenueResult[0]?.total || 0;
+  // Calculate total revenue from completed projects
+  const { data: completedProjectsData } = await supabase
+    .from('projects')
+    .select('value')
+    .eq('vendor_id', vendorId)
+    .eq('status', 'completed');
 
-    // Recent activity
-    const [recentProjects, recentNotifications] = await Promise.all([
-        Project.find({ vendor: vendor._id }).sort({ updatedAt: -1 }).limit(5).lean(),
-        Notification.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(5).lean(),
-    ]);
+  const totalRevenue = (completedProjectsData || []).reduce((sum, p) => sum + (Number(p.value) || 0), 0);
 
-    res.json({
-        success: true,
-        data: {
-            stats: {
-                totalServices,
-                activeServices,
-                totalProjects,
-                activeProjects,
-                completedProjects,
-                totalRevenue,
-                totalDocs,
-                unreadNotifications,
-            },
-            recentProjects,
-            recentNotifications,
-        },
-    });
+  // Recent activity
+  const [{ data: recentProjects }, { data: recentNotifications }] = await Promise.all([
+    supabase.from('projects').select('*').eq('vendor_id', vendorId).order('updated_at', { ascending: false }).limit(5),
+    supabase.from('notifications').select('*').eq('user_id', req.user._id).order('created_at', { ascending: false }).limit(5),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      stats: {
+        totalServices: totalServices || 0,
+        activeServices: activeServices || 0,
+        totalProjects: totalProjects || 0,
+        activeProjects: activeProjects || 0,
+        completedProjects: completedProjects || 0,
+        totalRevenue,
+        totalDocs: totalDocs || 0,
+        unreadNotifications: unreadNotifications || 0,
+      },
+      recentProjects: recentProjects || [],
+      recentNotifications: recentNotifications || [],
+    },
+  });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  SERVICES                                                              ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getServices = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const services = await Service.find({ vendor: vendor._id }).sort({ createdAt: -1 });
-    res.json({ success: true, data: services });
+  const vendorId = getVendorId(req);
+  const { data: services, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('vendor_id', vendorId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  res.json({ success: true, data: services || [] });
 };
 
 exports.createService = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const service = await Service.create({
-        ...req.body,
-        vendor: vendor._id,
-        user: req.user._id,
-    });
-    res.status(201).json({ success: true, data: service });
+  const vendorId = getVendorId(req);
+  const { name, description, category, sector, tags, status, pricing, deliveryTimeline, coverImage } = req.body;
+
+  const { data: service, error } = await supabase
+    .from('services')
+    .insert({
+      vendor_id: vendorId,
+      user_id: req.user._id,
+      name,
+      description,
+      category,
+      sector,
+      tags: tags || [],
+      status: status || 'active',
+      pricing,
+      delivery_timeline: deliveryTimeline,
+      cover_image: coverImage,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  res.status(201).json({ success: true, data: service });
 };
 
 exports.updateService = async (req, res, next) => {
-    const vendor = await getVendor(req.user._id);
-    const service = await Service.findOneAndUpdate(
-        { _id: req.params.id, vendor: vendor._id },
-        req.body,
-        { new: true, runValidators: true }
-    );
-    if (!service) return next(new AppError('Service not found.', 404));
-    res.json({ success: true, data: service });
+  const vendorId = getVendorId(req);
+  const updates = {};
+
+  const fieldMap = {
+    name: 'name', description: 'description', category: 'category',
+    sector: 'sector', tags: 'tags', status: 'status', pricing: 'pricing',
+    deliveryTimeline: 'delivery_timeline', coverImage: 'cover_image',
+  };
+
+  for (const [camel, snake] of Object.entries(fieldMap)) {
+    if (req.body[camel] !== undefined) updates[snake] = req.body[camel];
+  }
+  updates.updated_at = new Date().toISOString();
+
+  const { data: service, error } = await supabase
+    .from('services')
+    .update(updates)
+    .eq('id', req.params.id)
+    .eq('vendor_id', vendorId)
+    .select()
+    .single();
+
+  if (error || !service) return next(new AppError('Service not found.', 404));
+  res.json({ success: true, data: service });
 };
 
 exports.deleteService = async (req, res, next) => {
-    const vendor = await getVendor(req.user._id);
-    const service = await Service.findOneAndDelete({ _id: req.params.id, vendor: vendor._id });
-    if (!service) return next(new AppError('Service not found.', 404));
-    res.json({ success: true, message: 'Service deleted.' });
+  const vendorId = getVendorId(req);
+  const { error } = await supabase
+    .from('services')
+    .delete()
+    .eq('id', req.params.id)
+    .eq('vendor_id', vendorId);
+
+  if (error) return next(new AppError('Service not found.', 404));
+  res.json({ success: true, message: 'Service deleted.' });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  PROJECTS                                                              ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getProjects = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const { status } = req.query;
-    const filter = { vendor: vendor._id };
-    if (status) filter.status = status;
-    const projects = await Project.find(filter).sort({ updatedAt: -1 });
-    res.json({ success: true, data: projects });
+  const vendorId = getVendorId(req);
+  const { status } = req.query;
+
+  let query = supabase.from('projects').select('*').eq('vendor_id', vendorId);
+  if (status) query = query.eq('status', status);
+
+  const { data: projects, error } = await query.order('updated_at', { ascending: false });
+  if (error) throw error;
+  res.json({ success: true, data: projects || [] });
 };
 
 exports.createProject = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const project = await Project.create({
-        ...req.body,
-        vendor: vendor._id,
-        user: req.user._id,
-    });
-    res.status(201).json({ success: true, data: project });
+  const vendorId = getVendorId(req);
+  const { title, description, client, value, status, startDate, endDate, progress, sector, notes } = req.body;
+
+  const { data: project, error } = await supabase
+    .from('projects')
+    .insert({
+      vendor_id: vendorId,
+      user_id: req.user._id,
+      title,
+      description,
+      client,
+      value: value || 0,
+      status: status || 'opportunity',
+      start_date: startDate || null,
+      end_date: endDate || null,
+      progress: progress || 0,
+      sector,
+      notes,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  res.status(201).json({ success: true, data: project });
 };
 
 exports.updateProject = async (req, res, next) => {
-    const vendor = await getVendor(req.user._id);
-    const project = await Project.findOneAndUpdate(
-        { _id: req.params.id, vendor: vendor._id },
-        req.body,
-        { new: true, runValidators: true }
-    );
-    if (!project) return next(new AppError('Project not found.', 404));
-    res.json({ success: true, data: project });
+  const vendorId = getVendorId(req);
+  const updates = {};
+
+  const fieldMap = {
+    title: 'title', description: 'description', client: 'client',
+    value: 'value', status: 'status', startDate: 'start_date',
+    endDate: 'end_date', progress: 'progress', sector: 'sector', notes: 'notes',
+  };
+
+  for (const [camel, snake] of Object.entries(fieldMap)) {
+    if (req.body[camel] !== undefined) updates[snake] = req.body[camel];
+  }
+  updates.updated_at = new Date().toISOString();
+
+  const { data: project, error } = await supabase
+    .from('projects')
+    .update(updates)
+    .eq('id', req.params.id)
+    .eq('vendor_id', vendorId)
+    .select()
+    .single();
+
+  if (error || !project) return next(new AppError('Project not found.', 404));
+  res.json({ success: true, data: project });
 };
 
 exports.deleteProject = async (req, res, next) => {
-    const vendor = await getVendor(req.user._id);
-    const project = await Project.findOneAndDelete({ _id: req.params.id, vendor: vendor._id });
-    if (!project) return next(new AppError('Project not found.', 404));
-    res.json({ success: true, message: 'Project deleted.' });
+  const vendorId = getVendorId(req);
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', req.params.id)
+    .eq('vendor_id', vendorId);
+
+  if (error) return next(new AppError('Project not found.', 404));
+  res.json({ success: true, message: 'Project deleted.' });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  MEETINGS (from Vendor model data)                                     ║
+// ║  MEETINGS (from meetings table)                                        ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getMeetings = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    // Extract meeting info from onboarding history + vendor fields
-    const meetings = [];
+  const vendorId = getVendorId(req);
 
-    if (vendor.meetingDate) {
-        meetings.push({
-            _id: 'intro-meeting',
-            type: 'Intro Meeting',
-            date: vendor.meetingDate,
-            time: vendor.meetingTime,
-            link: vendor.meetingLink,
-            note: vendor.meetingNote,
-            status: new Date(vendor.meetingDate) > new Date() ? 'upcoming' : 'completed',
-        });
-    }
+  const { data: meetings, error } = await supabase
+    .from('meetings')
+    .select('*')
+    .eq('vendor_id', vendorId)
+    .order('created_at', { ascending: false });
 
-    // Build from onboarding history entries
-    const meetingEntries = (vendor.onboardingHistory || [])
-        .filter((h) => h.stage === 'intro_meeting_scheduled')
-        .map((h) => ({
-            _id: h._id,
-            type: 'Onboarding Meeting',
-            date: vendor.meetingDate,
-            time: vendor.meetingTime,
-            link: vendor.meetingLink,
-            note: h.note,
-            status: 'completed',
-            scheduledAt: h.updatedAt,
-        }));
+  if (error) throw error;
 
-    res.json({ success: true, data: meetings.length ? meetings : meetingEntries });
+  // Format meetings to match expected shape
+  const formatted = (meetings || []).map(m => ({
+    _id: m.id,
+    type: 'Onboarding Meeting',
+    date: m.scheduled_date,
+    time: m.scheduled_time,
+    link: m.meeting_link,
+    note: m.notes,
+    status: m.scheduled_date && new Date(m.scheduled_date) > new Date() ? 'upcoming' : 'completed',
+    scheduledAt: m.created_at,
+  }));
+
+  res.json({ success: true, data: formatted });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  DOCUMENTS                                                             ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getDocuments = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const docs = await Document.find({ vendor: vendor._id }).sort({ createdAt: -1 });
+  const vendorId = getVendorId(req);
 
-    // Also include agreement status from vendor model as a virtual document
-    const allDocs = [...docs];
-    if (vendor.agreementStatus && vendor.agreementStatus !== 'not_sent') {
-        allDocs.unshift({
-            _id: 'partnership-agreement',
-            name: 'Partnership Agreement',
-            type: 'agreement',
-            status: vendor.agreementStatus === 'signed' ? 'signed' : 'shared',
-            sharedBy: 'admin',
-            createdAt: vendor.agreementSentAt,
-            updatedAt: vendor.agreementSignedAt || vendor.agreementSentAt,
-            notes: vendor.agreementStatus === 'signed' ? 'Agreement signed and confirmed' : 'Pending signature',
-        });
-    }
+  const { data: docs, error } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('vendor_id', vendorId)
+    .order('created_at', { ascending: false });
 
-    res.json({ success: true, data: allDocs });
+  if (error) throw error;
+
+  const allDocs = [...(docs || [])];
+
+  // Include agreement status as a virtual document
+  const { data: agreements } = await supabase
+    .from('agreements')
+    .select('*')
+    .eq('vendor_id', vendorId)
+    .order('sent_at', { ascending: false })
+    .limit(1);
+
+  const latestAgreement = agreements?.[0];
+  if (latestAgreement) {
+    allDocs.unshift({
+      _id: 'partnership-agreement',
+      id: 'partnership-agreement',
+      name: 'Partnership Agreement',
+      type: 'agreement',
+      status: latestAgreement.signed ? 'signed' : 'shared',
+      shared_by: 'admin',
+      created_at: latestAgreement.sent_at,
+      updated_at: latestAgreement.signed_at || latestAgreement.sent_at,
+      notes: latestAgreement.signed ? 'Agreement signed and confirmed' : 'Pending signature',
+    });
+  }
+
+  res.json({ success: true, data: allDocs });
 };
 
 exports.createDocument = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const doc = await Document.create({
-        ...req.body,
-        vendor: vendor._id,
-        user: req.user._id,
-        sharedBy: 'vendor',
-    });
-    res.status(201).json({ success: true, data: doc });
+  const vendorId = getVendorId(req);
+  const { name, description, type, fileUrl, notes } = req.body;
+
+  const { data: doc, error } = await supabase
+    .from('documents')
+    .insert({
+      vendor_id: vendorId,
+      user_id: req.user._id,
+      name,
+      description,
+      type: type || 'other',
+      file_url: fileUrl,
+      notes,
+      shared_by: 'vendor',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  res.status(201).json({ success: true, data: doc });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  NOTIFICATIONS                                                         ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.getNotifications = async (req, res) => {
-    const notifications = await Notification.find({ user: req.user._id })
-        .sort({ createdAt: -1 })
-        .limit(50);
-    const unreadCount = await Notification.countDocuments({ user: req.user._id, isRead: false });
-    res.json({ success: true, data: notifications, unreadCount });
+  const { data: notifications, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', req.user._id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+
+  const { count: unreadCount } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user._id)
+    .eq('is_read', false);
+
+  res.json({ success: true, data: notifications || [], unreadCount: unreadCount || 0 });
 };
 
 exports.markNotificationRead = async (req, res, next) => {
-    const notif = await Notification.findOneAndUpdate(
-        { _id: req.params.id, user: req.user._id },
-        { isRead: true, readAt: Date.now() },
-        { new: true }
-    );
-    if (!notif) return next(new AppError('Notification not found.', 404));
-    res.json({ success: true, data: notif });
+  const { data: notif, error } = await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', req.params.id)
+    .eq('user_id', req.user._id)
+    .select()
+    .single();
+
+  if (error || !notif) return next(new AppError('Notification not found.', 404));
+  res.json({ success: true, data: notif });
 };
 
 exports.markAllNotificationsRead = async (req, res) => {
-    await Notification.updateMany(
-        { user: req.user._id, isRead: false },
-        { isRead: true, readAt: Date.now() }
-    );
-    res.json({ success: true, message: 'All notifications marked as read.' });
+  await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('user_id', req.user._id)
+    .eq('is_read', false);
+
+  res.json({ success: true, message: 'All notifications marked as read.' });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  SETTINGS                                                              ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.updateSettings = async (req, res) => {
-    const vendor = await getVendor(req.user._id);
-    const { contactPerson, phone, email } = req.body;
-    if (contactPerson) vendor.contactPerson = contactPerson;
-    if (phone) vendor.phone = phone;
-    if (email) vendor.email = email;
-    await vendor.save();
+  const vendorId = getVendorId(req);
+  const { contactPerson, phone, email } = req.body;
 
-    // Also update user name if contactPerson changed
-    if (contactPerson) {
-        const User = require('../models/User.model');
-        await User.findByIdAndUpdate(req.user._id, { name: contactPerson });
-    }
+  const vendorUpdates = {};
+  if (contactPerson) vendorUpdates.contact_person = contactPerson;
+  if (phone) vendorUpdates.phone = phone;
+  if (email) vendorUpdates.email = email.toLowerCase().trim();
 
-    res.json({ success: true, data: vendor });
+  if (Object.keys(vendorUpdates).length > 0) {
+    await supabase.from('vendors').update(vendorUpdates).eq('id', vendorId);
+  }
+
+  // Also update user name if contactPerson changed
+  if (contactPerson) {
+    await supabase.from('users').update({ name: contactPerson }).eq('id', vendorId);
+  }
+
+  const { data: vendor } = await supabase.from('vendors').select('*').eq('id', vendorId).single();
+  res.json({ success: true, data: vendor });
 };

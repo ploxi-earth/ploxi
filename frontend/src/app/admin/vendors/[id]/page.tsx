@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { adminService } from '@/services/admin.service';
+import { getLifecycleStageIndex } from '@/lib/vendorLifecycle';
 
 interface VendorDetail {
   _id: string;
@@ -128,7 +129,7 @@ export default function VendorDetailPage() {
     );
   if (!vendor) return <div className="p-10 text-gray-400 text-center">Vendor not found.</div>;
 
-  const stageIndex = STAGES.indexOf(vendor.onboardingStage);
+  const stageIndex = getLifecycleStageIndex(STAGES, vendor.onboardingStage, vendor.status);
   const portalAccessStatus = vendor.portalAccessStatus || 'active';
   const canManagePortalAccess = ['approved', 'onboarding', 'onboarded'].includes(vendor.status);
   const isPortalPaused = portalAccessStatus === 'paused';
@@ -393,8 +394,9 @@ export default function VendorDetailPage() {
             </div>
           )}
 
-          {/* Onboarding actions for approved/onboarding vendors */}
-          {(vendor.status === 'approved' || vendor.status === 'onboarding') && (
+          {/* Onboarding actions only while not finished (status + derived stage) */}
+          {(vendor.status === 'approved' || vendor.status === 'onboarding') &&
+            vendor.onboardingStage !== 'onboarded' && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Onboarding Actions</h3>
 

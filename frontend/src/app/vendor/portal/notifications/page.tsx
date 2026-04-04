@@ -1,5 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { portalService } from '@/services/portal.service';
+import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser';
 import {
   SettingsIcon,
   RocketIcon,
@@ -8,24 +10,14 @@ import {
 
 type NotifCategory = 'system' | 'onboarding' | 'partnership';
 
-interface Notification {
-    id: number;
-    title: string;
-    message: string;
-    category: NotifCategory;
-    date: string;
-    read: boolean;
-}
-
-const SAMPLE_NOTIFICATIONS: Notification[] = [
-    { id: 1, title: 'New Enquiry Received', message: 'GreenTech Solutions sent an enquiry about Solar Panel Installation services.', category: 'partnership', date: '15 Mar 2026', read: false },
-    { id: 2, title: 'Agreement Ready for Review', message: 'A new Service Level Agreement has been shared for your review and signature.', category: 'partnership', date: '14 Mar 2026', read: false },
-    { id: 3, title: 'Meeting Scheduled', message: 'Quarterly Business Review scheduled for 20 Mar 2026 at 10:00 AM.', category: 'system', date: '13 Mar 2026', read: false },
-    { id: 4, title: 'Profile Update Reminder', message: 'Complete your company profile to improve visibility to potential clients.', category: 'onboarding', date: '10 Mar 2026', read: true },
-    { id: 5, title: 'Welcome to Ploxi Portal', message: 'Congratulations! Your onboarding is complete. Explore the vendor portal to manage services, projects, and meetings.', category: 'onboarding', date: '05 Mar 2026', read: true },
-    { id: 6, title: 'System Maintenance Notice', message: 'Scheduled maintenance on 08 Mar 2026 from 2:00 AM to 4:00 AM IST. Portal may be briefly unavailable.', category: 'system', date: '06 Mar 2026', read: true },
-    { id: 7, title: 'New Project Opportunity', message: 'A new project "LED Retrofit – Bangalore" matches your service categories. View details in Projects.', category: 'partnership', date: '01 Mar 2026', read: true },
-];
+type NotificationRow = {
+  id: string;
+  type?: NotifCategory | string | null;
+  title?: string | null;
+  message?: string | null;
+  created_at?: string | null;
+  is_read?: boolean | null;
+};
 
 const CATEGORY_CONFIG: Record<NotifCategory, { label: string; classes: string; icon: React.ReactNode }> = {
     system: { label: 'System', classes: 'bg-gray-100 text-gray-600', icon: <SettingsIcon className="w-4 h-4" /> },
@@ -34,18 +26,72 @@ const CATEGORY_CONFIG: Record<NotifCategory, { label: string; classes: string; i
 };
 
 export default function VendorNotificationsPage() {
-    const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState<NotificationRow[]>([]);
     const [filter, setFilter] = useState<'all' | NotifCategory>('all');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const filtered = filter === 'all' ? notifications : notifications.filter((n) => n.category === filter);
-    const unreadCount = notifications.filter((n) => !n.read).length;
+    const unreadCount = useMemo(
+      () => notifications.filter((n) => !n.is_read).length,
+      [notifications]
+    );
 
-    const markAllRead = () => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const filtered = useMemo(() => {
+      if (filter === 'all') return notifications;
+      return notifications.filter((n) => (n.type || '') === filter);
+    }, [notifications, filter]);
+
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const r = await portalService.getNotifications();
+        setNotifications(r.data?.data || []);
+      } catch (e: unknown) {
+        setNotifications([]);
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to load notifications.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const toggleRead = (id: number) => {
-        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n)));
+    useEffect(() => {
+      load();
+    }, []);
+
+    // Realtime updates for notifications.
+    useEffect(() => {
+      const sb = getSupabaseBrowserClient();
+      if (!sb) return;
+      const ch = sb
+        .channel('vendor-portal-notifications-list')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'notifications' },
+          () => load()
+        )
+        .subscribe();
+      return () => {
+        sb.removeChannel(ch);
+      };
+    }, []);
+
+    const markAllRead = async () => {
+      try {
+        await portalService.markAllRead();
+        await load();
+      } catch (e: unknown) {
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to mark all as read.');
+      }
+    };
+
+    const markRead = async (id: string) => {
+      try {
+        await portalService.markNotificationRead(id);
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      } catch (e: unknown) {
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to mark as read.');
+      }
     };
 
     return (
@@ -67,6 +113,12 @@ export default function VendorNotificationsPage() {
                 )}
             </div>
 
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             {/* Category filters */}
             <div className="flex flex-wrap gap-2 mb-6">
                 {(['all', 'system', 'onboarding', 'partnership'] as const).map((f) => (
@@ -83,32 +135,40 @@ export default function VendorNotificationsPage() {
 
             {/* Notification list */}
             <div className="space-y-3">
-                {filtered.map((n) => {
-                    const cat = CATEGORY_CONFIG[n.category];
+                {loading ? (
+                  <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+                    <p className="text-gray-400 text-sm">Loading notifications…</p>
+                  </div>
+                ) : filtered.map((n) => {
+                    const category = (n.type || 'system') as NotifCategory;
+                    const cat = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.system;
+                    const isRead = Boolean(n.is_read);
                     return (
                         <div
                             key={n.id}
-                            className={`bg-white rounded-xl border p-5 flex items-start gap-4 transition-all hover:shadow-sm cursor-pointer ${n.read ? 'border-gray-100' : 'border-primary-200 bg-primary-50/20'}`}
-                            onClick={() => toggleRead(n.id)}
+                            className={`bg-white rounded-xl border p-5 flex items-start gap-4 transition-all hover:shadow-sm cursor-pointer ${isRead ? 'border-gray-100' : 'border-primary-200 bg-primary-50/20'}`}
+                            onClick={() => { if (!isRead) markRead(n.id); }}
                         >
                             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-lg">
                                 {cat.icon}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    {!n.read && <span className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0" />}
-                                    <p className={`text-sm font-semibold ${n.read ? 'text-gray-700' : 'text-gray-900'}`}>{n.title}</p>
+                                    {!isRead && <span className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0" />}
+                                    <p className={`text-sm font-semibold ${isRead ? 'text-gray-700' : 'text-gray-900'}`}>{n.title || 'Notification'}</p>
                                 </div>
-                                <p className="text-sm text-gray-500 leading-relaxed">{n.message}</p>
+                                <p className="text-sm text-gray-500 leading-relaxed">{n.message || '—'}</p>
                                 <div className="flex items-center gap-3 mt-2">
                                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.classes}`}>{cat.label}</span>
-                                    <span className="text-xs text-gray-400">{n.date}</span>
+                                    <span className="text-xs text-gray-400">
+                                      {n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     );
                 })}
-                {filtered.length === 0 && (
+                {!loading && filtered.length === 0 && (
                     <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
                         <p className="text-gray-400 text-sm">No notifications in this category.</p>
                     </div>

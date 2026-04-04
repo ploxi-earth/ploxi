@@ -1,38 +1,37 @@
 const crypto = require('crypto');
-const User = require('../models/User.model');
-const Vendor = require('../models/Vendor.model');
-const CorporateRegistration = require('../models/CorporateRegistration.model');
-const CleantechRegistration = require('../models/CleantechRegistration.model');
-const ClimateFinanceRegistration = require('../models/ClimateFinanceRegistration.model');
+const bcrypt = require('bcryptjs');
+const supabase = require('../config/db');
 const AppError = require('../utils/AppError');
 const { sendTemplatedEmail } = require('../utils/emailService');
 const { MANAGEABLE_VENDOR_STATUSES } = require('../utils/vendorAccess');
 
 // ── Dashboard Stats ────────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
-  const [total, pending, approved, rejected, onboarding, onboarded] = await Promise.all([
-    Vendor.countDocuments(),
-    Vendor.countDocuments({ status: 'pending' }),
-    Vendor.countDocuments({ status: 'approved' }),
-    Vendor.countDocuments({ status: 'rejected' }),
-    Vendor.countDocuments({ status: 'onboarding' }),
-    Vendor.countDocuments({ status: 'onboarded' }),
-  ]);
+  // Vendor counts by status
+  const statuses = ['pending', 'approved', 'rejected', 'onboarding', 'onboarded'];
+  const vendorCounts = {};
 
-  const [corporateCount, cleantechCount, climateCount] = await Promise.all([
-    CorporateRegistration.countDocuments(),
-    CleantechRegistration.countDocuments(),
-    ClimateFinanceRegistration.countDocuments(),
-  ]);
+  const { count: total } = await supabase.from('vendors').select('*', { count: 'exact', head: true });
+  vendorCounts.total = total || 0;
+
+  for (const s of statuses) {
+    const { count } = await supabase.from('vendors').select('*', { count: 'exact', head: true }).eq('status', s);
+    vendorCounts[s] = count || 0;
+  }
+
+  // Registration counts
+  const { count: corporateCount } = await supabase.from('corporate_registrations').select('*', { count: 'exact', head: true });
+  const { count: cleantechCount } = await supabase.from('cleantech_registrations').select('*', { count: 'exact', head: true });
+  const { count: climateCount } = await supabase.from('climate_finance_registrations').select('*', { count: 'exact', head: true });
 
   res.json({
     success: true,
     data: {
-      vendors: { total, pending, approved, rejected, onboarding, onboarded },
+      vendors: vendorCounts,
       registrations: {
-        corporate: corporateCount,
-        cleantech: cleantechCount,
-        climateFinance: climateCount,
+        corporate: corporateCount || 0,
+        cleantech: cleantechCount || 0,
+        climateFinance: climateCount || 0,
       },
     },
   });
@@ -45,222 +44,464 @@ exports.createAdmin = async (req, res, next) => {
   if (!allowedRoles.includes(role)) {
     return next(new AppError('Invalid admin role.', 400));
   }
-  const admin = await User.create({ name, email, password, role });
-  admin.password = undefined;
+
+  const password_hash = await bcrypt.hash(password, 12);
+
+  const { data: admin, error } = await supabase
+    .from('users')
+    .insert({ name, email: email.toLowerCase().trim(), password_hash, role })
+    .select('id, name, email, role, created_at')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') return next(new AppError('Email already exists.', 400));
+    throw error;
+  }
+
   res.status(201).json({ success: true, data: admin });
 };
 
 // ── List All Vendors ───────────────────────────────────────────────────────
 exports.getVendors = async (req, res) => {
   const { status, page = 1, limit = 20, search } = req.query;
-  const filter = {};
-  if (status) filter.status = status;
+  const offset = (Number(page) - 1) * Number(limit);
+
+  let query = supabase.from('vendors').select('*', { count: 'exact' });
+
+  if (status) query = query.eq('status', status);
   if (search) {
-    filter.$or = [
-      { companyName: { $regex: search, $options: 'i' } },
-      { contactPerson: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
-    ];
+    query = query.or(`company_name.ilike.%${search}%,contact_person.ilike.%${search}%,email.ilike.%${search}%`);
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
-  const [vendors, total] = await Promise.all([
-    Vendor.find(filter)
-      .populate('user', 'name email')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit)),
-    Vendor.countDocuments(filter),
-  ]);
+  const { data: vendors, count: total, error } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + Number(limit) - 1);
+
+  if (error) throw error;
 
   res.json({
     success: true,
     data: vendors,
-    pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) },
+    pagination: { total: total || 0, page: Number(page), limit: Number(limit), pages: Math.ceil((total || 0) / limit) },
   });
 };
 
 // ── Get Single Vendor ──────────────────────────────────────────────────────
 exports.getVendor = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id).populate('user', 'name email createdAt');
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
-  res.json({ success: true, data: vendor });
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
+
+  // Get onboarding stages
+  const { data: stages } = await supabase
+    .from('onboarding_stages')
+    .select('*')
+    .eq('vendor_id', vendor.id)
+    .order('created_at', { ascending: true });
+
+  // Get profile
+  const { data: profile } = await supabase
+    .from('vendor_profiles')
+    .select('*')
+    .eq('vendor_id', vendor.id)
+    .single();
+
+  // Get meetings (most recent first)
+  const { data: meetings } = await supabase
+    .from('meetings')
+    .select('*')
+    .eq('vendor_id', vendor.id)
+    .order('created_at', { ascending: false });
+
+  // Get agreements (most recent first)
+  const { data: agreements } = await supabase
+    .from('agreements')
+    .select('*')
+    .eq('vendor_id', vendor.id)
+    .order('sent_at', { ascending: false });
+
+  // ── Compute onboardingStage from stage records ────────────────────────
+  const stageRecords = stages || [];
+  const activeStage = stageRecords.find(s => s.status === 'active');
+  const allCompleted = stageRecords.length > 0 && stageRecords.every(s => s.status === 'completed');
+  const onboardingStage =
+    vendor.status === 'onboarded' || allCompleted
+      ? 'onboarded'
+      : (activeStage?.stage_name || 'registration');
+
+  // ── Build onboardingHistory for the timeline ──────────────────────────
+  const onboardingHistory = stageRecords
+    .filter(s => s.completed_at || s.status === 'active')
+    .map(s => ({
+      stage: s.stage_name,
+      updatedAt: s.completed_at || s.updated_at || s.created_at,
+      note: s.notes || undefined,
+    }));
+
+  // ── Flatten latest meeting data ───────────────────────────────────────
+  const latestMeeting = meetings?.[0] || null;
+  const latestAgreement = agreements?.[0] || null;
+
+  // ── Determine agreement status ────────────────────────────────────────
+  let agreementStatus = 'not_sent';
+  if (latestAgreement) {
+    agreementStatus = latestAgreement.signed ? 'signed' : 'sent';
+  }
+
+  // ── Compute profile completion ────────────────────────────────────────
+  let profileCompletion = 0;
+  if (profile) {
+    const fields = [profile.services, profile.sector, profile.location, profile.website];
+    const filled = fields.filter(f => f && String(f).trim()).length;
+    profileCompletion = Math.round((filled / fields.length) * 100);
+    if (profile.profile_completed) profileCompletion = 100;
+  }
+
+  // ── Build camelCase response matching frontend VendorDetail interface ─
+  res.json({
+    success: true,
+    data: {
+      _id: vendor.id,
+      companyName: vendor.company_name,
+      email: vendor.email,
+      phone: vendor.phone,
+      contactPerson: vendor.contact_person,
+      status: vendor.status,
+      onboardingStage,
+      onboardingHistory,
+
+      // Portal access (from vendor_profiles)
+      portalAccessStatus: profile?.portal_access_status || 'active',
+      portalAccessPausedAt: profile?.portal_access_paused_at || null,
+      portalAccessPauseReason: profile?.portal_access_pause_reason || null,
+      portalAccessResumedAt: profile?.portal_access_resumed_at || null,
+
+      // Profile detail
+      website: profile?.website || null,
+      companyDescription: profile?.description || null,
+      servicesOffered: profile?.services || null,
+      sector: profile?.sector || null,
+      location: profile?.location || null,
+      profileCompletion,
+
+      // Meeting info (latest)
+      meetingDate: latestMeeting?.scheduled_date || null,
+      meetingTime: latestMeeting?.scheduled_time || null,
+      meetingLink: latestMeeting?.meeting_link || null,
+      meetingNote: latestMeeting?.notes || null,
+
+      // Agreement info (latest)
+      agreementStatus,
+      agreementSentAt: latestAgreement?.sent_at || null,
+      agreementSignedAt: latestAgreement?.signed_at || null,
+
+      // Timestamps
+      approvedAt: vendor.approved_at || null,
+      rejectedAt: vendor.rejected_at || null,
+      onboardedAt: vendor.onboarded_at || null,
+      reviewNote: vendor.review_note || null,
+      createdAt: vendor.created_at,
+    },
+  });
 };
 
 // ── Add Vendor (Admin Invites) ─────────────────────────────────────────────
 exports.addVendor = async (req, res, next) => {
   const { companyName, email, phone, contactPerson } = req.body;
 
-  // Create a placeholder user
-  const tempPassword = crypto.randomBytes(8).toString('hex');
-  let user = await User.findOne({ email });
-  if (!user) {
-    user = await User.create({ name: contactPerson, email, password: tempPassword, role: 'vendor' });
+  // Check if vendor already exists
+  const { data: existing } = await supabase
+    .from('vendors')
+    .select('id')
+    .eq('email', email.toLowerCase().trim())
+    .maybeSingle();
+
+  if (existing) {
+    return next(new AppError('A vendor with this email already exists.', 400));
   }
 
+  const tempPassword = crypto.randomBytes(8).toString('hex');
+  const password_hash = await bcrypt.hash(tempPassword, 12);
   const inviteToken = crypto.randomBytes(32).toString('hex');
-  const vendor = await Vendor.create({
-    user: user._id,
-    companyName,
-    email,
-    phone,
-    contactPerson,
-    registrationSource: 'admin_invited',
-    inviteToken: crypto.createHash('sha256').update(inviteToken).digest('hex'),
-    inviteTokenExpires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .insert({
+      company_name: companyName,
+      contact_person: contactPerson,
+      email: email.toLowerCase().trim(),
+      phone,
+      password_hash,
+      status: 'pending',
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+
+  // Also create user record
+  await supabase.from('users').insert({
+    id: vendor.id,
+    name: contactPerson,
+    email: email.toLowerCase().trim(),
+    password_hash,
+    role: 'vendor',
+    is_active: false,
   });
 
+  // Seed onboarding stages
+  const ONBOARDING_STAGES = [
+    'registration', 'admin_review', 'company_details_submitted',
+    'intro_meeting_scheduled', 'agreement_sent', 'agreement_signed', 'onboarded',
+  ];
+  const stages = ONBOARDING_STAGES.map((stage_name, idx) => ({
+    vendor_id: vendor.id,
+    stage_name,
+    status: idx === 0 ? 'completed' : idx === 1 ? 'active' : 'pending',
+    completed_at: idx === 0 ? new Date().toISOString() : null,
+  }));
+  await supabase.from('onboarding_stages').insert(stages);
+
   const inviteUrl = `${process.env.CLIENT_URL}/vendor/accept-invite/${inviteToken}`;
-  await sendTemplatedEmail('vendorInvite', email, inviteUrl);
+  try {
+    await sendTemplatedEmail('vendorInvite', email, inviteUrl);
+  } catch (err) {
+    console.error('Failed to send invite email:', err.message);
+  }
 
   res.status(201).json({ success: true, data: vendor, message: 'Vendor added and invitation sent.' });
 };
 
 // ── Approve Vendor ─────────────────────────────────────────────────────────
 exports.approveVendor = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
 
-  vendor.status = 'approved';
-  vendor.onboardingStage = 'admin_review';
-  vendor.reviewedBy = req.user._id;
-  vendor.approvedAt = Date.now();
-  vendor.onboardingHistory.push({
-    stage: 'admin_review',
-    updatedBy: req.user._id,
-    note: req.body.note || 'Approved by admin',
-  });
-  await vendor.save();
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
+
+  // Update vendor status
+  await supabase
+    .from('vendors')
+    .update({ status: 'approved' })
+    .eq('id', vendor.id);
+
+  // Update onboarding stage
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'admin_review');
 
   // Activate user account so vendor can log in
-  await User.findByIdAndUpdate(vendor.user, { isActive: true });
+  await supabase
+    .from('users')
+    .update({ is_active: true })
+    .eq('id', vendor.id);
 
   try {
     const loginUrl = `${process.env.CLIENT_URL}/auth/login`;
-    await sendTemplatedEmail('vendorApproved', vendor.email, vendor.companyName, loginUrl);
+    await sendTemplatedEmail('vendorApproved', vendor.email, vendor.company_name, loginUrl);
   } catch (err) {
     console.error('Failed to send approval email:', err.message);
   }
 
-  res.json({ success: true, data: vendor, message: 'Vendor approved successfully.' });
+  const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+  res.json({ success: true, data: updated, message: 'Vendor approved successfully.' });
 };
 
 // ── Reject Vendor ──────────────────────────────────────────────────────────
 exports.rejectVendor = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
 
-  vendor.status = 'rejected';
-  vendor.reviewedBy = req.user._id;
-  vendor.rejectedAt = Date.now();
-  vendor.reviewNote = req.body.note;
-  vendor.onboardingHistory.push({
-    stage: 'admin_review',
-    updatedBy: req.user._id,
-    note: req.body.note || 'Rejected by admin',
-  });
-  await vendor.save();
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
-  // Deactivate user account
-  await User.findByIdAndUpdate(vendor.user, { isActive: false });
+  await supabase
+    .from('vendors')
+    .update({ status: 'rejected' })
+    .eq('id', vendor.id);
+
+  // Deactivate user
+  await supabase.from('users').update({ is_active: false }).eq('id', vendor.id);
 
   try {
-    await sendTemplatedEmail('vendorRejected', vendor.email, vendor.companyName, req.body.note);
+    await sendTemplatedEmail('vendorRejected', vendor.email, vendor.company_name, req.body.note);
   } catch (err) {
     console.error('Failed to send rejection email:', err.message);
   }
 
-  res.json({ success: true, data: vendor, message: 'Vendor rejected.' });
+  const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+  res.json({ success: true, data: updated, message: 'Vendor rejected.' });
 };
 
 // ── Schedule Meeting ───────────────────────────────────────────────────────
 exports.scheduleMeeting = async (req, res, next) => {
   const { date, time, link, note } = req.body;
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
 
-  vendor.meetingDate = date;
-  vendor.meetingTime = time;
-  vendor.meetingLink = link || '';
-  vendor.meetingNote = note;
-  vendor.status = 'onboarding';
-  vendor.onboardingStage = 'intro_meeting_scheduled';
-  vendor.onboardingHistory.push({
-    stage: 'intro_meeting_scheduled',
-    updatedBy: req.user._id,
-    note: `Meeting on ${date} at ${time}`,
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
+
+  // Insert meeting record
+  await supabase.from('meetings').insert({
+    vendor_id: vendor.id,
+    scheduled_date: date,
+    scheduled_time: time,
+    meeting_link: link || '',
+    notes: note,
   });
-  await vendor.save();
+
+  // Update vendor status
+  await supabase.from('vendors').update({ status: 'onboarding' }).eq('id', vendor.id);
+
+  // Update onboarding stage
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'company_details_submitted');
+
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'active' })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'intro_meeting_scheduled');
 
   try {
-    await sendTemplatedEmail('meetingScheduled', vendor.email, vendor.companyName, date, time, vendor.meetingLink);
+    await sendTemplatedEmail('meetingScheduled', vendor.email, vendor.company_name, date, time, link);
   } catch (err) {
     console.error('Failed to send meeting email:', err.message);
   }
 
-  res.json({ success: true, data: vendor });
+  const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+  res.json({ success: true, data: updated });
 };
 
 // ── Send Agreement ─────────────────────────────────────────────────────────
 exports.sendAgreement = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
   const { note } = req.body;
 
-  vendor.agreementStatus = 'sent';
-  vendor.agreementSentAt = Date.now();
-  vendor.onboardingStage = 'agreement_sent';
-  vendor.onboardingHistory.push({
-    stage: 'agreement_sent',
-    updatedBy: req.user._id,
-    note: note || 'Agreement sent to vendor via email',
+  // Insert agreement record
+  await supabase.from('agreements').insert({
+    vendor_id: vendor.id,
+    file_name: 'Partnership Agreement',
+    sent_at: new Date().toISOString(),
   });
-  await vendor.save();
+
+  // Update onboarding stage
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'intro_meeting_scheduled');
+
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'active' })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'agreement_sent');
 
   try {
-    await sendTemplatedEmail('agreementSent', vendor.email, vendor.companyName, note);
+    await sendTemplatedEmail('agreementSent', vendor.email, vendor.company_name, note);
   } catch (err) {
     console.error('Failed to send agreement email:', err.message);
   }
 
-  res.json({ success: true, data: vendor, message: 'Agreement sent to vendor via email.' });
+  const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+  res.json({ success: true, data: updated, message: 'Agreement sent to vendor via email.' });
 };
 
 // ── Mark Agreement Signed ──────────────────────────────────────────────────
 exports.markAgreementSigned = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
 
-  vendor.agreementStatus = 'signed';
-  vendor.agreementSignedAt = Date.now();
-  vendor.onboardingStage = 'agreement_signed';
-  vendor.onboardingHistory.push({
-    stage: 'agreement_signed',
-    updatedBy: req.user._id,
-    note: 'Agreement confirmed as signed',
-  });
-  await vendor.save();
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
-  res.json({ success: true, data: vendor });
+  // Update latest agreement
+  await supabase
+    .from('agreements')
+    .update({ signed: true, signed_at: new Date().toISOString() })
+    .eq('vendor_id', vendor.id)
+    .is('signed_at', null);
+
+  // Update onboarding stage
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'agreement_sent');
+
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'active' })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'agreement_signed');
+
+  const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+  res.json({ success: true, data: updated });
 };
 
 // ── Complete Onboarding ────────────────────────────────────────────────────
 exports.completeOnboarding = async (req, res, next) => {
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
 
-  vendor.status = 'onboarded';
-  vendor.onboardingStage = 'onboarded';
-  vendor.onboardedAt = Date.now();
-  vendor.onboardingHistory.push({
-    stage: 'onboarded',
-    updatedBy: req.user._id,
-    note: 'Onboarding completed',
-  });
-  await vendor.save();
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
-  res.json({ success: true, data: vendor, message: 'Vendor onboarding completed.' });
+  const now = new Date().toISOString();
+
+  const { data: updatedVendor, error: updateErr } = await supabase
+    .from('vendors')
+    .update({ status: 'onboarded', onboarded_at: now })
+    .eq('id', vendor.id)
+    .select('*')
+    .single();
+
+  if (updateErr) {
+    return next(new AppError(updateErr.message || 'Failed to update vendor status.', 500));
+  }
+  if (!updatedVendor || updatedVendor.status !== 'onboarded') {
+    return next(new AppError('Vendor status was not updated.', 500));
+  }
+
+  const { error: stagesErr } = await supabase
+    .from('onboarding_stages')
+    .update({ status: 'completed', completed_at: now })
+    .eq('vendor_id', vendor.id);
+
+  if (stagesErr) {
+    return next(new AppError(stagesErr.message || 'Failed to update onboarding stages.', 500));
+  }
+
+  res.json({ success: true, data: updatedVendor, message: 'Vendor onboarding completed.' });
 };
 
 // ── Pause / Resume Vendor Portal Access ───────────────────────────────────
@@ -271,87 +512,93 @@ exports.setVendorPortalAccess = async (req, res, next) => {
     return next(new AppError('Invalid vendor portal access status.', 400));
   }
 
-  const vendor = await Vendor.findById(req.params.id);
-  if (!vendor) return next(new AppError('Vendor not found.', 404));
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
   if (!MANAGEABLE_VENDOR_STATUSES.includes(vendor.status)) {
     return next(new AppError('Portal access can only be managed after the vendor has been approved.', 400));
   }
 
-  const currentPortalAccessStatus = vendor.portalAccessStatus || 'active';
-  if (currentPortalAccessStatus === portalAccessStatus) {
-    return res.json({
-      success: true,
-      data: vendor,
-      message:
-        portalAccessStatus === 'paused'
-          ? 'Vendor portal access is already paused.'
-          : 'Vendor portal access is already active.',
-    });
-  }
-
-  vendor.portalAccessStatus = portalAccessStatus;
+  // Upsert vendor_profiles with portal access status
+  const profileData = {
+    vendor_id: vendor.id,
+    portal_access_status: portalAccessStatus,
+    updated_at: new Date().toISOString(),
+  };
 
   if (portalAccessStatus === 'paused') {
-    vendor.portalAccessPausedAt = Date.now();
-    vendor.portalAccessPauseReason = reason?.trim() || undefined;
-    vendor.portalAccessPausedBy = req.user._id;
-    vendor.portalAccessResumedAt = undefined;
-    vendor.portalAccessResumedBy = undefined;
-  } else {
-    vendor.portalAccessPausedAt = undefined;
-    vendor.portalAccessPauseReason = undefined;
-    vendor.portalAccessPausedBy = undefined;
-    vendor.portalAccessResumedAt = Date.now();
-    vendor.portalAccessResumedBy = req.user._id;
+    profileData.portal_access_paused_at = new Date().toISOString();
+    profileData.portal_access_pause_reason = reason?.trim() || null;
   }
 
-  await vendor.save();
+  const { data: existingProfile } = await supabase
+    .from('vendor_profiles')
+    .select('id')
+    .eq('vendor_id', vendor.id)
+    .maybeSingle();
+
+  if (existingProfile) {
+    await supabase.from('vendor_profiles').update(profileData).eq('vendor_id', vendor.id);
+  } else {
+    await supabase.from('vendor_profiles').insert(profileData);
+  }
 
   res.json({
     success: true,
     data: vendor,
-    message:
-      portalAccessStatus === 'paused'
-        ? 'Vendor portal access paused.'
-        : 'Vendor portal access reactivated.',
+    message: portalAccessStatus === 'paused'
+      ? 'Vendor portal access paused.'
+      : 'Vendor portal access reactivated.',
   });
 };
 
 // ── List All Corporate Registrations ───────────────────────────────────────
 exports.getCorporateRegistrations = async (req, res) => {
   const { status, page = 1, limit = 20 } = req.query;
-  const filter = status ? { status } : {};
-  const skip = (Number(page) - 1) * Number(limit);
-  const [docs, total] = await Promise.all([
-    CorporateRegistration.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
-    CorporateRegistration.countDocuments(filter),
-  ]);
-  res.json({ success: true, data: docs, pagination: { total, page: Number(page), limit: Number(limit) } });
+  const offset = (Number(page) - 1) * Number(limit);
+
+  let query = supabase.from('corporate_registrations').select('*', { count: 'exact' });
+  if (status) query = query.eq('status', status);
+
+  const { data: docs, count: total } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + Number(limit) - 1);
+
+  res.json({ success: true, data: docs || [], pagination: { total: total || 0, page: Number(page), limit: Number(limit) } });
 };
 
 // ── List All CleanTech Registrations ───────────────────────────────────────
 exports.getCleantechRegistrations = async (req, res) => {
   const { status, page = 1, limit = 20 } = req.query;
-  const filter = status ? { status } : {};
-  const skip = (Number(page) - 1) * Number(limit);
-  const [docs, total] = await Promise.all([
-    CleantechRegistration.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
-    CleantechRegistration.countDocuments(filter),
-  ]);
-  res.json({ success: true, data: docs, pagination: { total, page: Number(page), limit: Number(limit) } });
+  const offset = (Number(page) - 1) * Number(limit);
+
+  let query = supabase.from('cleantech_registrations').select('*', { count: 'exact' });
+  if (status) query = query.eq('status', status);
+
+  const { data: docs, count: total } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + Number(limit) - 1);
+
+  res.json({ success: true, data: docs || [], pagination: { total: total || 0, page: Number(page), limit: Number(limit) } });
 };
 
 // ── List All Climate Finance Registrations ─────────────────────────────────
 exports.getClimateFinanceRegistrations = async (req, res) => {
   const { status, engagementType, page = 1, limit = 20 } = req.query;
-  const filter = {};
-  if (status) filter.status = status;
-  if (engagementType) filter.engagementType = engagementType;
-  const skip = (Number(page) - 1) * Number(limit);
-  const [docs, total] = await Promise.all([
-    ClimateFinanceRegistration.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
-    ClimateFinanceRegistration.countDocuments(filter),
-  ]);
-  res.json({ success: true, data: docs, pagination: { total, page: Number(page), limit: Number(limit) } });
+  const offset = (Number(page) - 1) * Number(limit);
+
+  let query = supabase.from('climate_finance_registrations').select('*', { count: 'exact' });
+  if (status) query = query.eq('status', status);
+  if (engagementType) query = query.eq('engagement_type', engagementType);
+
+  const { data: docs, count: total } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + Number(limit) - 1);
+
+  res.json({ success: true, data: docs || [], pagination: { total: total || 0, page: Number(page), limit: Number(limit) } });
 };

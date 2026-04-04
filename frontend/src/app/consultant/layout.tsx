@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useAuthHydrated } from '@/hooks/useAuthHydrated';
 
 const NAV = [
   { href: '/consultant', label: 'My Reports', icon: '📄' },
@@ -12,13 +13,23 @@ const NAV = [
 
 export default function ConsultantLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated || !['consultant', 'manager', 'platform_admin'].includes(user?.role || ''))
       router.push('/auth/login');
-  }, [isAuthenticated, user, router]);
+  }, [hydrated, isAuthenticated, user, router]);
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 

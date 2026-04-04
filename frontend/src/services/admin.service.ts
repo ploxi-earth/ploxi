@@ -4,10 +4,6 @@ export const adminService = {
   // Dashboard
   getDashboard: () => api.get('/admin/dashboard'),
 
-  // Admin user management
-  createAdmin: (data: { name: string; email: string; password: string; role: string }) =>
-    api.post('/admin/create-admin', data),
-
   // Vendor management
   getVendors: (params?: { status?: string; page?: number; limit?: number; search?: string }) =>
     api.get('/admin/vendors', { params }),

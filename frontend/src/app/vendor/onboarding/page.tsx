@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { vendorService } from '@/services/vendor.service';
+import { getLifecycleStageIndex } from '@/lib/vendorLifecycle';
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -73,7 +74,13 @@ export default function VendorOnboardingPage() {
   if (!onboarding)
     return <div className="p-10 text-gray-400 text-center">Unable to load onboarding status.</div>;
 
-  const stageIndex = STAGES.indexOf(onboarding.onboardingStage);
+  const stageIndex = getLifecycleStageIndex(
+    STAGES,
+    onboarding.onboardingStage,
+    onboarding.status
+  );
+  const progressPct =
+    stageIndex >= STAGES.length ? 100 : Math.round(((stageIndex + 1) / STAGES.length) * 100);
 
   return (
     <div>
@@ -86,12 +93,12 @@ export default function VendorOnboardingPage() {
       <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 max-w-2xl">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-medium text-gray-700">Overall Progress</p>
-          <p className="text-sm font-bold text-primary-600">{Math.round(((stageIndex + 1) / STAGES.length) * 100)}%</p>
+          <p className="text-sm font-bold text-primary-600">{progressPct}%</p>
         </div>
         <div className="h-2 bg-gray-100 rounded-full">
           <div
-            className={`h-full rounded-full transition-all ${stageIndex === STAGES.length - 1 ? 'bg-green-500' : 'bg-primary-500'}`}
-            style={{ width: `${((stageIndex + 1) / STAGES.length) * 100}%` }}
+            className={`h-full rounded-full transition-all ${stageIndex >= STAGES.length ? 'bg-green-500' : 'bg-primary-500'}`}
+            style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>

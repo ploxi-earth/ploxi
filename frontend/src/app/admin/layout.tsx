@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useAuthHydrated } from '@/hooks/useAuthHydrated';
 
 const NAV_LINKS = [
   {
@@ -30,14 +31,29 @@ const NAV_LINKS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const router = useRouter();
   const pathname = usePathname();
 
+  // Allow login page to render without auth
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
+    if (!hydrated || isLoginPage) return;
     if (!isAuthenticated || user?.role !== 'platform_admin') {
-      router.push('/auth/login');
+      router.push('/admin/login');
     }
-  }, [isAuthenticated, user, router]);
+  }, [hydrated, isAuthenticated, user, router, isLoginPage]);
+
+  if (isLoginPage) return <>{children}</>;
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== 'platform_admin') return null;
 
@@ -86,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
           <button
-            onClick={() => { useAuthStore.getState().clearAuth(); router.push('/auth/login'); }}
+            onClick={() => { useAuthStore.getState().clearAuth(); router.push('/admin/login'); }}
             className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-400 transition-colors w-full"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

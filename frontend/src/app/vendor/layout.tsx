@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useAuthHydrated } from '@/hooks/useAuthHydrated';
 import { vendorService } from '@/services/vendor.service';
 import { Icons } from '@/components/vendor/Icons';
 
@@ -26,6 +27,7 @@ const PORTAL_NAV = [
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const router = useRouter();
   const pathname = usePathname();
   const [vendorStatus, setVendorStatus] = useState<string | null>(null);
@@ -35,23 +37,24 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const isPublicPage = pathname === '/vendor/register';
 
   useEffect(() => {
-    if (!isPublicPage && (!isAuthenticated || user?.role !== 'vendor')) {
+    if (!hydrated || isPublicPage) return;
+    if (!isAuthenticated || user?.role !== 'vendor') {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, user, router, isPublicPage]);
+  }, [hydrated, isAuthenticated, user, router, isPublicPage]);
 
-  // Fetch vendor status to determine which phase to show
+  // Fetch vendor status to determine which phase to show (refetch on route change so admin-side updates apply without full reload)
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'vendor' && !isPublicPage) {
-      vendorService
-        .getOnboardingStatus()
-        .then((r: { data: { data: { status: string } } }) => {
-          setVendorStatus(r.data.data.status);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [isAuthenticated, user, isPublicPage]);
+    if (!hydrated || !isAuthenticated || user?.role !== 'vendor' || isPublicPage) return;
+    setLoading(true);
+    vendorService
+      .getOnboardingStatus()
+      .then((r: { data: { data: { status: string } } }) => {
+        setVendorStatus(r.data.data.status);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [hydrated, isAuthenticated, user, isPublicPage, pathname]);
 
   // Redirect logic: onboarded vendor on onboarding pages → portal, and vice versa
   useEffect(() => {
@@ -70,6 +73,14 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   // Render registration page without layout
   if (isPublicPage) return <>{children}</>;
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== 'vendor') return null;
 

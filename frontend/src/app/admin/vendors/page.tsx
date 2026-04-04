@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { adminService } from '@/services/admin.service';
 
 interface Vendor {
-  _id: string;
-  companyName: string;
+  id: string;
+  company_name: string;
   email: string;
   status: string;
-  portalAccessStatus?: 'active' | 'paused';
-  onboardingStage: string;
-  createdAt: string;
-  contactPerson: string;
+  portal_access_status?: 'active' | 'paused';
+  onboarding_stage: string;
+  created_at: string;
+  contact_person: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -38,7 +38,7 @@ const getPortalAccessMeta = (vendor: Vendor) => {
     return { label: 'Blocked', style: ACCESS_STYLES.blocked };
   }
 
-  return vendor.portalAccessStatus === 'paused'
+  return vendor.portal_access_status === 'paused'
     ? { label: 'Paused', style: ACCESS_STYLES.paused }
     : { label: 'Active', style: ACCESS_STYLES.active };
 };
@@ -175,9 +175,9 @@ export default function AdminVendorsPage() {
                 const portalAccess = getPortalAccessMeta(v);
 
                 return (
-                  <tr key={v._id} className="hover:bg-gray-50/70 transition-colors group">
-                    <td className="px-5 py-3.5 font-semibold text-gray-900">{v.companyName || '—'}</td>
-                    <td className="px-5 py-3.5 text-gray-600">{v.contactPerson || '—'}</td>
+                  <tr key={v.id} className="hover:bg-gray-50/70 transition-colors group">
+                    <td className="px-5 py-3.5 font-semibold text-gray-900">{v.company_name || '—'}</td>
+                    <td className="px-5 py-3.5 text-gray-600">{v.contact_person || '—'}</td>
                     <td className="px-5 py-3.5 text-gray-500">{v.email}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${STATUS_STYLES[v.status] || STATUS_STYLES.pending}`}>
@@ -190,11 +190,11 @@ export default function AdminVendorsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-gray-400 text-xs">
-                      {new Date(v.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(v.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-5 py-3.5">
                       <Link
-                        href={`/admin/vendors/${v._id}`}
+                        href={`/admin/vendors/${v.id}`}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 group-hover:text-emerald-600 transition-colors"
                       >
                         View

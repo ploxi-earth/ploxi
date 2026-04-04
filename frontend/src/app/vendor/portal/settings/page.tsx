@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { portalService } from '@/services/portal.service';
+import { authService } from '@/services/auth.service';
 
 export default function VendorSettingsPage() {
-    const { user } = useAuthStore();
+    const { user, setUser, setTokens } = useAuthStore();
 
     const [account, setAccount] = useState({
         name: user?.name || '',
@@ -19,18 +21,75 @@ export default function VendorSettingsPage() {
     });
     const [savedAccount, setSavedAccount] = useState(false);
     const [savedPassword, setSavedPassword] = useState(false);
+    const [savingAccount, setSavingAccount] = useState(false);
+    const [savingPassword, setSavingPassword] = useState(false);
+    const [accountError, setAccountError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
 
-    const handleAccountSave = (e: React.FormEvent) => {
+    const handleAccountSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSavedAccount(true);
-        setTimeout(() => setSavedAccount(false), 3000);
+        setSavingAccount(true);
+        setAccountError('');
+        setSavedAccount(false);
+        try {
+          const r = await portalService.updateSettings({
+            contactPerson: account.name,
+            phone: account.phone,
+          });
+          const updated = r.data?.data;
+          if (updated) {
+            // Keep auth store in sync for header greetings etc.
+            setUser({
+              ...user,
+              name: updated.contact_person ?? account.name,
+              email: updated.email ?? account.email,
+            });
+          }
+          setSavedAccount(true);
+          setTimeout(() => setSavedAccount(false), 3000);
+        } catch (err: unknown) {
+          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+          setAccountError(msg || 'Failed to update account details.');
+        } finally {
+          setSavingAccount(false);
+        }
     };
 
-    const handlePasswordSave = (e: React.FormEvent) => {
+    const handlePasswordSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSavedPassword(true);
-        setPasswords({ current: '', newPass: '', confirm: '' });
-        setTimeout(() => setSavedPassword(false), 3000);
+        setSavingPassword(true);
+        setPasswordError('');
+        setSavedPassword(false);
+        try {
+          if (!passwords.current || !passwords.newPass) {
+            setPasswordError('Current and new password are required.');
+            return;
+          }
+          if (passwords.newPass.length < 8) {
+            setPasswordError('New password must be at least 8 characters.');
+            return;
+          }
+          if (passwords.newPass !== passwords.confirm) {
+            setPasswordError('New password and confirmation do not match.');
+            return;
+          }
+
+          const r = await authService.changePassword(passwords.current, passwords.newPass);
+          const accessToken = r.data?.accessToken;
+          const refreshToken = r.data?.refreshToken;
+          const nextUser = r.data?.user;
+          if (accessToken && refreshToken) setTokens(accessToken, refreshToken);
+          if (nextUser) setUser(nextUser);
+
+          setSavedPassword(true);
+          setPasswords({ current: '', newPass: '', confirm: '' });
+          setTimeout(() => setSavedPassword(false), 3000);
+        } catch (err: unknown) {
+          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+          setPasswordError(msg || 'Failed to update password.');
+        } finally {
+          setSavingPassword(false);
+        }
     };
 
     const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
@@ -55,6 +114,11 @@ export default function VendorSettingsPage() {
             {/* Account Information */}
             <form onSubmit={handleAccountSave} className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
                 <h2 className="font-semibold text-gray-900 mb-5">Account Information</h2>
+                {accountError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-4">
+                    {accountError}
+                  </div>
+                )}
                 {savedAccount && (
                     <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700 mb-4">
                         ✓ Account details saved successfully!
@@ -93,14 +157,23 @@ export default function VendorSettingsPage() {
                         />
                     </div>
                 </div>
-                <button type="submit" className="mt-5 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                    Save Changes
+                <button
+                  type="submit"
+                  disabled={savingAccount}
+                  className="mt-5 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm disabled:opacity-50"
+                >
+                    {savingAccount ? 'Saving…' : 'Save Changes'}
                 </button>
             </form>
 
             {/* Change Password */}
             <form onSubmit={handlePasswordSave} className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
                 <h2 className="font-semibold text-gray-900 mb-5">Change Password</h2>
+                {passwordError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-4">
+                    {passwordError}
+                  </div>
+                )}
                 {savedPassword && (
                     <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700 mb-4">
                         ✓ Password updated successfully!
@@ -138,8 +211,12 @@ export default function VendorSettingsPage() {
                         />
                     </div>
                 </div>
-                <button type="submit" className="mt-5 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                    Update Password
+                <button
+                  type="submit"
+                  disabled={savingPassword}
+                  className="mt-5 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm disabled:opacity-50"
+                >
+                    {savingPassword ? 'Updating…' : 'Update Password'}
                 </button>
             </form>
 
