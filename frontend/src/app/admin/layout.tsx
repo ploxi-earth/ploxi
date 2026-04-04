@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const hydrated = useAuthHydrated();
   const router = useRouter();
   const pathname = usePathname();
+  const [pendingMeetingRequests, setPendingMeetingRequests] = useState(0);
 
   // Allow login page to render without auth
   const isLoginPage = pathname === '/admin/login';
@@ -46,6 +47,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/admin/login');
     }
   }, [hydrated, isAuthenticated, user, router, isLoginPage]);
+
+  useEffect(() => {
+    if (!hydrated || isLoginPage || !isAuthenticated || user?.role !== 'platform_admin') return;
+
+    let mounted = true;
+
+    const loadAlerts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('/api/admin/dashboard', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) return;
+        const body = await response.json();
+
+        if (!mounted) return;
+        setPendingMeetingRequests(body?.data?.alerts?.pendingMeetingRequests || 0);
+      } catch {
+        // Ignore background polling errors.
+      }
+    };
+
+    loadAlerts();
+    const intervalId = setInterval(loadAlerts, 30000);
+
+    const onFocus = () => loadAlerts();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [hydrated, isLoginPage, isAuthenticated, user?.role, pathname]);
 
   if (isLoginPage) return <>{children}</>;
 
@@ -135,7 +175,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   }`}
                 >
                   <span className={active ? 'text-white' : 'text-gray-500'}>{l.icon}</span>
-                  {l.label}
+                  <span className="flex items-center gap-2">
+                    {l.label}
+                    {l.href === '/admin/vendors' && pendingMeetingRequests > 0 && (
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500" aria-label="Pending meeting requests" title="Pending meeting requests" />
+                    )}
+                  </span>
                 </Link>
               );
             })}

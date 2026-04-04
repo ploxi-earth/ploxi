@@ -6,6 +6,7 @@ import { adminService } from '@/services/admin.service';
 interface DashboardData {
   vendors: { total: number; pending: number; approved: number; rejected: number; onboarding: number; onboarded: number };
   registrations: { corporate: number; cleantech: number; climateFinance: number };
+  alerts?: { pendingMeetingRequests: number };
 }
 
 function StatCard({ label, value, icon, accent }: { label: string; value: number; icon: React.ReactNode; accent: string }) {
@@ -82,10 +83,13 @@ export default function AdminDashboard() {
     ]
     : [];
 
+  const pendingMeetingRequests = data?.alerts?.pendingMeetingRequests || 0;
+
   const quickLinks = [
     {
       href: '/admin/vendors', label: 'Manage Vendors', desc: 'Approve, reject and onboard vendors',
       accent: 'from-gray-800 to-gray-900',
+      pendingCount: pendingMeetingRequests,
       icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
     },
     {
@@ -147,14 +151,22 @@ export default function AdminDashboard() {
             <Link
               key={q.href}
               href={q.href}
-              className={`bg-gradient-to-br ${q.accent} text-white rounded-2xl p-5 flex flex-col gap-3 hover:opacity-90 transition-all shadow-sm hover:shadow-md group`}
+              className={`relative bg-gradient-to-br ${q.accent} text-white rounded-2xl p-5 flex flex-col gap-3 hover:opacity-90 transition-all shadow-sm hover:shadow-md group`}
             >
+              {q.pendingCount > 0 && (
+                <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
+                  {q.pendingCount}
+                </span>
+              )}
               <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
                 {q.icon}
               </div>
               <div>
                 <p className="font-semibold text-sm leading-none mb-1">{q.label}</p>
-                <p className="text-xs opacity-70 leading-tight">{q.desc}</p>
+                <p className="text-xs opacity-70 leading-tight">
+                  {q.pendingCount > 0 ? `${q.desc} · ${q.pendingCount} pending request${q.pendingCount > 1 ? 's' : ''}` : q.desc}
+                </p>
               </div>
               <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                 Open
