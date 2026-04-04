@@ -26,7 +26,11 @@ export async function GET(req: NextRequest) {
     const { data: completedProjectsData } = await supabase
       .from('projects').select('value').eq('vendor_id', vendorId).eq('status', 'completed');
 
-    const totalRevenue = (completedProjectsData || []).reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+    const projectRevenue = (completedProjectsData || []).reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+
+    // Revenue should only reflect realized marketplace deals.
+    // Service pricing is not considered revenue until client/deal flow is implemented.
+    const totalRevenue = projectRevenue;
 
     const [{ data: recentProjects }, { data: recentNotifications }] = await Promise.all([
       supabase.from('projects').select('*').eq('vendor_id', vendorId).order('updated_at', { ascending: false }).limit(5),

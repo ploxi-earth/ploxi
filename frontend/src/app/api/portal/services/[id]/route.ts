@@ -8,6 +8,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const vendorId = user.vendorId || user.id;
     const body = await req.json();
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+    if (body.pricing !== undefined) {
+      const pricing = Number(body.pricing);
+      if (Number.isNaN(pricing) || pricing < 0) {
+        return jsonError('Service pricing must be a valid non-negative number.', 400);
+      }
+    }
+
     const map: Record<string, string> = {
       name: 'name', description: 'description', category: 'category',
       sector: 'sector', tags: 'tags', status: 'status', pricing: 'pricing',

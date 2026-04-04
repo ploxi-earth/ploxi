@@ -9,6 +9,7 @@ type ServiceRow = {
   description?: string | null;
   sector?: string | null;
   status?: 'active' | 'inactive' | 'draft' | null;
+  pricing?: number | null;
   category?: string | null;
   created_at?: string | null;
 };
@@ -30,7 +31,14 @@ export default function VendorServicesPage() {
     const [services, setServices] = useState<ServiceRow[]>([]);
 
     const [showAdd, setShowAdd] = useState(false);
-    const [draft, setDraft] = useState({ name: '', description: '', sector: '', status: 'active' as 'active' | 'draft' });
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [draft, setDraft] = useState({
+      name: '',
+      description: '',
+      sector: '',
+      status: 'active' as 'active' | 'inactive' | 'draft',
+      pricing: '',
+    });
 
     const sectors = useMemo(
       () => Array.from(new Set(services.map((s) => s.sector).filter(Boolean))) as string[],
@@ -86,8 +94,13 @@ export default function VendorServicesPage() {
 
     const createService = async () => {
       const name = draft.name.trim();
+      const pricing = Number(draft.pricing);
       if (!name) {
         setError('Service name is required.');
+        return;
+      }
+      if (!draft.pricing || Number.isNaN(pricing) || pricing <= 0) {
+        setError('Service pricing is required and must be greater than 0.');
         return;
       }
       setSaving(true);
@@ -98,14 +111,87 @@ export default function VendorServicesPage() {
           description: draft.description.trim(),
           sector: draft.sector.trim() || null,
           status: draft.status,
+          pricing,
         });
         setShowAdd(false);
-        setDraft({ name: '', description: '', sector: '', status: 'active' });
+        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
         await load();
       } catch (e: unknown) {
         setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create service.');
       } finally {
         setSaving(false);
+      }
+    };
+
+    const openEdit = (service: ServiceRow) => {
+      setEditingId(service.id);
+      setDraft({
+        name: service.name || '',
+        description: service.description || '',
+        sector: service.sector || '',
+        status: (service.status || 'active') as 'active' | 'inactive' | 'draft',
+        pricing: service.pricing ? String(service.pricing) : '',
+      });
+      setError('');
+    };
+
+    const updateService = async () => {
+      if (!editingId) return;
+      const name = draft.name.trim();
+      const pricing = Number(draft.pricing);
+
+      if (!name) {
+        setError('Service name is required.');
+        return;
+      }
+      if (!draft.pricing || Number.isNaN(pricing) || pricing <= 0) {
+        setError('Service pricing is required and must be greater than 0.');
+        return;
+      }
+
+      setSaving(true);
+      setError('');
+      try {
+        await portalService.updateService(editingId, {
+          name,
+          description: draft.description.trim(),
+          sector: draft.sector.trim() || null,
+          status: draft.status,
+          pricing,
+        });
+        setEditingId(null);
+        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
+        await load();
+      } catch (e: unknown) {
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update service.');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const removeService = async () => {
+      if (!editingId) return;
+      setSaving(true);
+      setError('');
+      try {
+        await portalService.deleteService(editingId);
+        setEditingId(null);
+        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
+        await load();
+      } catch (e: unknown) {
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete service.');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const togglePause = async (service: ServiceRow) => {
+      const nextStatus = service.status === 'inactive' ? 'active' : 'inactive';
+      try {
+        await portalService.updateService(service.id, { status: nextStatus });
+        await load();
+      } catch (e: unknown) {
+        setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update service status.');
       }
     };
 
@@ -132,15 +218,15 @@ export default function VendorServicesPage() {
               </div>
             )}
 
-            {/* Add Service Modal */}
-            {showAdd && (
+            {/* Add/Edit Service Modal */}
+            {(showAdd || editingId) && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
                 <div className="w-full max-w-lg rounded-2xl bg-white border border-gray-100 shadow-xl p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-semibold text-gray-900">Add Service</h2>
+                    <h2 className="font-semibold text-gray-900">{editingId ? 'Edit Service' : 'Add Service'}</h2>
                     <button
                       type="button"
-                      onClick={() => setShowAdd(false)}
+                      onClick={() => { setShowAdd(false); setEditingId(null); }}
                       className="text-sm text-gray-500 hover:text-gray-700"
                     >
                       Close
@@ -176,25 +262,51 @@ export default function VendorServicesPage() {
                         />
                       </div>
                       <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Pricing (INR)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all"
+                          value={draft.pricing}
+                          onChange={(e) => setDraft(d => ({ ...d, pricing: e.target.value }))}
+                          placeholder="e.g. 150000"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                         <select
                           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all"
                           value={draft.status}
-                          onChange={(e) => setDraft(d => ({ ...d, status: e.target.value as 'active' | 'draft' }))}
+                          onChange={(e) => setDraft(d => ({ ...d, status: e.target.value as 'active' | 'inactive' | 'draft' }))}
                         >
                           <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
                           <option value="draft">Draft</option>
                         </select>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={createService}
-                      className="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      {saving ? 'Creating…' : 'Create Service'}
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={editingId ? updateService : createService}
+                        className="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        {saving ? (editingId ? 'Saving…' : 'Creating…') : (editingId ? 'Save Changes' : 'Create Service')}
+                      </button>
+                      {editingId && (
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={removeService}
+                          className="w-full inline-flex items-center justify-center gap-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                          Delete Service
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -232,18 +344,34 @@ export default function VendorServicesPage() {
                     <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-sm hover:border-primary-100 transition-all group">
                         <div className="flex items-start justify-between mb-3">
                             <h3 className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{s.name}</h3>
-                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${s.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                                {s.status === 'active' ? 'Active' : 'Draft'}
+                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${s.status === 'active' ? 'bg-emerald-100 text-emerald-700' : s.status === 'inactive' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                {s.status === 'active' ? 'Active' : s.status === 'inactive' ? 'Paused' : 'Draft'}
                             </span>
                         </div>
                         <p className="text-sm text-gray-500 mb-4 leading-relaxed">{s.description || '—'}</p>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-3">
                             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${SECTOR_COLORS[s.sector || ''] || 'bg-gray-100 text-gray-500'}`}>
                                 {s.sector || '—'}
                             </span>
-                            <button className="text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors">
-                                Edit →
-                            </button>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs font-semibold text-gray-700">
+                                  ₹{Number(s.pricing || 0).toLocaleString('en-IN')}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => togglePause(s)}
+                                  className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${s.status === 'inactive' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}
+                                >
+                                  {s.status === 'inactive' ? 'Activate' : 'Pause'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openEdit(s)}
+                                  className="inline-flex items-center rounded-lg border border-primary-200 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-50 transition-colors"
+                                >
+                                  Edit →
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

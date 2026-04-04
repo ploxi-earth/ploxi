@@ -244,13 +244,8 @@ export default function VendorSettingsPage() {
                 </div>
             </div>
 
-            {/* Danger Zone */}
-            <div className="bg-white rounded-xl border border-red-200 p-6">
-                <h2 className="font-semibold text-red-700 mb-2">Danger Zone</h2>
-                <p className="text-sm text-gray-500 mb-4">Once you deactivate your account, all data will be permanently removed. This action cannot be undone.</p>
-                <button className="text-sm font-medium text-red-600 hover:text-red-700 border border-red-200 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-colors">
-                    Deactivate Account
-                </button>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs text-gray-500">
+                Account activation and deactivation are managed by the admin team.
             </div>
         </div>
     );

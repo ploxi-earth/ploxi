@@ -25,8 +25,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const message = error.response?.data?.message;
+    const requestUrl = String(originalRequest?.url || '');
+    const isAuthRequest =
+      requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/vendor/login') ||
+      requestUrl.includes('/admin/login');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
       if (typeof window !== 'undefined') {
         useAuthStore.getState().clearAuth();
