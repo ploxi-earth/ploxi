@@ -14,6 +14,8 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, accessToken: string) => void;
+  setUser: (user: User) => void;
+  setTokens: (accessToken: string, refreshToken?: string | null) => void;
   clearAuth: () => void;
 }
 
@@ -28,6 +30,18 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('accessToken', accessToken);
         }
         set({ user, accessToken, isAuthenticated: true });
+      },
+      setUser: (user) => {
+        set((state) => ({ ...state, user, isAuthenticated: Boolean(state.accessToken) }));
+      },
+      setTokens: (accessToken, refreshToken) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+          }
+        }
+        set((state) => ({ ...state, accessToken, isAuthenticated: true }));
       },
       clearAuth: () => {
         if (typeof window !== 'undefined') {

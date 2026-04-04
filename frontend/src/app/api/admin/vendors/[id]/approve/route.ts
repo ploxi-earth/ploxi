@@ -20,6 +20,12 @@ export async function PATCH(
       .eq('vendor_id', vendor.id)
       .eq('stage_name', 'admin_review');
 
+    await supabase
+      .from('onboarding_stages')
+      .update({ status: 'active' })
+      .eq('vendor_id', vendor.id)
+      .eq('stage_name', 'company_details_submitted');
+
 
     const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
     return jsonOk({ success: true, data: updated, message: 'Vendor approved.' });

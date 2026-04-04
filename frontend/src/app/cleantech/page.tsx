@@ -6,10 +6,10 @@ import SubpageHeader from '@/components/SubpageHeader';
 
 export default function CleantechPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="page-shell min-h-screen bg-white">
       <SubpageHeader subtitle="Decarbonisation and Net-Zero Marketplace" />
 
-      <section className="bg-gradient-to-br from-sky-900 via-cyan-800 to-blue-900 text-white py-24 px-4">
+      <section className="bg-gradient-to-br from-sky-900 via-cyan-800 to-blue-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <HeroFadeUp delay={0.1}>
             <div className="inline-block bg-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full border border-sky-400/30 mb-6">
@@ -17,7 +17,7 @@ export default function CleantechPage() {
             </div>
           </HeroFadeUp>
           <HeroFadeUp delay={0.22}>
-            <h1 className="text-5xl font-extrabold leading-tight mb-6">
+            <h1 className="text-balance mb-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
               Connect Your <span className="text-sky-300">Clean Tech</span>
               <br />
               Solutions with Enterprise Buyers
@@ -54,7 +54,7 @@ export default function CleantechPage() {
 
       {/* Features Section */}
       <FadeUp>
-        <section className="py-20 bg-white">
+        <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Why Partner with Ploxi?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -81,7 +81,7 @@ export default function CleantechPage() {
                   desc: 'Showcase your solutions and generate qualified leads.',
                 },
               ].map((f) => (
-                <div key={f.title} className="bg-gray-50 rounded-2xl p-6 text-center hover:shadow-md transition-all hover:-translate-y-1">
+                <div key={f.title} className="surface-card surface-card-hover p-6 text-center">
                   <div className="w-14 h-14 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-4 text-white">
                     {f.icon}
                   </div>
@@ -95,9 +95,9 @@ export default function CleantechPage() {
       </FadeUp>
 
       <FadeUp>
-        <section className="py-20 bg-gray-50">
+        <section className="bg-gray-50 py-16 sm:py-20">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Accelerate Your Growth?</h2>
+            <h2 className="text-balance text-3xl font-bold text-gray-900 mb-4">Ready to Accelerate Your Growth?</h2>
             <p className="text-gray-500 mb-8">Join hundreds of clean tech vendors connecting with enterprise buyers on Ploxi</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/vendor/register" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-md hover:from-sky-600 hover:to-cyan-600 transition-all duration-200">

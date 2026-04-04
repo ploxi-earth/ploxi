@@ -1,164 +1,299 @@
 'use client';
+
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { HeroFadeDown, HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
+const NAV_LINKS = [
+  { href: '/corporate', label: 'Corporate' },
+  { href: '/cleantech', label: 'Clean Tech' },
+  { href: '/climate-finance', label: 'Climate Finance' },
+  { href: '/tools/ghg-calculator', label: 'GHG Calculator' },
+];
+
+const SOLUTION_CARDS = [
+  {
+    href: '/corporate',
+    eyebrow: 'Corporate & Industry',
+    title: 'Marketplace',
+    accent: 'from-green-500 to-emerald-600',
+    hoverAccent: 'hover:from-green-600 hover:to-emerald-700',
+    eyebrowClass: 'text-primary-600',
+    items: ['ESG Dashboard', 'Sustainability Reporting', 'Compliance Management', 'Vendor Marketplace'],
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 text-white sm:h-8 sm:w-8" aria-hidden="true">
+        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+        <path d="M10 6h4" />
+        <path d="M10 10h4" />
+        <path d="M10 14h4" />
+        <path d="M10 18h4" />
+      </svg>
+    ),
+  },
+  {
+    href: '/cleantech',
+    eyebrow: 'Clean Tech',
+    title: 'Vendors & Solutions',
+    accent: 'from-blue-500 to-cyan-600',
+    hoverAccent: 'hover:from-blue-600 hover:to-cyan-700',
+    eyebrowClass: 'text-sky-600',
+    items: ['Technology Vendors', 'Innovation Showcase', 'Solution Matching', 'Partnership Opportunities'],
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 text-white sm:h-8 sm:w-8" aria-hidden="true">
+        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/climate-finance',
+    eyebrow: 'Climate Finance',
+    title: 'Investment & Funding',
+    accent: 'from-gray-700 to-gray-900',
+    hoverAccent: 'hover:from-gray-800 hover:to-black',
+    eyebrowClass: 'text-gray-600',
+    items: ['Carbon Credits', 'Green Bonds', 'Impact Investment', 'ESG Funds'],
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 text-white sm:h-8 sm:w-8" aria-hidden="true">
+        <path d="M16 7h6v6" />
+        <path d="m22 7-8.5 8.5-5-5L2 17" />
+      </svg>
+    ),
+  },
+];
+
 export default function HomePage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileNavOpen]);
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* ── Navbar ──────────────────────────────────────────────────────── */}
+    <div className="page-shell min-h-screen bg-white">
       <HeroFadeDown delay={0} className="sticky top-0 z-50">
-      <header className="bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
+        <header className="border-b border-white/10 bg-white/80 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <Link href="/" className="flex min-w-0 items-center gap-3">
               <Image
                 src="/images/logo.jpeg"
                 alt="Ploxi Earth"
-                width={40}
-                height={40}
-                className="rounded-full"
+                width={42}
+                height={42}
+                className="rounded-full ring-2 ring-primary-500/10"
               />
-              <span className="text-xl font-bold text-gray-900">Ploxi</span>
+              <div className="min-w-0">
+                <span className="block truncate text-lg font-bold text-gray-900">Ploxi Earth</span>
+                <span className="hidden text-xs uppercase tracking-[0.22em] text-gray-400 sm:block">
+                  Decarbonisation Marketplace
+                </span>
+              </div>
             </Link>
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href="/corporate" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Corporate</Link>
-              <Link href="/cleantech" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Clean Tech</Link>
-              <Link href="/climate-finance" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Climate Finance</Link>
-              <Link href="/tools/ghg-calculator" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">GHG Calculator</Link>
-              <Link href="https://www.ploxiconsult.com/" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm px-4 py-2">
+
+            <nav className="hidden items-center gap-3 lg:flex">
+              {NAV_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <a
+                href="https://www.ploxiconsult.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary px-4 py-2 text-sm"
+              >
                 Visit Website
-              </Link>
+              </a>
             </nav>
+
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50 lg:hidden"
+              aria-label="Open navigation"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
           </div>
-        </div>
-      </header>
+        </header>
       </HeroFadeDown>
 
-      {/* ── Hero Section ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-          <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary-500 blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-cyan-500 blur-3xl" />
-        </div>
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-28 text-center">
+      <AnimatePresence>
+        {mobileNavOpen && (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Close navigation"
+              className="fixed inset-0 z-[60] bg-slate-950/45 backdrop-blur-sm lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileNavOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-x-4 top-4 z-[70] overflow-hidden rounded-[28px] border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl lg:hidden"
+              initial={{ opacity: 0, y: -24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -18, scale: 0.98 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={38} height={38} className="rounded-full" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">Ploxi Earth</p>
+                    <p className="text-xs text-slate-500">Explore the platform</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50"
+                  aria-label="Close navigation"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {NAV_LINKS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                  >
+                    <span>{item.label}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ))}
+              </div>
+
+              <a
+                href="https://www.ploxiconsult.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary mt-4 w-full"
+              >
+                Visit Website
+              </a>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+        <div className="hero-orb left-[-8rem] top-10 h-56 w-56 bg-primary-500/35 sm:h-72 sm:w-72" />
+        <div className="hero-orb bottom-[-4rem] right-[-3rem] h-72 w-72 bg-cyan-500/20 sm:h-96 sm:w-96" />
+        <div className="hero-orb right-[20%] top-[18%] hidden h-40 w-40 bg-emerald-400/15 lg:block" />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <HeroFadeUp delay={0.1}>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-600/20 px-4 py-1.5 text-sm font-medium text-primary-300 border border-primary-500/30">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-200 sm:text-sm">
               Decarbonisation & Net-Zero Marketplace
             </div>
           </HeroFadeUp>
           <HeroFadeUp delay={0.22}>
-            <h1 className="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight">
+            <h1 className="text-balance mt-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
               Empowering{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">
+              <span className="bg-gradient-to-r from-primary-300 via-emerald-300 to-cyan-300 bg-clip-text text-transparent">
                 Sustainable
               </span>
-              <br />Business Growth
+              <br className="hidden sm:block" />
+              Business Growth
             </h1>
           </HeroFadeUp>
-          <HeroFadeUp delay={0.36}>
-            <p className="mt-6 text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              Transform your sustainability journey with our integrated platform connecting
-              corporations, technology providers, and financial solutions.
+          <HeroFadeUp delay={0.34}>
+            <p className="mx-auto mt-6 max-w-3xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8 lg:text-xl">
+              Transform your sustainability journey with an integrated platform connecting
+              corporations, technology providers, and climate-focused financial solutions.
             </p>
           </HeroFadeUp>
-          <HeroFadeUp delay={0.48}>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="https://www.ploxiconsult.com/" target="_blank" rel="noopener noreferrer" className="btn-primary text-base px-8 py-4">
+          <HeroFadeUp delay={0.46}>
+            <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+              <a
+                href="https://www.ploxiconsult.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary px-8 py-4 text-base"
+              >
                 Visit Our Website
-              </Link>
-              <Link href="/tools/ghg-calculator" className="btn-secondary text-base px-8 py-4 border-white/30 text-white hover:bg-white/10">
+              </a>
+              <Link
+                href="/tools/ghg-calculator"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+              >
                 GHG Calculator
               </Link>
             </div>
           </HeroFadeUp>
+
         </div>
       </section>
 
-      {/* ── Solutions Section ────────────────────────────────────────────── */}
-      <section className="py-24 bg-white">
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <FadeUp className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900">Comprehensive ESG Solutions</h2>
-            <p className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">
-              Transform your sustainability journey with our integrated platform connecting
-              corporations, technology providers, and financial solutions.
+          <FadeUp className="mx-auto mb-12 max-w-3xl text-center sm:mb-16">
+            <h2 className="text-balance text-3xl font-bold text-gray-900 sm:text-4xl">
+              Comprehensive ESG Solutions
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-500 sm:text-lg">
+              Explore tailored experiences for enterprises, clean technology innovators, and
+              climate finance participants in one connected ecosystem.
             </p>
           </FadeUp>
 
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Corporate Card */}
-            <StaggerItem className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-5 sm:mb-6 transition-all duration-300 hover:from-green-600 hover:to-emerald-700">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 text-white" aria-hidden="true">
-                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" />
-                </svg>
-              </div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-primary-600 mb-2">Corporate & Industry</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Marketplace</h3>
-              <ul className="space-y-2.5 text-sm text-gray-700 mb-6">
-                {['ESG Dashboard', 'Sustainability Reporting', 'Compliance Management', 'Vendor Marketplace'].map((item) => (
-                  <li key={item} className="flex items-center text-xs sm:text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" aria-hidden="true">
-                      <path d="M21.801 10A10 10 0 1 1 17 3.335" /><path d="m9 11 3 3L22 4" />
-                    </svg>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/corporate" className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-green-600 hover:to-emerald-700 transition-all duration-200">
-                Explore Ploxi Earth <span aria-hidden="true">→</span>
-              </Link>
-            </StaggerItem>
-
-            {/* Clean Tech Card */}
-            <StaggerItem className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-5 sm:mb-6 transition-all duration-300 hover:from-blue-600 hover:to-cyan-700">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 text-white" aria-hidden="true">
-                  <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-                </svg>
-              </div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-sky-600 mb-2">Clean Tech</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Vendors & Solutions</h3>
-              <ul className="space-y-2.5 text-sm text-gray-700 mb-6">
-                {['Technology Vendors', 'Innovation Showcase', 'Solution Matching', 'Partnership Opportunities'].map((item) => (
-                  <li key={item} className="flex items-center text-xs sm:text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" aria-hidden="true">
-                      <path d="M21.801 10A10 10 0 1 1 17 3.335" /><path d="m9 11 3 3L22 4" />
-                    </svg>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/cleantech" className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-blue-600 hover:to-cyan-700 transition-all duration-200">
-                Explore Ploxi Earth <span aria-hidden="true">→</span>
-              </Link>
-            </StaggerItem>
-
-            {/* Climate Finance Card */}
-            <StaggerItem className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center mb-5 sm:mb-6 transition-all duration-300 hover:from-gray-800 hover:to-black">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 text-white" aria-hidden="true">
-                  <path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" />
-                </svg>
-              </div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-600 mb-2">Climate Finance</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Investment & Funding</h3>
-              <ul className="space-y-2.5 text-sm text-gray-700 mb-6">
-                {['Carbon Credits', 'Green Bonds', 'Impact Investment', 'ESG Funds'].map((item) => (
-                  <li key={item} className="flex items-center text-xs sm:text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" aria-hidden="true">
-                      <path d="M21.801 10A10 10 0 1 1 17 3.335" /><path d="m9 11 3 3L22 4" />
-                    </svg>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/climate-finance" className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gray-700 to-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-gray-800 hover:to-black transition-all duration-200">
-                Explore Ploxi Earth <span aria-hidden="true">→</span>
-              </Link>
-            </StaggerItem>
+          <StaggerContainer className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            {SOLUTION_CARDS.map((card) => (
+              <StaggerItem
+                key={card.title}
+                className="surface-card surface-card-hover group relative overflow-hidden p-6 sm:p-8"
+              >
+                <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${card.accent} ${card.hoverAccent} transition-all duration-300 sm:h-16 sm:w-16`}>
+                  {card.icon}
+                </div>
+                <div className={`mb-2 text-xs font-semibold uppercase tracking-[0.22em] ${card.eyebrowClass}`}>
+                  {card.eyebrow}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">{card.title}</h3>
+                <ul className="mt-5 space-y-3 text-sm text-gray-700">
+                  {card.items.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={card.href}
+                  className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 ${card.accent} ${card.hoverAccent}`}
+                >
+                  Explore Ploxi Earth
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </StaggerItem>
+            ))}
           </StaggerContainer>
         </div>
       </section>

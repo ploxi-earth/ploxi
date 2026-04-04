@@ -37,7 +37,7 @@ export default function VendorSettingsPage() {
             phone: account.phone,
           });
           const updated = r.data?.data;
-          if (updated) {
+          if (updated && user) {
             // Keep auth store in sync for header greetings etc.
             setUser({
               ...user,

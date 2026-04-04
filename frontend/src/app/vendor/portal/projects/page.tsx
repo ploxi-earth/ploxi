@@ -68,7 +68,7 @@ export default function VendorProjectsPage() {
     return (
         <div>
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Projects & Opportunities</h1>
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Projects & Opportunities</h1>
                 <p className="text-gray-500 text-sm mt-0.5">Track your project pipeline and submitted proposals</p>
             </div>
 
@@ -93,7 +93,50 @@ export default function VendorProjectsPage() {
 
             {/* Project table */}
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="space-y-3 p-4 md:hidden">
+                    {loading ? (
+                      <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">Loading projects…</div>
+                    ) : filtered.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">No projects match this filter.</div>
+                    ) : filtered.map((p) => (
+                      <div key={p.id} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-gray-900">{p.title || 'Untitled project'}</p>
+                            <p className="mt-1 text-sm text-gray-500">{p.client || '—'}</p>
+                          </div>
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${(STATUS_CONFIG[p.status || ''] || STATUS_CONFIG.opportunity).classes}`}>
+                            {(STATUS_CONFIG[p.status || ''] || STATUS_CONFIG.opportunity).label}
+                          </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-gray-400">Value</p>
+                            <p className="mt-1 font-semibold text-gray-800">₹{Number(p.value || 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-gray-400">Deadline</p>
+                            <p className="mt-1 text-gray-600">
+                              {p.end_date ? new Date(p.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="mb-1 flex items-center justify-between text-xs text-gray-400">
+                            <span>Progress</span>
+                            <span>{Number(p.progress || 0)}%</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-gray-100">
+                            <div
+                              className={`h-full rounded-full transition-all ${p.status === 'completed' ? 'bg-emerald-500' : p.status === 'cancelled' ? 'bg-red-300' : 'bg-primary-500'}`}
+                              style={{ width: `${Number(p.progress || 0)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-gray-50/80 border-b border-gray-100 text-left">
@@ -138,7 +181,7 @@ export default function VendorProjectsPage() {
                     </table>
                 </div>
                 {!loading && filtered.length === 0 && (
-                    <div className="text-center py-12">
+                    <div className="hidden py-12 text-center md:block">
                         <p className="text-gray-400 text-sm">No projects match this filter.</p>
                     </div>
                 )}

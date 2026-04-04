@@ -82,14 +82,14 @@ export default function VendorProfilePage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold text-slate-900">Company Profile</h1>
+      <div className="mb-8 sm:mb-10">
+        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Company Profile</h1>
         <p className="text-slate-600 mt-2">Manage your company information and track completion progress</p>
       </div>
 
       {/* Completion Indicator */}
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-6 mb-8 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-emerald-900">Profile Completion</p>
           <p className={`text-2xl font-bold ${completion === 100 ? 'text-green-600' : 'text-emerald-600'}`}>
             {completion}%
@@ -112,7 +112,7 @@ export default function VendorProfilePage() {
 
       {/* Form */}
       <form onSubmit={handleSave} className="max-w-4xl">
-        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm sm:p-8">
           {/* Messages */}
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-6">

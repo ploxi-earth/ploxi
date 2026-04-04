@@ -39,7 +39,7 @@ export default function ManagerDashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Reports</h1>
           <p className="text-gray-500 text-sm mt-0.5">Review, approve and publish sustainability reports</p>
@@ -64,7 +64,7 @@ export default function ManagerDashboard() {
         <div className="space-y-3">
           {reports.map((r) => (
             <div key={r._id} className="bg-white rounded-xl border border-gray-100 p-5">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1 min-w-0">
                   <Link href={`/consultant/reports/${r._id}`} className="font-semibold text-gray-900 hover:text-primary-600 truncate block">{r.title}</Link>
                   <p className="text-sm text-gray-500 mt-0.5">
@@ -73,7 +73,7 @@ export default function ManagerDashboard() {
                     {' · '}{new Date(r.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_COLORS[r.status] || ''}`}>{r.status.replace(/_/g, ' ')}</span>
                   {r.status === 'submitted' && (
                     <button onClick={() => act(() => consultantService.approveReport(r._id), `approve-${r._id}`)} disabled={!!actionLoading} className="btn-primary text-xs py-1 px-3">

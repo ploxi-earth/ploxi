@@ -117,7 +117,7 @@ export default function GHGCalculatorPage() {
 
       {/* ── Sticky nav ── */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           {/* Left — Ploxi brand identity */}
           <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={32} height={32} className="rounded-full ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/50 transition-all" />
@@ -128,7 +128,7 @@ export default function GHGCalculatorPage() {
           </Link>
 
           {/* Centre — tool name as a Ploxi product */}
-          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5">
+          <div className="order-3 flex w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 sm:order-none sm:w-auto">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
             <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">GHG Calculator</span>
             <span className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 border-l border-gray-200 pl-2 ml-0.5">
@@ -155,7 +155,7 @@ export default function GHGCalculatorPage() {
             <Image src="/images/logo.jpeg" alt="" width={14} height={14} className="rounded-full opacity-80" />
             Ploxi Earth · GHG Protocol Aligned Tool
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
+          <h1 className="text-balance mb-4 text-4xl font-extrabold leading-tight sm:text-5xl">
             Ploxi <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">GHG Emissions</span> Calculator
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-2">
@@ -301,7 +301,7 @@ export default function GHGCalculatorPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button onClick={() => setActiveScope(1)} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
                     Back to Scope 1
@@ -391,13 +391,13 @@ export default function GHGCalculatorPage() {
         {results && (
           <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
             {/* Results header */}
-            <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6 text-white text-center">
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-5 py-6 text-center text-white sm:px-8">
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Total Estimated Emissions</p>
-              <p className="text-6xl font-extrabold tracking-tight">{results.total.toFixed(2)}</p>
+              <p className="text-5xl font-extrabold tracking-tight sm:text-6xl">{results.total.toFixed(2)}</p>
               <p className="text-emerald-400 text-sm font-medium mt-1">tCO₂e · {companyName || 'Your Organisation'} · {reportingYear}</p>
             </div>
 
-            <div className="p-8 space-y-8">
+            <div className="space-y-8 p-5 sm:p-8">
               {/* Scope cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
@@ -431,7 +431,7 @@ export default function GHGCalculatorPage() {
                     />
                   ))}
                 </div>
-                <div className="flex justify-between mt-2">
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-between">
                   {[
                     { label: 'Scope 1', color: 'bg-red-500', value: results.scope1 },
                     { label: 'Scope 2', color: 'bg-amber-400', value: results.scope2 },
@@ -453,9 +453,9 @@ export default function GHGCalculatorPage() {
                   { label: 'Scope 3 — Value Chain', value: results.scope3, bar: 'bg-emerald-500', text: 'text-emerald-600' },
                 ].map((s) => (
                   <div key={s.label}>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-xs font-medium text-gray-600">{s.label}</span>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className={`text-xs font-bold ${s.text}`}>{pct(s.value)}%</span>
                         <span className="text-xs text-gray-400">{s.value.toFixed(2)} tCO₂e</span>
                       </div>

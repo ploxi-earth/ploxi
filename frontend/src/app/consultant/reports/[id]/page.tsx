@@ -52,7 +52,7 @@ export default function ReportDetailPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <Link href="/consultant" className="text-sm text-gray-500 hover:text-gray-700">← Reports</Link>
         <span className="text-gray-300">/</span>
         <h1 className="text-xl font-bold text-gray-900 flex-1 truncate">{report.title}</h1>
@@ -63,7 +63,7 @@ export default function ReportDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Meta */}
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <dl className="grid grid-cols-2 gap-4 text-sm">
+            <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               <div><dt className="text-gray-500">Reporting Period</dt><dd className="font-medium mt-0.5">{report.reportingPeriod || '—'}</dd></div>
               <div><dt className="text-gray-500">Created</dt><dd className="font-medium mt-0.5">{new Date(report.createdAt).toLocaleDateString()}</dd></div>
             </dl>

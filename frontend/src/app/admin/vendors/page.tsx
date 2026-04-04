@@ -87,7 +87,7 @@ export default function AdminVendorsPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Admin Console</p>
           <h1 className="text-2xl font-extrabold text-gray-900">Vendors</h1>
@@ -160,58 +160,95 @@ export default function AdminVendorsPage() {
             <p className="text-sm text-gray-400">No vendors found.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                {['Company', 'Contact', 'Email', 'Status', 'Portal Access', 'Joined', ''].map((h) => (
-                  <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
+          <>
+            <div className="space-y-3 p-4 md:hidden">
               {vendors.map((v) => {
                 const portalAccess = getPortalAccessMeta(v);
 
                 return (
-                  <tr key={v.id} className="hover:bg-gray-50/70 transition-colors group">
-                    <td className="px-5 py-3.5 font-semibold text-gray-900">{v.company_name || '—'}</td>
-                    <td className="px-5 py-3.5 text-gray-600">{v.contact_person || '—'}</td>
-                    <td className="px-5 py-3.5 text-gray-500">{v.email}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${STATUS_STYLES[v.status] || STATUS_STYLES.pending}`}>
+                  <Link key={v.id} href={`/admin/vendors/${v.id}`} className="block rounded-2xl border border-gray-100 bg-gray-50/70 p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900">{v.company_name || '—'}</p>
+                        <p className="mt-1 text-sm text-gray-600">{v.contact_person || '—'}</p>
+                      </div>
+                      <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[v.status] || STATUS_STYLES.pending}`}>
                         {v.status === 'onboarded' ? 'completed' : v.status}
                       </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${portalAccess.style}`}>
-                        {portalAccess.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-gray-400 text-xs">
-                      {new Date(v.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <Link
-                        href={`/admin/vendors/${v.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 group-hover:text-emerald-600 transition-colors"
-                      >
-                        View
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                      </Link>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-400">Email</p>
+                        <p className="mt-1 break-all text-gray-600">{v.email}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${portalAccess.style}`}>
+                          {portalAccess.label}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(v.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+            <div className="hidden md:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    {['Company', 'Contact', 'Email', 'Status', 'Portal Access', 'Joined', ''].map((h) => (
+                      <th key={h} className="bg-gray-50/60 px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {vendors.map((v) => {
+                    const portalAccess = getPortalAccessMeta(v);
+
+                    return (
+                      <tr key={v.id} className="group transition-colors hover:bg-gray-50/70">
+                        <td className="px-5 py-3.5 font-semibold text-gray-900">{v.company_name || '—'}</td>
+                        <td className="px-5 py-3.5 text-gray-600">{v.contact_person || '—'}</td>
+                        <td className="px-5 py-3.5 text-gray-500">{v.email}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${STATUS_STYLES[v.status] || STATUS_STYLES.pending}`}>
+                            {v.status === 'onboarded' ? 'completed' : v.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${portalAccess.style}`}>
+                            {portalAccess.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-gray-400 text-xs">
+                          {new Date(v.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <Link
+                            href={`/admin/vendors/${v.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 transition-colors group-hover:text-emerald-600"
+                          >
+                            View
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Pagination */}
       {total > 20 && (
-        <div className="flex items-center justify-between mt-5 text-sm">
+        <div className="mt-5 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-gray-400">Showing page {page}</p>
           <div className="flex gap-2">
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors">

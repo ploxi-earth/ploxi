@@ -55,7 +55,7 @@ export default function VendorMeetingsPage() {
     return (
         <div>
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Meetings</h1>
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Meetings</h1>
                 <p className="text-gray-500 text-sm mt-0.5">View and manage your scheduled meetings</p>
             </div>
 
@@ -122,7 +122,33 @@ export default function VendorMeetingsPage() {
             <div>
                 <h2 className="font-semibold text-gray-900 mb-4">Past Meetings</h2>
                 <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="space-y-3 p-4 md:hidden">
+                        {loading ? (
+                          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">Loading…</div>
+                        ) : past.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">No past meetings.</div>
+                        ) : past.map((m) => (
+                          <div key={m._id} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-gray-900">{m.type || 'Meeting'}</p>
+                                <p className="mt-1 text-sm text-gray-600">
+                                  {m.date ? new Date(m.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                                  {m.time ? ` · ${m.time}` : ''}
+                                </p>
+                              </div>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[m.status || ''] || STATUS_STYLES.completed}`}>
+                                {m.status || 'completed'}
+                              </span>
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                              <span>📹 Video</span>
+                              <span>{m.note || '—'}</span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50/80 border-b border-gray-100 text-left">
@@ -156,7 +182,7 @@ export default function VendorMeetingsPage() {
                         </table>
                     </div>
                     {!loading && past.length === 0 && (
-                      <div className="p-10 text-center">
+                      <div className="hidden p-10 text-center md:block">
                         <p className="text-gray-400 text-sm">No past meetings.</p>
                       </div>
                     )}

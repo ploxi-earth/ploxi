@@ -299,6 +299,12 @@ exports.approveVendor = async (req, res, next) => {
     .eq('vendor_id', vendor.id)
     .eq('stage_name', 'admin_review');
 
+  await supabase
+    .from('onboarding_stages')
+    .update({ status: 'active' })
+    .eq('vendor_id', vendor.id)
+    .eq('stage_name', 'company_details_submitted');
+
   // Activate user account so vendor can log in
   await supabase
     .from('users')

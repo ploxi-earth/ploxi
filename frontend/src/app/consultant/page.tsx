@@ -29,7 +29,7 @@ export default function ConsultantReportsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Reports</h1>
           <p className="text-gray-500 text-sm mt-0.5">Sustainability data collection & reporting</p>
@@ -52,7 +52,7 @@ export default function ConsultantReportsPage() {
         <div className="space-y-3">
           {reports.map((r) => (
             <Link key={r._id} href={`/consultant/reports/${r._id}`} className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-primary-200 hover:shadow-sm transition-all">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{r.title}</p>
                   <p className="text-sm text-gray-500 mt-0.5">
@@ -60,7 +60,7 @@ export default function ConsultantReportsPage() {
                     {r.vendorId?.companyName && ` · ${r.vendorId.companyName}`}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_COLORS[r.status] || 'bg-gray-100 text-gray-700'}`}>{r.status.replace(/_/g, ' ')}</span>
                   <span className="text-gray-400 text-sm">{new Date(r.createdAt).toLocaleDateString()}</span>
                 </div>

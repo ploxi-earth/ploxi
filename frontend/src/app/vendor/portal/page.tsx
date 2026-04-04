@@ -155,7 +155,7 @@ export default function VendorPortalDashboard() {
     return (
         <div>
             {showWelcome && (
-                <div className="mb-8 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6 shadow-sm">
+                <div className="mb-8 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm sm:p-6">
                     <h2 className="text-lg font-bold text-emerald-900">Welcome to your vendor portal</h2>
                     <p className="text-sm text-emerald-800/90 mt-1 max-w-2xl">
                         Your onboarding is complete. Use the dashboard below to manage services, projects, meetings, and notifications.
@@ -171,7 +171,7 @@ export default function VendorPortalDashboard() {
             )}
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name || 'Vendor'}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome back, {user?.name || 'Vendor'}</h1>
                 <p className="text-gray-500 mt-1">Here&apos;s a summary of your vendor portal activity.</p>
             </div>
 
@@ -193,14 +193,36 @@ export default function VendorPortalDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 {/* Recent Enquiries */}
-                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-5">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5 sm:p-6">
+                    <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="font-semibold text-gray-900">Recent Enquiries</h2>
                         <Link href="/vendor/portal/notifications" className="text-xs text-primary-600 hover:text-primary-700 font-medium">
                             View all →
                         </Link>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="space-y-3 md:hidden">
+                        {loading ? (
+                          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">Loading enquiries…</div>
+                        ) : recentNotifications.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-400">No enquiries yet.</div>
+                        ) : recentNotifications.map((n) => (
+                          <div key={n.id} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-gray-900">{n.title || 'Enquiry'}</p>
+                                <p className="mt-1 text-sm leading-6 text-gray-600">{n.message || '—'}</p>
+                              </div>
+                              <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${n.is_read ? STATUS_COLORS.Closed : STATUS_COLORS.New}`}>
+                                {n.is_read ? 'Closed' : 'New'}
+                              </span>
+                            </div>
+                            <p className="mt-3 text-xs text-gray-400">
+                              {n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-gray-100 text-left">
@@ -235,7 +257,7 @@ export default function VendorPortalDashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="bg-white rounded-xl border border-gray-100 p-5 sm:p-6">
                     <h2 className="font-semibold text-gray-900 mb-5">Quick Actions</h2>
                     <div className="space-y-3">
                         {[
@@ -262,8 +284,8 @@ export default function VendorPortalDashboard() {
             </div>
 
             {/* Active Projects */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 sm:p-6">
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="font-semibold text-gray-900">Active Projects</h2>
                     <Link href="/vendor/portal/projects" className="text-xs text-primary-600 hover:text-primary-700 font-medium">
                         View all →
@@ -275,7 +297,7 @@ export default function VendorPortalDashboard() {
                     ) : recentProjects.length === 0 ? (
                       <div className="text-gray-400 text-sm py-6">No projects yet.</div>
                     ) : recentProjects.map((p) => (
-                        <div key={p.id} className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-primary-100 transition-colors">
+                        <div key={p.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 transition-colors hover:border-primary-100 sm:flex-row sm:items-center">
                             <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-sm">
                                 {Number(p.progress || 0)}%
                             </div>
@@ -286,7 +308,7 @@ export default function VendorPortalDashboard() {
                                   {p.end_date ? ` · Due ${new Date(p.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
                                 </p>
                             </div>
-                            <div className="w-32 hidden sm:block">
+                            <div className="w-full sm:w-32">
                                 <div className="h-2 bg-gray-100 rounded-full">
                                     <div
                                         className="h-full rounded-full bg-primary-500 transition-all"

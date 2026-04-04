@@ -23,7 +23,7 @@ const STAGES = [
 const STAGE_LABELS: Record<string, string> = {
   registration: 'Registration Submitted',
   admin_review: 'Admin Review',
-  company_details_submitted: 'Company Details Submitted',
+  company_details_submitted: 'Complete Profile',
   intro_meeting_scheduled: 'Intro Meeting Scheduled',
   agreement_sent: 'Agreement Sent',
   agreement_signed: 'Agreement Signed',
@@ -32,8 +32,8 @@ const STAGE_LABELS: Record<string, string> = {
 
 const STAGE_DESCRIPTIONS: Record<string, string> = {
   registration: 'Your registration has been submitted and is under review by our team.',
-  admin_review: 'Your application has been approved. Complete your company profile to proceed.',
-  company_details_submitted: 'Company details have been reviewed. Awaiting meeting scheduling.',
+  admin_review: 'Your application is being reviewed by our admin team.',
+  company_details_submitted: 'Your application was approved. Complete your company profile to proceed.',
   intro_meeting_scheduled: 'An introductory meeting has been scheduled with the Ploxi team.',
   agreement_sent: 'Partnership agreement has been sent for your review and signature.',
   agreement_signed: 'Agreement has been signed. Final onboarding steps in progress.',
@@ -50,6 +50,7 @@ interface OnboardingStatus {
   agreementStatus?: string;
   agreementSentAt?: string;
   agreementSignedAt?: string;
+  agreementSentToEmail?: string;
 }
 
 export default function VendorOnboardingPage() {
@@ -57,11 +58,27 @@ export default function VendorOnboardingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    vendorService
-      .getOnboardingStatus()
-      .then((r: { data: { data: OnboardingStatus } }) => setOnboarding(r.data.data))
-      .catch(() => { })
-      .finally(() => setLoading(false));
+    let alive = true;
+
+    const load = async (initial = false) => {
+      if (initial) setLoading(true);
+      try {
+        const r: { data: { data: OnboardingStatus } } = await vendorService.getOnboardingStatus();
+        if (alive) setOnboarding(r.data.data);
+      } catch {
+        /* ignore */
+      } finally {
+        if (initial && alive) setLoading(false);
+      }
+    };
+
+    load(true);
+    const timer = window.setInterval(() => load(false), 30000);
+
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   if (loading)
@@ -85,13 +102,13 @@ export default function VendorOnboardingPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Onboarding Journey</h1>
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Onboarding Journey</h1>
         <p className="text-gray-500 text-sm mt-0.5">Follow these steps to complete your vendor onboarding</p>
       </div>
 
       {/* Progress bar */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 max-w-2xl">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-6 max-w-2xl rounded-xl border border-gray-100 bg-white p-5">
+        <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-medium text-gray-700">Overall Progress</p>
           <p className="text-sm font-bold text-primary-600">{progressPct}%</p>
         </div>
@@ -114,7 +131,7 @@ export default function VendorOnboardingPage() {
           return (
             <div
               key={s}
-              className={`bg-white rounded-xl border p-5 flex gap-4 transition-all ${current
+              className={`flex gap-4 rounded-xl border bg-white p-5 transition-all ${current
                 ? 'border-primary-300 shadow-sm ring-1 ring-primary-200'
                 : completed
                   ? 'border-gray-100'
@@ -138,7 +155,7 @@ export default function VendorOnboardingPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <p
                     className={`font-semibold text-sm ${completed ? 'text-gray-700' : current ? 'text-primary-700' : 'text-gray-400'
                       }`}
@@ -208,6 +225,11 @@ export default function VendorOnboardingPage() {
                     {onboarding.agreementSentAt && (
                       <p className="text-xs text-amber-600 mt-1">
                         Sent: {new Date(onboarding.agreementSentAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    )}
+                    {onboarding.agreementSentToEmail && (
+                      <p className="text-xs text-amber-700 mt-1">
+                        Sent to: {onboarding.agreementSentToEmail}
                       </p>
                     )}
                     {onboarding.agreementSignedAt && (

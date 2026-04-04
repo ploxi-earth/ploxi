@@ -28,7 +28,7 @@ const STAGES = [
 const STAGE_LABELS: Record<string, string> = {
   registration: 'Registration Submitted',
   admin_review: 'Admin Review',
-  company_details_submitted: 'Company Details Submitted',
+  company_details_submitted: 'Complete Profile',
   intro_meeting_scheduled: 'Intro Meeting Scheduled',
   agreement_sent: 'Agreement Sent',
   agreement_signed: 'Agreement Signed',
@@ -44,6 +44,7 @@ interface OnboardingData {
   meetingLink?: string;
   agreementStatus?: string;
   agreementSentAt?: string;
+  agreementSentToEmail?: string;
 }
 
 export default function VendorDashboard() {
@@ -70,11 +71,13 @@ export default function VendorDashboard() {
     };
 
     load();
+    const poll = window.setInterval(load, 30000);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', load);
 
     return () => {
       alive = false;
+      window.clearInterval(poll);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', load);
     };
@@ -96,16 +99,22 @@ export default function VendorDashboard() {
       pendingActions.push({ label: `Meeting scheduled: ${data.meetingDate} at ${data.meetingTime}`, href: data.meetingLink || '/vendor/onboarding', icon: <CalendarIcon className="w-5 h-5" /> });
     }
     if (data.agreementStatus === 'sent' && data.onboardingStage !== 'agreement_signed' && data.onboardingStage !== 'onboarded') {
-      pendingActions.push({ label: 'Agreement sent – Pending your signature', href: '/vendor/onboarding', icon: <FileIcon className="w-5 h-5" /> });
+      pendingActions.push({
+        label: data.agreementSentToEmail
+          ? `Agreement sent to ${data.agreementSentToEmail} – Pending your signature`
+          : 'Agreement sent – Pending your signature',
+        href: '/vendor/onboarding',
+        icon: <FileIcon className="w-5 h-5" />,
+      });
     }
   }
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold text-slate-900">Welcome, {user?.name || 'Vendor'}</h1>
-        <p className="text-slate-600 mt-2 text-lg">Track your onboarding progress and complete your profile to get started.</p>
+      <div className="mb-8 sm:mb-10">
+        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Welcome, {user?.name || 'Vendor'}</h1>
+        <p className="mt-2 text-base text-slate-600 sm:text-lg">Track your onboarding progress and complete your profile to get started.</p>
       </div>
 
       {/* Status Cards */}
@@ -183,17 +192,17 @@ export default function VendorDashboard() {
           </div>
 
           {/* Onboarding Progress Stepper */}
-          <div className="bg-white rounded-xl border border-slate-200 p-8 mb-10 shadow-sm">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm sm:p-8 mb-10">
             <h2 className="font-bold text-slate-900 mb-8 text-lg">Onboarding Progress</h2>
-            <div className="flex items-center gap-0">
+            <div className="grid gap-4 md:grid-cols-7 md:gap-0">
               {STAGES.map((s, i) => {
                 const done = i < stageIndex;
                 const cur = i === stageIndex;
                 return (
-                  <div key={s} className="flex-1 relative">
-                    <div className="flex flex-col items-center">
+                  <div key={s} className="relative md:px-2">
+                    <div className="flex items-start gap-4 md:flex-col md:items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold z-10 relative transition-all ${
+                        className={`relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold transition-all ${
                           done
                             ? 'bg-green-500 text-white shadow-md'
                             : cur
@@ -203,21 +212,28 @@ export default function VendorDashboard() {
                       >
                         {done ? <CheckCircleIcon className="w-5 h-5" /> : cur ? '◉' : i + 1}
                       </div>
-                      <p
-                        className={`text-xs mt-3 text-center leading-tight font-medium transition-colors ${
-                          cur
-                            ? 'text-emerald-700'
-                            : done
-                            ? 'text-slate-700'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        {STAGE_LABELS[s]}
-                      </p>
+                      <div className="min-w-0 md:text-center">
+                        <p
+                          className={`text-xs font-medium leading-tight transition-colors md:mt-3 ${
+                            cur
+                              ? 'text-emerald-700'
+                              : done
+                              ? 'text-slate-700'
+                              : 'text-slate-500'
+                          }`}
+                        >
+                          {STAGE_LABELS[s]}
+                        </p>
+                      </div>
                     </div>
                     {i < STAGES.length - 1 && (
                       <div
-                        className={`absolute top-5 left-1/2 w-full h-1 transition-colors ${
+                        className={`ml-5 mt-2 h-6 w-px md:hidden ${i < stageIndex ? 'bg-green-500' : 'bg-slate-300'}`}
+                      />
+                    )}
+                    {i < STAGES.length - 1 && (
+                      <div
+                        className={`absolute left-1/2 top-5 hidden h-1 w-full transition-colors md:block ${
                           i < stageIndex ? 'bg-green-500' : 'bg-slate-300'
                         }`}
                         style={{ zIndex: 0 }}
@@ -231,14 +247,14 @@ export default function VendorDashboard() {
 
           {/* Pending actions */}
           {pendingActions.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 p-8 mb-10 shadow-sm">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm sm:p-8 mb-10">
               <h2 className="font-bold text-slate-900 mb-6">Pending Actions</h2>
               <div className="space-y-3">
                 {pendingActions.map((a) => (
                   <Link
                     key={a.label}
                     href={a.href}
-                    className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300/50 rounded-xl hover:from-amber-100 hover:to-orange-100 hover:shadow-md transition-all group"
+                    className="flex flex-col gap-3 rounded-xl border border-amber-300/50 bg-gradient-to-r from-amber-50 to-orange-50 p-4 transition-all hover:from-amber-100 hover:to-orange-100 hover:shadow-md sm:flex-row sm:items-center sm:gap-4 group"
                   >
                     <div className="flex-shrink-0 text-amber-600">{a.icon}</div>
                     <span className="text-sm font-medium text-amber-900 flex-1">{a.label}</span>

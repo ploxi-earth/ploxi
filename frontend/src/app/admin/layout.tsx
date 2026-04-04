@@ -3,8 +3,10 @@ import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthHydrated } from '@/hooks/useAuthHydrated';
+import ShellFrame from '@/components/ui/ShellFrame';
 
 const NAV_LINKS = [
   {
@@ -58,65 +60,110 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated || user?.role !== 'platform_admin') return null;
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8] flex">
-      {/* ── Sidebar ── */}
-      <aside className="w-60 bg-gray-950 text-white flex flex-col fixed inset-y-0 z-20 border-r border-gray-800">
-        {/* Brand */}
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={32} height={32} className="rounded-full ring-2 ring-white/10 brightness-0 invert" />
-            <div>
-              <p className="text-sm font-bold text-white leading-none">Ploxi Earth</p>
-              <p className="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider">Admin Console</p>
+    <ShellFrame
+      rootClassName="page-shell bg-[#f5f6f8]"
+      sidebarWidthClassName="w-60"
+      sidebarPanelClassName="border-r border-gray-800 bg-gray-950 text-white"
+      mainClassName="lg:pl-60"
+      contentClassName="px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8 lg:py-8"
+      mobileHeaderClassName="border-b border-slate-200/80 bg-white/85 backdrop-blur"
+      mobileHeader={({ open }) => (
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Image
+              src="/images/logo.jpeg"
+              alt="Ploxi Earth"
+              width={34}
+              height={34}
+              className="rounded-full ring-2 ring-emerald-500/10"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-slate-900">Ploxi Earth</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Admin Console</p>
             </div>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV_LINKS.map((l) => {
-            const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  active
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'
-                }`}
-              >
-                <span className={active ? 'text-white' : 'text-gray-500'}>{l.icon}</span>
-                {l.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="px-4 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-              {user?.email?.[0]?.toUpperCase() ?? 'A'}
-            </div>
-            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
           <button
-            onClick={() => { useAuthStore.getState().clearAuth(); router.push('/admin/login'); }}
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-400 transition-colors w-full"
+            type="button"
+            onClick={open}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+            aria-label="Open navigation"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sign out
+            <Menu className="h-5 w-5" />
           </button>
         </div>
-      </aside>
+      )}
+      sidebar={({ close }) => (
+        <>
+          <div className="border-b border-gray-800 px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Image
+                  src="/images/logo.jpeg"
+                  alt="Ploxi Earth"
+                  width={32}
+                  height={32}
+                  className="rounded-full ring-2 ring-white/10 brightness-0 invert"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold leading-none text-white">Ploxi Earth</p>
+                  <p className="mt-0.5 text-[10px] uppercase tracking-wider text-gray-500">Admin Console</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={close}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-800 text-gray-400 transition-colors hover:bg-gray-900 hover:text-white lg:hidden"
+                aria-label="Close navigation"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
 
-      {/* ── Main ── */}
-      <main className="ml-60 flex-1 min-h-screen">
-        <div className="max-w-6xl mx-auto px-8 py-8">
-          {children}
-        </div>
-      </main>
-    </div>
+          <nav className="mobile-scroll flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+            {NAV_LINKS.map((l) => {
+              const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={close}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                    active
+                      ? 'bg-emerald-600 text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.9)]'
+                      : 'text-gray-400 hover:bg-gray-900 hover:text-gray-100'
+                  }`}
+                >
+                  <span className={active ? 'text-white' : 'text-gray-500'}>{l.icon}</span>
+                  {l.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-gray-800 px-4 py-4">
+            <div className="mb-3 flex items-center gap-2.5 rounded-2xl border border-gray-800 bg-white/[0.03] px-3 py-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                {user?.email?.[0]?.toUpperCase() ?? 'A'}
+              </div>
+              <p className="truncate text-xs text-gray-400">{user?.email}</p>
+            </div>
+            <button
+              onClick={() => {
+                close();
+                useAuthStore.getState().clearAuth();
+                router.push('/admin/login');
+              }}
+              className="flex w-full items-center gap-2 text-xs text-gray-500 transition-colors hover:text-red-400"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </button>
+          </div>
+        </>
+      )}
+    >
+      <div className="mx-auto max-w-6xl">{children}</div>
+    </ShellFrame>
   );
 }

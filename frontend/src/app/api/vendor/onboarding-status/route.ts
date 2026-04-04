@@ -87,6 +87,11 @@ export async function GET(req: NextRequest) {
         agreementStatus,
         agreementSentAt: latestAgreement?.sent_at || null,
         agreementSignedAt: latestAgreement?.signed_at || null,
+        agreementSentToEmail:
+          latestAgreement?.recipient_email ||
+          latestAgreement?.sent_to_email ||
+          latestAgreement?.to_email ||
+          vendor.email,
         profileCompletion: profile?.profile_completed ? 100 : profileCompletion,
       },
     });

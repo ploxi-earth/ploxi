@@ -6,15 +6,15 @@ import SubpageHeader from '@/components/SubpageHeader';
 
 export default function CorporatePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="page-shell min-h-screen bg-white">
       {/* ── Header ── */}
       <SubpageHeader subtitle="Decarbonisation and Net-Zero Marketplace" />
 
       {/* ── Hero ── */}
-      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-gray-900 text-white py-24 px-4">
+      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-gray-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <HeroFadeUp delay={0.1}>
-            <h1 className="text-5xl font-extrabold leading-tight mb-6">
+            <h1 className="text-balance mb-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
               Empower Your
               <br />
               <span className="text-primary-300">Corporate ESG Journey</span>
@@ -36,7 +36,7 @@ export default function CorporatePage() {
       </section>
 
       {/* ── Features ── */}
-      <section className="py-20 bg-white">
+      <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -62,7 +62,7 @@ export default function CorporatePage() {
                 desc: 'Discover verified sustainability solution providers and consultants.',
               },
             ].map((f) => (
-              <StaggerItem key={f.title} className="rounded-2xl border border-gray-200 p-8 text-center hover:shadow-md transition-shadow">
+              <StaggerItem key={f.title} className="surface-card surface-card-hover p-8 text-center">
                 <div className="flex justify-center mb-4">{f.icon}</div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-500">{f.desc}</p>
@@ -75,7 +75,7 @@ export default function CorporatePage() {
       {/* ── CTA ── */}
       <FadeUp>
         <section className="bg-primary-50 py-16 px-4 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Lead in Sustainability?</h2>
+          <h2 className="text-balance text-3xl font-bold text-gray-900 mb-4">Ready to Lead in Sustainability?</h2>
           <p className="text-gray-500 mb-8">Join organizations driving impactful ESG transformations with Ploxi Earth.</p>
           <Link href="/corporate/register" className="inline-flex items-center justify-center gap-2 btn-primary text-base px-8 py-4">
             Get Started Today

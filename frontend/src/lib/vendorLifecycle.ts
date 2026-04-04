@@ -34,7 +34,16 @@ export function computeOnboardingStage(
   const allCompleted =
     stageRecords.length > 0 && stageRecords.every(s => s.status === 'completed');
   if (vendorStatus === 'onboarded' || allCompleted) return 'onboarded';
-  return activeStage?.stage_name || 'registration';
+
+  if (activeStage?.stage_name) return activeStage.stage_name;
+
+  // Defensive fallback keeps vendor UI aligned with admin actions even when
+  // historical stage rows are missing/partially updated.
+  if (vendorStatus === 'approved') return 'company_details_submitted';
+  if (vendorStatus === 'onboarding') return 'intro_meeting_scheduled';
+  if (vendorStatus === 'pending') return 'admin_review';
+
+  return 'registration';
 }
 
 /** Stage index for progress/timeline UIs: when fully onboarded, all circles are complete (use length, not last index). */
@@ -84,6 +93,9 @@ type AgreementRow = {
   signed?: boolean | null;
   sent_at?: string | null;
   signed_at?: string | null;
+  recipient_email?: string | null;
+  sent_to_email?: string | null;
+  to_email?: string | null;
 } | null;
 
 /** Single-vendor payload for admin UI — matches Express admin.controller getVendor. */
@@ -142,6 +154,11 @@ export function buildAdminVendorDetail(
     agreementStatus,
     agreementSentAt: latestAgreement?.sent_at || null,
     agreementSignedAt: latestAgreement?.signed_at || null,
+    agreementSentToEmail:
+      latestAgreement?.recipient_email ||
+      latestAgreement?.sent_to_email ||
+      latestAgreement?.to_email ||
+      vendor.email,
 
     approvedAt: vendor.approved_at || null,
     rejectedAt: vendor.rejected_at || null,

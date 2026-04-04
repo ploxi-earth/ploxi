@@ -6,10 +6,10 @@ import SubpageHeader from '@/components/SubpageHeader';
 
 export default function ClimateFinancePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="page-shell min-h-screen bg-white">
       <SubpageHeader subtitle="Investment &amp; Funding" />
 
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-zinc-900 text-white py-24 px-4">
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-zinc-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <HeroFadeUp delay={0.1}>
             <div className="inline-block bg-white/10 text-gray-300 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full border border-white/20 mb-6">
@@ -17,7 +17,7 @@ export default function ClimateFinancePage() {
             </div>
           </HeroFadeUp>
           <HeroFadeUp delay={0.22}>
-            <h1 className="text-5xl font-extrabold leading-tight mb-6">
+            <h1 className="text-balance mb-6 text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
               Accelerate Your
               <br />
               <span className="text-gray-400 bg-clip-text bg-gradient-to-r from-gray-400 to-white">Climate Finance</span>{' '}
@@ -32,7 +32,7 @@ export default function ClimateFinancePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
+      <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Climate Finance</h2>
@@ -42,7 +42,7 @@ export default function ClimateFinancePage() {
             {/* Raise Funding */}
             <StaggerItem>
               <Link href="/climate-finance/registration?type=raise_funding"
-                className="rounded-2xl border-2 border-gray-200 p-8 text-center hover:border-gray-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group block"
+                className="surface-card surface-card-hover block p-8 text-center cursor-pointer group"
               >
                 <div className="w-14 h-14 bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 group-hover:from-gray-800 group-hover:to-black">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white" aria-hidden="true">
@@ -57,7 +57,7 @@ export default function ClimateFinancePage() {
             {/* Investor */}
             <StaggerItem>
               <Link href="/climate-finance/registration?type=investor"
-                className="rounded-2xl border-2 border-gray-200 p-8 text-center hover:border-gray-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group block"
+                className="surface-card surface-card-hover block p-8 text-center cursor-pointer group"
               >
                 <div className="w-14 h-14 bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 group-hover:from-gray-800 group-hover:to-black">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white" aria-hidden="true">
@@ -72,7 +72,7 @@ export default function ClimateFinancePage() {
             {/* Participate */}
             <StaggerItem>
               <Link href="/climate-finance/registration?type=participate"
-                className="rounded-2xl border-2 border-gray-200 p-8 text-center hover:border-gray-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group block"
+                className="surface-card surface-card-hover block p-8 text-center cursor-pointer group"
               >
                 <div className="w-14 h-14 bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 group-hover:from-gray-800 group-hover:to-black">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white" aria-hidden="true">

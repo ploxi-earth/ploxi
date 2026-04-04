@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     const { data } = await query.order('created_at', { ascending: false });
 
     // Enrich with consultant info
-    const ids = [...new Set((data || []).map(r => r.consultant_id))];
+    const ids = Array.from(new Set((data || []).map((r) => r.consultant_id)));
     let consultants: Record<string, any> = {};
     if (ids.length > 0) {
       const { data: c } = await supabase.from('admin_users').select('id, name, email').in('id', ids);

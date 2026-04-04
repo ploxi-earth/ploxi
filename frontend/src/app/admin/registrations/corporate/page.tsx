@@ -59,31 +59,55 @@ export default function CorporateRegistrationsPage() {
             <p className="text-sm text-gray-400">No registrations yet.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                {['Name', 'Company', 'Email', 'Sector', 'Status', 'Date'].map((h) => (
-                  <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
+          <>
+            <div className="space-y-3 p-4 md:hidden">
               {items.map((r) => (
-                <tr key={r._id} className="hover:bg-gray-50/70 transition-colors">
-                  <td className="px-5 py-3.5 font-semibold text-gray-900">{r.fullName || '—'}</td>
-                  <td className="px-5 py-3.5 text-gray-600">{r.companyName || '—'}</td>
-                  <td className="px-5 py-3.5 text-gray-500">{r.email}</td>
-                  <td className="px-5 py-3.5 text-gray-400 text-xs">{r.industrySector || '—'}</td>
-                  <td className="px-5 py-3.5">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLES[r.status] || STATUS_STYLES.pending}`}>
+                <div key={r._id} className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900">{r.fullName || '—'}</p>
+                      <p className="mt-1 text-sm text-gray-600">{r.companyName || '—'}</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[r.status] || STATUS_STYLES.pending}`}>
                       {r.status.replace(/_/g, ' ')}
                     </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-gray-400 text-xs">{new Date(r.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                </tr>
+                  </div>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <p className="break-all text-gray-500">{r.email}</p>
+                    <p className="text-xs text-gray-400">{r.industrySector || '—'}</p>
+                    <p className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+            <div className="hidden md:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    {['Name', 'Company', 'Email', 'Sector', 'Status', 'Date'].map((h) => (
+                      <th key={h} className="bg-gray-50/60 px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {items.map((r) => (
+                    <tr key={r._id} className="transition-colors hover:bg-gray-50/70">
+                      <td className="px-5 py-3.5 font-semibold text-gray-900">{r.fullName || '—'}</td>
+                      <td className="px-5 py-3.5 text-gray-600">{r.companyName || '—'}</td>
+                      <td className="px-5 py-3.5 text-gray-500">{r.email}</td>
+                      <td className="px-5 py-3.5 text-xs text-gray-400">{r.industrySector || '—'}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLES[r.status] || STATUS_STYLES.pending}`}>
+                          {r.status.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
