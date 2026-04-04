@@ -53,7 +53,6 @@ npm run dev
 | `ghg_calculations` | GHG emission calculator results |
 | `services` | Vendor portal services |
 | `projects` | Vendor portal projects |
-| `documents` | Vendor portal documents |
 | `notifications` | User notifications |
 | `sustainability_reports` | Consultant sustainability reports |
 

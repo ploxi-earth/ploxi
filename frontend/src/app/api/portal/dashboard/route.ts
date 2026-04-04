@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
       { count: totalProjects },
       { count: activeProjects },
       { count: completedProjects },
-      { count: totalDocs },
       { count: unreadNotifications },
     ] = await Promise.all([
       supabase.from('services').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
@@ -21,7 +20,6 @@ export async function GET(req: NextRequest) {
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).in('status', ['opportunity', 'proposal', 'in_progress']),
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).eq('status', 'completed'),
-      supabase.from('documents').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
       supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
     ]);
 
@@ -42,7 +40,7 @@ export async function GET(req: NextRequest) {
           totalServices: totalServices || 0, activeServices: activeServices || 0,
           totalProjects: totalProjects || 0, activeProjects: activeProjects || 0,
           completedProjects: completedProjects || 0, totalRevenue,
-          totalDocs: totalDocs || 0, unreadNotifications: unreadNotifications || 0,
+          unreadNotifications: unreadNotifications || 0,
         },
         recentProjects: recentProjects || [],
         recentNotifications: recentNotifications || [],

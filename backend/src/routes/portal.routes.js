@@ -24,10 +24,6 @@ router.delete('/projects/:id', portalController.deleteProject);
 // Meetings
 router.get('/meetings', portalController.getMeetings);
 
-// Documents
-router.get('/documents', portalController.getDocuments);
-router.post('/documents', portalController.createDocument);
-
 // Notifications
 router.get('/notifications', portalController.getNotifications);
 router.patch('/notifications/:id/read', portalController.markNotificationRead);

@@ -5,17 +5,14 @@ import { useAuthStore } from '@/store/authStore';
 import { portalService } from '@/services/portal.service';
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser';
 import {
-  EyeIcon,
   MessageIcon,
   HandshakeIcon,
   CurrencyIcon,
   BoltIcon,
   BriefcaseIcon,
   CalendarIcon,
-  FileIcon,
   SettingsIcon,
   ChevronRightIcon,
-  TrendingUpIcon,
 } from '@/components/vendor/VendorIcons';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -33,7 +30,6 @@ type DashboardStats = {
   activeProjects: number;
   completedProjects: number;
   totalRevenue: number;
-  totalDocs: number;
   unreadNotifications: number;
 };
 
@@ -162,7 +158,7 @@ export default function VendorPortalDashboard() {
                 <div className="mb-8 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6 shadow-sm">
                     <h2 className="text-lg font-bold text-emerald-900">Welcome to your vendor portal</h2>
                     <p className="text-sm text-emerald-800/90 mt-1 max-w-2xl">
-                        Your onboarding is complete. Use the dashboard below to manage services, projects, meetings, and documents.
+                        Your onboarding is complete. Use the dashboard below to manage services, projects, meetings, and notifications.
                     </p>
                     <button
                         type="button"
@@ -246,7 +242,6 @@ export default function VendorPortalDashboard() {
                             { href: '/vendor/portal/services', label: 'Manage Services', icon: <BoltIcon className="w-5 h-5 text-emerald-600" />, desc: 'Add or edit your offerings' },
                             { href: '/vendor/portal/projects', label: 'View Projects', icon: <BriefcaseIcon className="w-5 h-5 text-blue-600" />, desc: 'Track active opportunities' },
                             { href: '/vendor/portal/meetings', label: 'Meetings', icon: <CalendarIcon className="w-5 h-5 text-purple-600" />, desc: 'Check upcoming schedules' },
-                            { href: '/vendor/portal/documents', label: 'Documents', icon: <FileIcon className="w-5 h-5 text-orange-600" />, desc: 'View agreements & files' },
                             { href: '/vendor/portal/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5 text-slate-600" />, desc: 'Update your preferences' },
                         ].map((a) => (
                             <Link

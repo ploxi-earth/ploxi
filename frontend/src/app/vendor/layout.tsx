@@ -20,7 +20,6 @@ const PORTAL_NAV = [
   { href: '/vendor/portal/services', label: 'Services', icon: Icons.Zap },
   { href: '/vendor/portal/projects', label: 'Projects', icon: Icons.Briefcase },
   { href: '/vendor/portal/meetings', label: 'Meetings', icon: Icons.Calendar },
-  { href: '/vendor/portal/documents', label: 'Documents', icon: Icons.File },
   { href: '/vendor/portal/notifications', label: 'Notifications', icon: Icons.Bell },
   { href: '/vendor/portal/settings', label: 'Settings', icon: Icons.Settings },
 ];

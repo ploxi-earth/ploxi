@@ -19,10 +19,6 @@ export const portalService = {
     // Meetings
     getMeetings: () => api.get('/portal/meetings'),
 
-    // Documents
-    getDocuments: () => api.get('/portal/documents'),
-    createDocument: (data: Record<string, unknown>) => api.post('/portal/documents', data),
-
     // Notifications
     getNotifications: () => api.get('/portal/notifications'),
     markNotificationRead: (id: string) => api.patch(`/portal/notifications/${id}/read`),

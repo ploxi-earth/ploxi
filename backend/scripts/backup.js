@@ -30,7 +30,6 @@ const TABLES = [
   'ghg_calculations',
   'services',
   'projects',
-  'documents',
   'notifications',
   'sustainability_reports',
 ];

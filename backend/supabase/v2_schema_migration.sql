@@ -190,26 +190,7 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at    timestamptz DEFAULT now()
 );
 
--- ── 8. Documents (Vendor Portal) ─────────────────────────────
-CREATE TABLE IF NOT EXISTS documents (
-  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  vendor_id     uuid NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-  user_id       uuid,
-  name          text NOT NULL,
-  description   text,
-  type          text DEFAULT 'other'
-                CHECK (type IN ('agreement','certificate','report','invoice','other')),
-  status        text DEFAULT 'shared'
-                CHECK (status IN ('draft','shared','signed','archived')),
-  shared_by     text DEFAULT 'admin'
-                CHECK (shared_by IN ('admin','vendor')),
-  file_url      text,
-  notes         text,
-  created_at    timestamptz DEFAULT now(),
-  updated_at    timestamptz DEFAULT now()
-);
-
--- ── 9. Notifications ─────────────────────────────────────────
+-- ── 8. Notifications ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notifications (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     uuid NOT NULL,
@@ -225,7 +206,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   updated_at  timestamptz DEFAULT now()
 );
 
--- ── 10. Sustainability Reports ───────────────────────────────
+-- ── 9. Sustainability Reports ───────────────────────────────
 CREATE TABLE IF NOT EXISTS sustainability_reports (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   consultant_id     uuid NOT NULL,
@@ -258,7 +239,6 @@ ALTER TABLE climate_finance_registrations DISABLE ROW LEVEL SECURITY;
 ALTER TABLE ghg_calculations              DISABLE ROW LEVEL SECURITY;
 ALTER TABLE services                      DISABLE ROW LEVEL SECURITY;
 ALTER TABLE projects                      DISABLE ROW LEVEL SECURITY;
-ALTER TABLE documents                     DISABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications                 DISABLE ROW LEVEL SECURITY;
 ALTER TABLE sustainability_reports        DISABLE ROW LEVEL SECURITY;
 
@@ -278,8 +258,6 @@ CREATE INDEX IF NOT EXISTS idx_services_vendor            ON services(vendor_id)
 CREATE INDEX IF NOT EXISTS idx_services_status            ON services(status);
 CREATE INDEX IF NOT EXISTS idx_projects_vendor            ON projects(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_projects_status            ON projects(status);
-CREATE INDEX IF NOT EXISTS idx_documents_vendor           ON documents(vendor_id);
-CREATE INDEX IF NOT EXISTS idx_documents_type             ON documents(type);
 CREATE INDEX IF NOT EXISTS idx_notifications_user         ON notifications(user_id, is_read, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sustainability_consultant  ON sustainability_reports(consultant_id);
 CREATE INDEX IF NOT EXISTS idx_sustainability_status      ON sustainability_reports(status);

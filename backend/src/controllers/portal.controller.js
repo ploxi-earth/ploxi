@@ -18,7 +18,6 @@ exports.getDashboardStats = async (req, res, next) => {
     { count: totalProjects },
     { count: activeProjects },
     { count: completedProjects },
-    { count: totalDocs },
     { count: unreadNotifications },
   ] = await Promise.all([
     supabase.from('services').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
@@ -26,7 +25,6 @@ exports.getDashboardStats = async (req, res, next) => {
     supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
     supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).in('status', ['opportunity', 'proposal', 'in_progress']),
     supabase.from('projects').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId).eq('status', 'completed'),
-    supabase.from('documents').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', req.user._id).eq('is_read', false),
   ]);
 
@@ -55,7 +53,6 @@ exports.getDashboardStats = async (req, res, next) => {
         activeProjects: activeProjects || 0,
         completedProjects: completedProjects || 0,
         totalRevenue,
-        totalDocs: totalDocs || 0,
         unreadNotifications: unreadNotifications || 0,
       },
       recentProjects: recentProjects || [],
@@ -252,71 +249,6 @@ exports.getMeetings = async (req, res) => {
   }));
 
   res.json({ success: true, data: formatted });
-};
-
-// ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  DOCUMENTS                                                             ║
-// ╚══════════════════════════════════════════════════════════════════════════╝
-exports.getDocuments = async (req, res) => {
-  const vendorId = getVendorId(req);
-
-  const { data: docs, error } = await supabase
-    .from('documents')
-    .select('*')
-    .eq('vendor_id', vendorId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  const allDocs = [...(docs || [])];
-
-  // Include agreement status as a virtual document
-  const { data: agreements } = await supabase
-    .from('agreements')
-    .select('*')
-    .eq('vendor_id', vendorId)
-    .order('sent_at', { ascending: false })
-    .limit(1);
-
-  const latestAgreement = agreements?.[0];
-  if (latestAgreement) {
-    allDocs.unshift({
-      _id: 'partnership-agreement',
-      id: 'partnership-agreement',
-      name: 'Partnership Agreement',
-      type: 'agreement',
-      status: latestAgreement.signed ? 'signed' : 'shared',
-      shared_by: 'admin',
-      created_at: latestAgreement.sent_at,
-      updated_at: latestAgreement.signed_at || latestAgreement.sent_at,
-      notes: latestAgreement.signed ? 'Agreement signed and confirmed' : 'Pending signature',
-    });
-  }
-
-  res.json({ success: true, data: allDocs });
-};
-
-exports.createDocument = async (req, res) => {
-  const vendorId = getVendorId(req);
-  const { name, description, type, fileUrl, notes } = req.body;
-
-  const { data: doc, error } = await supabase
-    .from('documents')
-    .insert({
-      vendor_id: vendorId,
-      user_id: req.user._id,
-      name,
-      description,
-      type: type || 'other',
-      file_url: fileUrl,
-      notes,
-      shared_by: 'vendor',
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  res.status(201).json({ success: true, data: doc });
 };
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
