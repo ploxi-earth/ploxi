@@ -5,7 +5,7 @@ export const adminService = {
   getDashboard: () => api.get('/admin/dashboard'),
 
   // Vendor management
-  getVendors: (params?: { status?: string; page?: number; limit?: number; search?: string }) =>
+  getVendors: (params?: { status?: string; page?: number; limit?: number; search?: string; pendingRequests?: boolean }) =>
     api.get('/admin/vendors', { params }),
   getVendor: (id: string) => api.get(`/admin/vendors/${id}`),
   addVendor: (data: { companyName: string; email: string; phone: string; contactPerson: string }) =>
@@ -16,6 +16,8 @@ export const adminService = {
     api.patch(`/admin/vendors/${id}/reject`, { note }),
   scheduleMeeting: (id: string, data: { date: string; time: string; link?: string; note?: string }) =>
     api.patch(`/admin/vendors/${id}/schedule-meeting`, data),
+  dismissMeetingRequest: (id: string, notificationIds: string[]) =>
+    api.patch(`/admin/vendors/${id}/meeting-request/dismiss`, { notificationIds }),
   sendAgreement: (id: string, data: { note?: string }) =>
     api.patch(`/admin/vendors/${id}/send-agreement`, data),
   markAgreementSigned: (id: string) => api.patch(`/admin/vendors/${id}/mark-signed`),

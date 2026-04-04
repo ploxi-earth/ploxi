@@ -10,30 +10,71 @@ export async function PATCH(
     await requireRole(req, 'platform_admin');
     const { date, time, link, note } = await req.json();
 
+    if (!date || !time) return jsonError('Meeting date and time are required.', 400);
+    if (!String(link || '').trim()) return jsonError('Meeting link is required.', 400);
+
     const { data: vendor } = await supabase.from('vendors').select('*').eq('id', params.id).single();
     if (!vendor) return jsonError('Vendor not found.', 404);
 
-    await supabase.from('meetings').insert({
-      vendor_id: vendor.id,
-      scheduled_date: date,
-      scheduled_time: time,
-      meeting_link: link || '',
-      notes: note,
-    });
-
-    await supabase.from('vendors').update({ status: 'onboarding' }).eq('id', vendor.id);
-
-    await supabase
-      .from('onboarding_stages')
-      .update({ status: 'completed', completed_at: new Date().toISOString() })
+    const { data: pendingRequest } = await supabase
+      .from('meetings')
+      .select('id, notes')
       .eq('vendor_id', vendor.id)
-      .eq('stage_name', 'company_details_submitted');
+      .or('meeting_link.is.null,meeting_link.eq.')
+      .ilike('notes', 'Vendor meeting request:%')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    await supabase
-      .from('onboarding_stages')
-      .update({ status: 'active' })
-      .eq('vendor_id', vendor.id)
-      .eq('stage_name', 'intro_meeting_scheduled');
+    if (pendingRequest?.id) {
+      const existingNote = String(pendingRequest.notes || '').trim();
+      const adminNote = String(note || '').trim();
+
+      const mergedNote = [
+        existingNote,
+        'Admin update: Request approved and meeting scheduled.',
+        adminNote ? `Admin note: ${adminNote}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      await supabase
+        .from('meetings')
+        .update({
+          scheduled_date: date,
+          scheduled_time: time,
+          meeting_link: String(link).trim(),
+          notes: mergedNote,
+        })
+        .eq('id', pendingRequest.id);
+    } else {
+      await supabase.from('meetings').insert({
+        vendor_id: vendor.id,
+        scheduled_date: date,
+        scheduled_time: time,
+        meeting_link: String(link).trim(),
+        notes: note,
+      });
+    }
+
+    // Lifecycle dependency rule:
+    // - Before onboarding completion, meeting scheduling advances onboarding.
+    // - After onboarding completion (status: onboarded), meetings are independent events.
+    if (vendor.status !== 'onboarded') {
+      await supabase.from('vendors').update({ status: 'onboarding' }).eq('id', vendor.id);
+
+      await supabase
+        .from('onboarding_stages')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('vendor_id', vendor.id)
+        .eq('stage_name', 'company_details_submitted');
+
+      await supabase
+        .from('onboarding_stages')
+        .update({ status: 'active' })
+        .eq('vendor_id', vendor.id)
+        .eq('stage_name', 'intro_meeting_scheduled');
+    }
 
     const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
     return jsonOk({ success: true, data: updated });

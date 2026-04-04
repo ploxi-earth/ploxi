@@ -18,6 +18,7 @@ export const portalService = {
 
     // Meetings
     getMeetings: () => api.get('/portal/meetings'),
+    requestMeeting: (data: Record<string, unknown>) => api.post('/portal/meetings', data),
 
     // Notifications
     getNotifications: () => api.get('/portal/notifications'),
