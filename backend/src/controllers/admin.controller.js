@@ -22,7 +22,19 @@ exports.getDashboardStats = async (req, res) => {
   // Registration counts
   const { count: corporateCount } = await supabase.from('corporate_registrations').select('*', { count: 'exact', head: true });
   const { count: cleantechCount } = await supabase.from('cleantech_registrations').select('*', { count: 'exact', head: true });
-  const { count: climateCount } = await supabase.from('climate_finance_registrations').select('*', { count: 'exact', head: true });
+  const [
+    { count: climateLegacy },
+    { count: climateRaise },
+    { count: climateInvestor },
+    { count: climateParticipant },
+  ] = await Promise.all([
+    supabase.from('climate_finance_registrations').select('*', { count: 'exact', head: true }),
+    supabase.from('raise_funding_registrations').select('*', { count: 'exact', head: true }),
+    supabase.from('investor_registrations').select('*', { count: 'exact', head: true }),
+    supabase.from('participant_registrations').select('*', { count: 'exact', head: true }),
+  ]);
+  const climateCount =
+    (climateLegacy || 0) + (climateRaise || 0) + (climateInvestor || 0) + (climateParticipant || 0);
 
   res.json({
     success: true,
@@ -31,7 +43,7 @@ exports.getDashboardStats = async (req, res) => {
       registrations: {
         corporate: corporateCount || 0,
         cleantech: cleantechCount || 0,
-        climateFinance: climateCount || 0,
+        climateFinance: climateCount,
       },
     },
   });
@@ -593,18 +605,150 @@ exports.getCleantechRegistrations = async (req, res) => {
   res.json({ success: true, data: docs || [], pagination: { total: total || 0, page: Number(page), limit: Number(limit) } });
 };
 
-// ── List All Climate Finance Registrations ─────────────────────────────────
+function mapClimateRowForAdmin(r, engagementType) {
+  if (engagementType === 'raise_funding') {
+    return {
+      _id: r.id,
+      fullName: r.full_name || r.company_name || '—',
+      email: r.email,
+      organization: r.organization || r.company_name || '—',
+      engagementType: 'raise_funding',
+      status: r.status,
+      createdAt: r.created_at,
+    };
+  }
+  if (engagementType === 'investor') {
+    const fn = [r.first_name, r.last_name].filter(Boolean).join(' ').trim();
+    return {
+      _id: r.id,
+      fullName: fn || '—',
+      email: r.email,
+      organization: r.organization_name || '—',
+      engagementType: 'investor',
+      status: r.status,
+      createdAt: r.created_at,
+    };
+  }
+  if (engagementType === 'participate') {
+    const fn = [r.first_name, r.last_name].filter(Boolean).join(' ').trim();
+    return {
+      _id: r.id,
+      fullName: fn || '—',
+      email: r.email,
+      organization: r.organization || '—',
+      engagementType: 'participate',
+      status: r.status,
+      createdAt: r.created_at,
+    };
+  }
+  return {
+    _id: r.id,
+    fullName: r.full_name || '—',
+    email: r.email,
+    organization: r.organization || '—',
+    engagementType: r.engagement_type || 'raise_funding',
+    status: r.status,
+    createdAt: r.created_at,
+  };
+}
+
+// ── List Climate Finance Registrations (split tables + legacy) ─────────────
 exports.getClimateFinanceRegistrations = async (req, res) => {
   const { status, engagementType, page = 1, limit = 20 } = req.query;
   const offset = (Number(page) - 1) * Number(limit);
+  const lim = Number(limit);
 
-  let query = supabase.from('climate_finance_registrations').select('*', { count: 'exact' });
-  if (status) query = query.eq('status', status);
-  if (engagementType) query = query.eq('engagement_type', engagementType);
+  const applyStatus = (q) => (status ? q.eq('status', status) : q);
 
-  const { data: docs, count: total } = await query
-    .order('created_at', { ascending: false })
-    .range(offset, offset + Number(limit) - 1);
+  if (engagementType === 'raise_funding') {
+    let query = supabase.from('raise_funding_registrations').select('*', { count: 'exact' });
+    if (status) query = query.eq('status', status);
+    const { data: docs, count: total } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + lim - 1);
+    const registrations = (docs || []).map((r) => mapClimateRowForAdmin(r, 'raise_funding'));
+    return res.json({
+      success: true,
+      data: { registrations, pagination: { total: total || 0, page: Number(page), limit: lim } },
+    });
+  }
 
-  res.json({ success: true, data: docs || [], pagination: { total: total || 0, page: Number(page), limit: Number(limit) } });
+  if (engagementType === 'investor') {
+    let query = supabase.from('investor_registrations').select('*', { count: 'exact' });
+    if (status) query = query.eq('status', status);
+    const { data: docs, count: total } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + lim - 1);
+    const registrations = (docs || []).map((r) => mapClimateRowForAdmin(r, 'investor'));
+    return res.json({
+      success: true,
+      data: { registrations, pagination: { total: total || 0, page: Number(page), limit: lim } },
+    });
+  }
+
+  if (engagementType === 'participate') {
+    let query = supabase.from('participant_registrations').select('*', { count: 'exact' });
+    if (status) query = query.eq('status', status);
+    const { data: docs, count: total } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + lim - 1);
+    const registrations = (docs || []).map((r) => mapClimateRowForAdmin(r, 'participate'));
+    return res.json({
+      success: true,
+      data: { registrations, pagination: { total: total || 0, page: Number(page), limit: lim } },
+    });
+  }
+
+  if (Number(page) > 1) {
+    return res.status(400).json({
+      success: false,
+      message: 'Select an engagement type to view page 2 and beyond.',
+    });
+  }
+
+  const per = 40;
+  const [rf, inv, part, leg] = await Promise.all([
+    applyStatus(supabase.from('raise_funding_registrations').select('*'))
+      .order('created_at', { ascending: false })
+      .limit(per),
+    applyStatus(supabase.from('investor_registrations').select('*'))
+      .order('created_at', { ascending: false })
+      .limit(per),
+    applyStatus(supabase.from('participant_registrations').select('*'))
+      .order('created_at', { ascending: false })
+      .limit(per),
+    applyStatus(supabase.from('climate_finance_registrations').select('*'))
+      .order('created_at', { ascending: false })
+      .limit(per),
+  ]);
+
+  const merged = [
+    ...(rf.data || []).map((r) => mapClimateRowForAdmin(r, 'raise_funding')),
+    ...(inv.data || []).map((r) => mapClimateRowForAdmin(r, 'investor')),
+    ...(part.data || []).map((r) => mapClimateRowForAdmin(r, 'participate')),
+    ...(leg.data || []).map((r) => mapClimateRowForAdmin(r, null)),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const slice = merged.slice(0, lim);
+
+  const countTable = async (table) => {
+    let q = supabase.from(table).select('*', { count: 'exact', head: true });
+    if (status) q = q.eq('status', status);
+    const { count } = await q;
+    return count || 0;
+  };
+  const total =
+    (await countTable('raise_funding_registrations')) +
+    (await countTable('investor_registrations')) +
+    (await countTable('participant_registrations')) +
+    (await countTable('climate_finance_registrations'));
+
+  return res.json({
+    success: true,
+    data: {
+      registrations: slice,
+      pagination: { total, page: 1, limit: slice.length },
+      mergedView: true,
+    },
+  });
 };

@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { vendorRegistrationService } from '@/services/vendor.service';
+import OTPModal from '@/components/OTPModal';
 
 export default function VendorRegisterPage() {
     const [form, setForm] = useState({
@@ -16,6 +17,8 @@ export default function VendorRegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [showOTPModal, setShowOTPModal] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     const update = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -32,20 +35,44 @@ export default function VendorRegisterPage() {
         setLoading(true);
         setError('');
         try {
-            await api.post('/auth/register', {
+            await vendorRegistrationService.sendOtp({
                 companyName: form.companyName,
                 contactPerson: form.contactPerson,
                 email: form.email,
                 phone: form.phone,
                 password: form.password,
             });
-            setSubmitted(true);
+            setShowOTPModal(true);
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
             setError(msg || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleVerifyVendorOtp = async (otp: string) => {
+        setIsVerifying(true);
+        try {
+            await vendorRegistrationService.verifyOtp(form.email, otp);
+            setShowOTPModal(false);
+            setSubmitted(true);
+        } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            throw new Error(msg || 'Invalid OTP.');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    const handleResendVendorOtp = async () => {
+        await vendorRegistrationService.sendOtp({
+            companyName: form.companyName,
+            contactPerson: form.contactPerson,
+            email: form.email,
+            phone: form.phone,
+            password: form.password,
+        });
     };
 
     if (submitted) {
@@ -64,7 +91,7 @@ export default function VendorRegisterPage() {
                             Thank you for registering on Ploxi Earth.
                         </p>
                         <p className="text-gray-500 text-sm mb-6">
-                            Your application is currently under review. You will receive an email notification once your account is approved by our admin team.
+                            Your email is verified and your application is under review. You will receive a notification once your account is approved by our admin team.
                         </p>
                         <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-6">
                             <p className="text-sm text-sky-800 font-medium">
@@ -198,10 +225,10 @@ export default function VendorRegisterPage() {
                             {loading ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Submitting...
+                                    Sending code…
                                 </span>
                             ) : (
-                                'Submit Registration'
+                                'Continue — verify email'
                             )}
                         </button>
                     </form>
@@ -210,6 +237,15 @@ export default function VendorRegisterPage() {
                     </p>
                 </div>
             </div>
+
+            <OTPModal
+                isOpen={showOTPModal}
+                onClose={() => setShowOTPModal(false)}
+                email={form.email}
+                onVerify={handleVerifyVendorOtp}
+                onResend={handleResendVendorOtp}
+                isVerifying={isVerifying}
+            />
         </div>
     );
 }

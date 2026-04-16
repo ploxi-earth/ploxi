@@ -153,7 +153,7 @@ export default function AdminDashboard() {
               href={q.href}
               className={`relative bg-gradient-to-br ${q.accent} text-white rounded-2xl p-5 flex flex-col gap-3 hover:opacity-90 transition-all shadow-sm hover:shadow-md group`}
             >
-              {q.pendingCount > 0 && (
+              {(q.pendingCount ?? 0) > 0 && (
                 <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
                   {q.pendingCount}
@@ -165,7 +165,9 @@ export default function AdminDashboard() {
               <div>
                 <p className="font-semibold text-sm leading-none mb-1">{q.label}</p>
                 <p className="text-xs opacity-70 leading-tight">
-                  {q.pendingCount > 0 ? `${q.desc} · ${q.pendingCount} pending request${q.pendingCount > 1 ? 's' : ''}` : q.desc}
+                  {(q.pendingCount ?? 0) > 0
+                    ? `${q.desc} · ${q.pendingCount} pending request${(q.pendingCount ?? 0) > 1 ? 's' : ''}`
+                    : q.desc}
                 </p>
               </div>
               <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity flex items-center gap-1">

@@ -1,15 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { corporateService } from '@/services/vendor.service';
 import FormPageHeader from '@/components/FormPageHeader';
+import OTPModal from '@/components/OTPModal';
 
 const INDUSTRY_SECTORS = [
   'Manufacturing', 'Real Estate', 'Agriculture', 'Transportation',
   'Utilities', 'Finance', 'Healthcare', 'Education', 'IT / Data Center',
   'Hospitality', 'Retail', 'Logistics', 'Automotive', 'Steel',
-  'Cement', 'Chemicals', 'Oil & Gas', 'Pharmaceuticals',
+  'Cement', 'Chemicals', 'Oil & Gas', 'Pharmaceuticals', 'Other',
 ];
 
 const ESG_FRAMEWORKS = ['GRI', 'SASB', 'BRSR', 'TCFD', 'CDP', 'UN SDGs', 'ISO 14001'];
@@ -20,16 +20,19 @@ const ESG_GOALS = [
 ];
 
 export default function CorporateRegisterPage() {
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [form, setForm] = useState({
     // Step 1
     fullName: '', designation: '', companyName: '', website: '',
-    industrySector: '', email: '', phone: '',
+    industrySector: '', customIndustry: '', email: '', phone: '',
     // Step 2
     currentEsgFrameworks: [] as string[], esgReportingStatus: '',
     primaryEsgGoals: [] as string[], annualRevenueBand: '', employeeCount: '',
@@ -44,11 +47,89 @@ export default function CorporateRegisterPage() {
     update(field, current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
   };
 
+  useEffect(() => {
+    if (step > 1 && !emailVerified) setStep(1);
+  }, [step, emailVerified]);
+
+  const step1Valid =
+    form.fullName &&
+    form.designation &&
+    form.companyName &&
+    form.industrySector &&
+    form.email &&
+    form.phone &&
+    (form.industrySector !== 'Other' || form.customIndustry.trim());
+
+  const sendStep1Otp = async () => {
+    setOtpBusy(true);
+    setError('');
+    try {
+      await corporateService.sendOtp(form.email, {
+        fullName: form.fullName,
+        designation: form.designation,
+        companyName: form.companyName,
+        website: form.website,
+        industrySector: form.industrySector,
+        customIndustry: form.customIndustry,
+        phone: form.phone,
+      });
+      setShowOTPModal(true);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e?.response?.data?.message || 'Could not send OTP. Please try again.');
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const handleVerifyCorporateOtp = async (otp: string) => {
+    setIsVerifying(true);
+    try {
+      await corporateService.verifyOtp(form.email, otp);
+      setEmailVerified(true);
+      setShowOTPModal(false);
+      setStep(2);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      throw new Error(e?.response?.data?.message || 'Invalid OTP.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendCorporateOtp = async () => {
+    await corporateService.sendOtp(form.email, {
+      fullName: form.fullName,
+      designation: form.designation,
+      companyName: form.companyName,
+      website: form.website,
+      industrySector: form.industrySector,
+      customIndustry: form.customIndustry,
+      phone: form.phone,
+    });
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
     try {
-      await corporateService.register(form);
+      await corporateService.completeRegistration({
+        email: form.email,
+        fullName: form.fullName,
+        designation: form.designation,
+        companyName: form.companyName,
+        website: form.website,
+        industrySector: form.industrySector,
+        customIndustry: form.customIndustry,
+        phone: form.phone,
+        currentEsgFrameworks: form.currentEsgFrameworks,
+        esgReportingStatus: form.esgReportingStatus,
+        primaryEsgGoals: form.primaryEsgGoals,
+        annualRevenueBand: form.annualRevenueBand,
+        employeeCount: form.employeeCount,
+        hearAboutUs: form.hearAboutUs,
+        additionalNotes: form.additionalNotes,
+      });
       setSuccess(true);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
@@ -127,6 +208,17 @@ export default function CorporateRegisterPage() {
                     {INDUSTRY_SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
+                {form.industrySector === 'Other' && (
+                  <div>
+                    <label className="label">Specify industry *</label>
+                    <input
+                      className="input-field"
+                      value={form.customIndustry}
+                      onChange={(e) => update('customIndustry', e.target.value)}
+                      placeholder="Your industry"
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">Email ID *</label>
@@ -138,14 +230,18 @@ export default function CorporateRegisterPage() {
                   </div>
                 </div>
               </div>
+              {error && step === 1 && (
+                <p className="mt-4 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">{error}</p>
+              )}
               <div className="mt-8 flex justify-between items-center">
                 <p className="text-xs text-gray-400">Need help? <a href="mailto:support@ploxi.com" className="text-primary-600 hover:underline">Contact Support</a></p>
                 <button
+                  type="button"
                   className="btn-primary inline-flex items-center gap-2"
-                  onClick={() => setStep(2)}
-                  disabled={!form.fullName || !form.designation || !form.companyName || !form.industrySector || !form.email || !form.phone}
+                  onClick={() => void sendStep1Otp()}
+                  disabled={!step1Valid || otpBusy}
                 >
-                  Continue to ESG &amp; Compliance
+                  {otpBusy ? 'Sending code…' : 'Verify email & continue'}
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
               </div>
@@ -256,6 +352,15 @@ export default function CorporateRegisterPage() {
           )}
         </div>
       </div>
+
+      <OTPModal
+        isOpen={showOTPModal}
+        onClose={() => setShowOTPModal(false)}
+        email={form.email}
+        onVerify={handleVerifyCorporateOtp}
+        onResend={handleResendCorporateOtp}
+        isVerifying={isVerifying}
+      />
     </div>
   );
 }

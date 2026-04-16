@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { jsonOk, jsonError } from '@/lib/auth';
 
+/** Legacy single-shot registration. Prefer: send-otp → verify-otp → complete. */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
         esg_frameworks: esgFrameworks || null,
         sustainability_stage: sustainabilityStage || null,
         esg_saas_integration: esgSaasIntegration || null,
+        email_verified: true,
+        registration_step: 3,
         status: 'pending',
       })
       .select()

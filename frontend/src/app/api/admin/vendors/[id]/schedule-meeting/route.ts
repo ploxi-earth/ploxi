@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireRole, jsonOk, jsonError } from '@/lib/auth';
+import { sendVendorMeetingScheduledEmail } from '@/lib/registrationEmails';
 
 export async function PATCH(
   req: NextRequest,
@@ -77,6 +78,17 @@ export async function PATCH(
     }
 
     const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
+
+    if (vendor.email) {
+      await sendVendorMeetingScheduledEmail(
+        vendor.email,
+        vendor.contact_person || vendor.company_name || 'Vendor',
+        date,
+        time,
+        String(link).trim()
+      );
+    }
+
     return jsonOk({ success: true, data: updated });
   } catch (err: any) {
     if (err.message === 'UNAUTHORIZED') return jsonError('Authentication required.', 401);

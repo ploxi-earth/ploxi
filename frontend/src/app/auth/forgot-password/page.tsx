@@ -1,8 +1,8 @@
-'use client';
+"use client";
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { authService } from '@/services/auth.service';
+import { supabaseClient } from '@/lib/supabaseClient';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -12,11 +12,28 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
+    const em = String(email || '').toLowerCase().trim();
+    if (!em || !em.includes('@')) {
+      setError('Please enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await authService.forgotPassword(email);
-      setSubmitted(true);
-    } catch {
+      if (!supabaseClient) throw new Error('Supabase client not configured');
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(em, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        console.error('Supabase resetPasswordForEmail error', error);
+        setError(error.message || 'Failed to send reset link.');
+      } else {
+        setSubmitted(true);
+      }
+    } catch (err) {
+      console.error('Forgot password submit error', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);

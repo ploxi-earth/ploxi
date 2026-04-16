@@ -1,6 +1,13 @@
 import { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireRole, jsonOk, jsonError } from '@/lib/auth';
+import {
+  mapInvestorRow,
+  mapLegacyClimateRow,
+  mapParticipantRow,
+  mapRaiseFundingRow,
+  type ClimateRegRow,
+} from '@/lib/climateFinanceAdminMaps';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,15 +19,90 @@ export async function GET(req: NextRequest) {
     const limit = 20;
     const offset = (page - 1) * limit;
 
-    let query = supabase.from('climate_finance_registrations').select('*', { count: 'exact' });
-    if (status) query = query.eq('status', status);
-    if (engagementType) query = query.eq('engagement_type', engagementType);
+    const applyStatus = <T extends { eq: (c: string, v: string) => T }>(q: T) =>
+      status ? q.eq('status', status) : q;
 
-    const { data, count } = await query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-    return jsonOk({ success: true, data: data || [], pagination: { total: count || 0, page, limit } });
-  } catch (err: any) {
-    if (err.message === 'UNAUTHORIZED') return jsonError('Authentication required.', 401);
-    if (err.message === 'FORBIDDEN') return jsonError('Access denied.', 403);
+    async function countTable(table: string) {
+      let q = supabase.from(table).select('*', { count: 'exact', head: true });
+      if (status) q = q.eq('status', status);
+      const { count } = await q;
+      return count || 0;
+    }
+
+    if (engagementType === 'raise_funding') {
+      let q = supabase.from('raise_funding_registrations').select('*', { count: 'exact' });
+      if (status) q = q.eq('status', status);
+      const { data, count } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      const registrations = (data || []).map((r) => mapRaiseFundingRow(r as Record<string, unknown>));
+      return jsonOk({
+        success: true,
+        data: { registrations, pagination: { total: count || 0, page, limit } },
+      });
+    }
+
+    if (engagementType === 'investor') {
+      let q = supabase.from('investor_registrations').select('*', { count: 'exact' });
+      if (status) q = q.eq('status', status);
+      const { data, count } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      const registrations = (data || []).map((r) => mapInvestorRow(r as Record<string, unknown>));
+      return jsonOk({
+        success: true,
+        data: { registrations, pagination: { total: count || 0, page, limit } },
+      });
+    }
+
+    if (engagementType === 'participate') {
+      let q = supabase.from('participant_registrations').select('*', { count: 'exact' });
+      if (status) q = q.eq('status', status);
+      const { data, count } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      const registrations = (data || []).map((r) => mapParticipantRow(r as Record<string, unknown>));
+      return jsonOk({
+        success: true,
+        data: { registrations, pagination: { total: count || 0, page, limit } },
+      });
+    }
+
+    // No type filter: merge recent rows from all sources (page > 1 needs a type for DB-level pagination)
+    if (page > 1) {
+      return jsonError('Select an engagement type to view page 2 and beyond.', 400);
+    }
+
+    const per = 40;
+    const [rf, inv, part, leg] = await Promise.all([
+      applyStatus(supabase.from('raise_funding_registrations').select('*')).order('created_at', { ascending: false }).limit(per),
+      applyStatus(supabase.from('investor_registrations').select('*')).order('created_at', { ascending: false }).limit(per),
+      applyStatus(supabase.from('participant_registrations').select('*')).order('created_at', { ascending: false }).limit(per),
+      applyStatus(supabase.from('climate_finance_registrations').select('*')).order('created_at', { ascending: false }).limit(per),
+    ]);
+
+    const merged: ClimateRegRow[] = [
+      ...(rf.data || []).map((r) => mapRaiseFundingRow(r as Record<string, unknown>)),
+      ...(inv.data || []).map((r) => mapInvestorRow(r as Record<string, unknown>)),
+      ...(part.data || []).map((r) => mapParticipantRow(r as Record<string, unknown>)),
+      ...(leg.data || []).map((r) => mapLegacyClimateRow(r as Record<string, unknown>)),
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const slice = merged.slice(0, limit);
+    const [cRf, cInv, cPart, cLeg] = await Promise.all([
+      countTable('raise_funding_registrations'),
+      countTable('investor_registrations'),
+      countTable('participant_registrations'),
+      countTable('climate_finance_registrations'),
+    ]);
+    const total = cRf + cInv + cPart + cLeg;
+
+    return jsonOk({
+      success: true,
+      data: {
+        registrations: slice,
+        pagination: { total, page: 1, limit: slice.length },
+        mergedView: true,
+      },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '';
+    if (message === 'UNAUTHORIZED') return jsonError('Authentication required.', 401);
+    if (message === 'FORBIDDEN') return jsonError('Access denied.', 403);
     return jsonError('Internal server error.', 500);
   }
 }

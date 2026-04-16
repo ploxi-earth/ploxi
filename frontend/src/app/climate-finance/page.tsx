@@ -56,7 +56,7 @@ export default function ClimateFinancePage() {
 
             {/* Investor */}
             <StaggerItem>
-              <Link href="/climate-finance/registration?type=investor"
+              <Link href="/climate-finance/investor-registration"
                 className="surface-card surface-card-hover block p-8 text-center cursor-pointer group"
               >
                 <div className="w-14 h-14 bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 group-hover:from-gray-800 group-hover:to-black">

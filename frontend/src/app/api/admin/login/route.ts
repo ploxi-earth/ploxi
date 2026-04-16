@@ -19,9 +19,17 @@ export async function POST(req: NextRequest) {
       .eq('email', normalizedEmail)
       .single();
 
+    console.debug('Admin login lookup', { email: normalizedEmail, found: !!admin, hashPrefix: admin?.password_hash?.slice?.(0,4) || null });
+
     if (!admin) return jsonError('Invalid email or password.', 401);
 
-    const valid = await bcrypt.compare(password, admin.password_hash);
+    let storedHash = admin.password_hash;
+    if (typeof storedHash === 'string' && storedHash.startsWith('$2y$')) {
+      storedHash = '$2a$' + storedHash.slice(4);
+      console.debug('Normalized bcrypt hash prefix $2y -> $2a for admin login', normalizedEmail);
+    }
+
+    const valid = await bcrypt.compare(password, storedHash);
     if (!valid) return jsonError('Invalid email or password.', 401);
 
     if (admin.is_active === false) return jsonError('Your account has been deactivated.', 403);

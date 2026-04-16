@@ -19,7 +19,19 @@ export async function GET(req: NextRequest) {
 
     const { count: corporateCount } = await supabase.from('corporate_registrations').select('*', { count: 'exact', head: true });
     const { count: cleantechCount } = await supabase.from('cleantech_registrations').select('*', { count: 'exact', head: true });
-    const { count: climateCount } = await supabase.from('climate_finance_registrations').select('*', { count: 'exact', head: true });
+    const [
+      { count: climateLegacy },
+      { count: climateRaise },
+      { count: climateInvestor },
+      { count: climateParticipant },
+    ] = await Promise.all([
+      supabase.from('climate_finance_registrations').select('*', { count: 'exact', head: true }),
+      supabase.from('raise_funding_registrations').select('*', { count: 'exact', head: true }),
+      supabase.from('investor_registrations').select('*', { count: 'exact', head: true }),
+      supabase.from('participant_registrations').select('*', { count: 'exact', head: true }),
+    ]);
+    const climateCount =
+      (climateLegacy || 0) + (climateRaise || 0) + (climateInvestor || 0) + (climateParticipant || 0);
 
     const { count: pendingMeetingRequests } = await supabase
       .from('notifications')

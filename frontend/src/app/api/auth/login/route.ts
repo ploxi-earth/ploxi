@@ -20,9 +20,17 @@ export async function POST(req: NextRequest) {
       .eq('email', normalizedEmail)
       .single();
 
+    console.debug('Auth login (vendor lookup)', { email: normalizedEmail, found: !!vendor, hashPrefix: vendor?.password_hash?.slice?.(0,4) || null });
+
     if (!vendor) return jsonError('Invalid email or password.', 401);
 
-    const valid = await bcrypt.compare(password, vendor.password_hash);
+    let storedHash = vendor.password_hash;
+    if (typeof storedHash === 'string' && storedHash.startsWith('$2y$')) {
+      storedHash = '$2a$' + storedHash.slice(4);
+      console.debug('Normalized bcrypt hash prefix $2y -> $2a for auth login', normalizedEmail);
+    }
+
+    const valid = await bcrypt.compare(password, storedHash);
     if (!valid) return jsonError('Invalid email or password.', 401);
 
     if (vendor.status === 'pending') return jsonError('Your application is currently under review.', 403);

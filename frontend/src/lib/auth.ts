@@ -75,12 +75,13 @@ export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
   if (role === 'vendor') {
     const { data: vendor } = await supabase
       .from('vendors')
-      .select('id, company_name, contact_person, email, status')
+      .select('id, company_name, contact_person, email, status, email_verified')
       .eq('id', decoded.id)
       .single();
 
     if (!vendor) return null;
     if (vendor.status === 'rejected') return null;
+    if (vendor.email_verified === false) return null;
 
     return {
       _id: vendor.id,

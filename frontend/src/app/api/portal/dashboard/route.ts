@@ -7,6 +7,8 @@ export async function GET(req: NextRequest) {
     const user = await requireRole(req, 'vendor');
     const vendorId = user.vendorId || user.id;
 
+    const { data: vendorRow } = await supabase.from('vendors').select('logo_url').eq('id', vendorId).maybeSingle();
+
     const [
       { count: totalServices },
       { count: activeServices },
@@ -40,6 +42,7 @@ export async function GET(req: NextRequest) {
     return jsonOk({
       success: true,
       data: {
+        logoUrl: vendorRow?.logo_url ?? null,
         stats: {
           totalServices: totalServices || 0, activeServices: activeServices || 0,
           totalProjects: totalProjects || 0, activeProjects: activeProjects || 0,

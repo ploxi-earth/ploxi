@@ -22,6 +22,7 @@ function buildVendorProfilePayload(vendor: any, profile: any) {
     sector: profile?.sector ?? null,
     location: profile?.location ?? null,
     profileCompleted: Boolean(profile?.profile_completed),
+    logoUrl: vendor?.logo_url ?? null,
   };
 }
 

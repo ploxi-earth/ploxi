@@ -1,6 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { vendorService } from '@/services/vendor.service';
+import { VendorLogoAvatar } from '@/components/vendor/VendorLogoAvatar';
+import { ALLOWED_VENDOR_LOGO_ACCEPT } from '@/lib/vendorLogoConstants';
+import { validateVendorLogoFile } from '@/lib/vendorLogoValidation';
 
 interface Profile {
   companyName?: string;
@@ -11,6 +14,7 @@ interface Profile {
   servicesOffered?: string;
   sector?: string;
   location?: string;
+  logoUrl?: string | null;
 }
 
 export default function VendorProfilePage() {
@@ -19,6 +23,10 @@ export default function VendorProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoLocalUrl, setLogoLocalUrl] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState('');
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     vendorService
@@ -28,20 +36,66 @@ export default function VendorProfilePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (logoLocalUrl) URL.revokeObjectURL(logoLocalUrl);
+    };
+  }, [logoLocalUrl]);
+
   const update = (k: keyof Profile, v: string) => setProfile((p) => ({ ...p, [k]: v }));
+
+  const onLogoPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    setLogoError('');
+    if (!f) return;
+    const v = validateVendorLogoFile(f);
+    if (!v.ok) {
+      setLogoError(v.message);
+      e.target.value = '';
+      return;
+    }
+    setLogoFile(f);
+    setLogoLocalUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(f);
+    });
+  };
+
+  const clearLogoSelection = () => {
+    setLogoFile(null);
+    setLogoLocalUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setLogoError('');
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
+    setLogoError('');
     setSaved(false);
     try {
+      if (logoFile) {
+        const v = validateVendorLogoFile(logoFile);
+        if (!v.ok) {
+          setLogoError(v.message);
+          return;
+        }
+        const publicUrl = await vendorService.uploadLogo(logoFile);
+        setProfile((p) => ({ ...p, logoUrl: publicUrl || p.logoUrl }));
+        clearLogoSelection();
+      }
+
       const res = await vendorService.updateProfile(profile);
       setProfile(res.data.data);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const ax = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = ax?.response?.data?.message || ax?.message;
       setError(msg || 'Save failed. Please try again.');
     } finally {
       setSaving(false);
@@ -82,9 +136,16 @@ export default function VendorProfilePage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 sm:mb-10">
-        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Company Profile</h1>
-        <p className="text-slate-600 mt-2">Manage your company information and track completion progress</p>
+      <div className="mb-8 sm:mb-10 flex flex-col gap-6 sm:flex-row sm:items-center">
+        <VendorLogoAvatar
+          logoUrl={logoLocalUrl || profile.logoUrl}
+          label={profile.companyName || profile.contactPerson || 'Vendor'}
+          sizeClass="h-20 w-20 sm:h-24 sm:w-24"
+        />
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Company Profile</h1>
+          <p className="text-slate-600 mt-2">Manage your company information and track completion progress</p>
+        </div>
       </div>
 
       {/* Completion Indicator */}
@@ -130,6 +191,39 @@ export default function VendorProfilePage() {
               </div>
             </div>
           )}
+
+          {/* Company logo */}
+          <div className="mb-10 pb-10 border-b border-slate-200">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">Company logo</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              PNG, JPEG, WebP, or GIF — up to 2 MB. Shown on your vendor dashboards after you save.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept={ALLOWED_VENDOR_LOGO_ACCEPT}
+                className="block w-full max-w-md text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-800 hover:file:bg-emerald-100"
+                onChange={onLogoPick}
+                disabled={saving}
+              />
+              {logoFile && (
+                <button
+                  type="button"
+                  onClick={clearLogoSelection}
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                  disabled={saving}
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+            {logoError && (
+              <p className="mt-2 text-sm text-red-600" role="alert">
+                {logoError}
+              </p>
+            )}
+          </div>
 
           {/* Basic Information Section */}
           <div className="mb-10">

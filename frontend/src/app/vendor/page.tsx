@@ -14,6 +14,8 @@ import {
   RocketIcon,
   ChevronRightIcon,
 } from '@/components/vendor/VendorIcons';
+import { VendorLogoAvatar } from '@/components/vendor/VendorLogoAvatar';
+import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser';
 
 const STAGES = [
   'registration',
@@ -45,6 +47,8 @@ interface OnboardingData {
   agreementStatus?: string;
   agreementSentAt?: string;
   agreementSentToEmail?: string;
+  logoUrl?: string | null;
+  companyName?: string | null;
 }
 
 export default function VendorDashboard() {
@@ -83,6 +87,32 @@ export default function VendorDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const sb = getSupabaseBrowserClient();
+    const vid = user?._id;
+    if (!sb || !vid) return;
+
+    const channel = sb
+      .channel(`vendor-onboarding-dash-logo-${vid}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'vendors', filter: `id=eq.${vid}` },
+        async () => {
+          try {
+            const r: { data: { data: OnboardingData } } = await vendorService.getOnboardingStatus();
+            setData(r.data.data);
+          } catch {
+            /* ignore */
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      sb.removeChannel(channel);
+    };
+  }, [user?._id]);
+
   const stageIndex = data
     ? getLifecycleStageIndex(STAGES, data.onboardingStage, data.status)
     : 0;
@@ -112,9 +142,20 @@ export default function VendorDashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 sm:mb-10">
-        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Welcome, {user?.name || 'Vendor'}</h1>
-        <p className="mt-2 text-base text-slate-600 sm:text-lg">Track your onboarding progress and complete your profile to get started.</p>
+      <div className="mb-8 sm:mb-10 flex flex-col gap-6 sm:flex-row sm:items-center">
+        {loading ? (
+          <div className="h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-2xl bg-slate-200 animate-pulse" aria-hidden />
+        ) : data ? (
+          <VendorLogoAvatar
+            logoUrl={data.logoUrl}
+            label={data.companyName || user?.name || 'Vendor'}
+            sizeClass="h-20 w-20 sm:h-24 sm:w-24"
+          />
+        ) : null}
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Welcome, {user?.name || 'Vendor'}</h1>
+          <p className="mt-2 text-base text-slate-600 sm:text-lg">Track your onboarding progress and complete your profile to get started.</p>
+        </div>
       </div>
 
       {/* Status Cards */}

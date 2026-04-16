@@ -1,13 +1,15 @@
 'use client';
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { climateFinanceService } from '@/services/vendor.service';
 import FormPageHeader from '@/components/FormPageHeader';
+import OTPModal from '@/components/OTPModal';
 
 type EngagementType = 'raise_funding' | 'investor' | 'participate' | '';
 
 function ClimateFinanceRegistrationForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialType = (searchParams.get('type') || '') as EngagementType;
 
@@ -15,6 +17,8 @@ function ClimateFinanceRegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', organization: '', website: '',
     // Raise Funding
@@ -31,17 +35,59 @@ function ClimateFinanceRegistrationForm() {
     update(field, current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true); setError('');
+  const buildFormData = () => ({ ...form });
+
+  const sendClimateOtp = async () => {
+    if (!engagementType) return;
+    setLoading(true);
+    setError('');
     try {
-      await climateFinanceService.register({ ...form, engagementType });
-      setSuccess(true);
+      await climateFinanceService.sendOtp(engagementType, form.email, buildFormData());
+      setShowOTPModal(true);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e?.response?.data?.message || 'Something went wrong.');
+      setError(e?.response?.data?.message || 'Could not send OTP.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyClimateOtp = async (otp: string) => {
+    if (!engagementType) return;
+    setIsVerifying(true);
+    try {
+      await climateFinanceService.verifyOtp(engagementType, form.email, otp);
+      setShowOTPModal(false);
+      if (engagementType === 'investor') {
+        try {
+          sessionStorage.setItem(
+            'investor-otp-prefill',
+            JSON.stringify({
+              email: form.email,
+              fullName: form.fullName,
+              phone: form.phone,
+              organization: form.organization,
+              website: form.website,
+            })
+          );
+        } catch {
+          // ignore storage issues
+        }
+        router.push(`/climate-finance/investor-registration?email=${encodeURIComponent(form.email)}&verified=1`);
+        return;
+      }
+      setSuccess(true);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      throw new Error(e?.response?.data?.message || 'Invalid OTP.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendClimateOtp = async () => {
+    if (!engagementType) return;
+    await climateFinanceService.sendOtp(engagementType, form.email, buildFormData());
   };
 
   if (success) {
@@ -87,9 +133,25 @@ function ClimateFinanceRegistrationForm() {
           </div>
         )}
 
-        {engagementType && (
+        {engagementType === 'investor' && (
+          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Investor Registration</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              The investor flow now uses a dedicated full multi-step form to match schema fields.
+            </p>
+            <button
+              type="button"
+              className="btn-primary inline-flex items-center gap-2"
+              onClick={() => router.push('/climate-finance/investor-registration')}
+            >
+              Open Full Investor Form
+            </button>
+          </div>
+        )}
+
+        {engagementType && engagementType !== 'investor' && (
           <div className="bg-white rounded-2xl shadow-sm p-8">
-            <button onClick={() => setEngagementType('')} className="text-sm text-gray-500 hover:text-gray-700 mb-6 block">← Back</button>
+            {/* <button onClick={() => setEngagementType('')} className="text-sm text-gray-500 hover:text-gray-700 mb-6 block">← Back</button> */}
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               {typeOptions.find((o) => o.type === engagementType)?.title} – Registration
             </h2>
@@ -122,16 +184,16 @@ function ClimateFinanceRegistrationForm() {
             {engagementType === 'raise_funding' && (
               <div className="space-y-4 border-t border-gray-100 pt-6">
                 <div>
-                  <label className="label">Project / Venture Name</label>
+                  <label className="label">Funding Purpose</label>
                   <input className="input-field" value={form.projectName} onChange={(e) => update('projectName', e.target.value)} />
                 </div>
                 <div>
-                  <label className="label">Project Description</label>
-                  <textarea className="input-field h-24 resize-none" value={form.projectDescription} onChange={(e) => update('projectDescription', e.target.value)} placeholder="Describe your clean tech solution and its impact..." />
+                  <label className="label">Use of funds</label>
+                  <textarea className="input-field h-24 resize-none" value={form.projectDescription} onChange={(e) => update('projectDescription', e.target.value)} placeholder="Type here" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="label">Funding Required</label>
+                    <label className="label">Funding Amount</label>
                     <select className="input-field" value={form.fundingRequired} onChange={(e) => update('fundingRequired', e.target.value)}>
                       <option value="">Select range</option>
                       <option>Below ₹1 Cr</option>
@@ -145,11 +207,11 @@ function ClimateFinanceRegistrationForm() {
                     <label className="label">Project Stage</label>
                     <select className="input-field" value={form.projectStage} onChange={(e) => update('projectStage', e.target.value)}>
                       <option value="">Select stage</option>
-                      <option>Idea / Concept</option>
-                      <option>Prototype</option>
-                      <option>Pilot</option>
-                      <option>Early Revenue</option>
-                      <option>Growth</option>
+                      <option>Pre-Seed</option>
+                      <option>Seed</option>
+                      <option>Series A</option>
+                      <option>Series B</option>
+                      <option>Series C+</option>
                     </select>
                   </div>
                 </div>
@@ -209,13 +271,27 @@ function ClimateFinanceRegistrationForm() {
 
             {error && <p className="mt-4 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">{error}</p>}
             <div className="mt-8">
-              <button className="btn-primary w-full inline-flex items-center justify-center gap-2" onClick={handleSubmit} disabled={loading || !form.fullName || !form.email}>
-                {loading ? 'Submitting...' : <>Submit Registration <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></>}
+              <button
+                type="button"
+                className="btn-primary w-full inline-flex items-center justify-center gap-2"
+                onClick={() => void sendClimateOtp()}
+                disabled={loading || !form.fullName || !form.email}
+              >
+                {loading ? 'Sending code…' : <>{engagementType === 'investor' ? 'Verify email & continue' : 'Verify email & submit'} <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></>}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      <OTPModal
+        isOpen={showOTPModal}
+        onClose={() => setShowOTPModal(false)}
+        email={form.email}
+        onVerify={handleVerifyClimateOtp}
+        onResend={handleResendClimateOtp}
+        isVerifying={isVerifying}
+      />
     </div>
   );
 }

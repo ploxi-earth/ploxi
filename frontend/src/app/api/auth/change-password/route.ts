@@ -23,7 +23,12 @@ export async function PATCH(req: NextRequest) {
 
       if (!vendor) return jsonError('User not found.', 404);
 
-      const valid = await bcrypt.compare(currentPassword, vendor.password_hash);
+      let storedHash = vendor.password_hash;
+      if (typeof storedHash === 'string' && storedHash.startsWith('$2y$')) {
+        storedHash = '$2a$' + storedHash.slice(4);
+        console.debug('Normalized bcrypt hash prefix $2y -> $2a for change-password (vendor)');
+      }
+      const valid = await bcrypt.compare(currentPassword, storedHash);
       if (!valid) return jsonError('Current password is incorrect.', 401);
 
       await supabase
@@ -42,7 +47,12 @@ export async function PATCH(req: NextRequest) {
 
       if (!admin) return jsonError('User not found.', 404);
 
-      const valid = await bcrypt.compare(currentPassword, admin.password_hash);
+      let storedHashAdmin = admin.password_hash;
+      if (typeof storedHashAdmin === 'string' && storedHashAdmin.startsWith('$2y$')) {
+        storedHashAdmin = '$2a$' + storedHashAdmin.slice(4);
+        console.debug('Normalized bcrypt hash prefix $2y -> $2a for change-password (admin)');
+      }
+      const valid = await bcrypt.compare(currentPassword, storedHashAdmin);
       if (!valid) return jsonError('Current password is incorrect.', 401);
 
       await supabase

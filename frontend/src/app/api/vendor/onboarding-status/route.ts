@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const { data: vendor } = await supabase
       .from('vendors')
-      .select('id, status, company_name, contact_person, email, phone, created_at')
+      .select('id, status, company_name, contact_person, email, phone, created_at, logo_url')
       .eq('id', vendorId)
       .single();
     if (!vendor) return jsonError('Vendor not found.', 404);
@@ -93,6 +93,8 @@ export async function GET(req: NextRequest) {
           latestAgreement?.to_email ||
           vendor.email,
         profileCompletion: profile?.profile_completed ? 100 : profileCompletion,
+        logoUrl: vendor.logo_url ?? null,
+        companyName: vendor.company_name ?? null,
       },
     });
   } catch (err: unknown) {

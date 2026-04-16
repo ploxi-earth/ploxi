@@ -109,8 +109,14 @@ exports.login = async (req, res, next) => {
     .single();
 
   if (user) {
-    const valid = await bcrypt.compare(password, user.password_hash);
+    let storedHashUser = user.password_hash;
+    if (typeof storedHashUser === 'string' && storedHashUser.startsWith('$2y$')) {
+      storedHashUser = '$2a$' + storedHashUser.slice(4);
+      console.warn('Normalized bcrypt hash prefix $2y -> $2a for user login', email.toLowerCase().trim());
+    }
+    const valid = await bcrypt.compare(password, storedHashUser);
     if (!valid) {
+      console.warn('User login bcrypt.compare failed for', email.toLowerCase().trim());
       return next(new AppError('Invalid email or password.', 401));
     }
 
@@ -153,8 +159,14 @@ exports.login = async (req, res, next) => {
     return next(new AppError('Invalid email or password.', 401));
   }
 
-  const valid = await bcrypt.compare(password, vendor.password_hash);
-  if (!valid) {
+  let storedHashVendor = vendor.password_hash;
+  if (typeof storedHashVendor === 'string' && storedHashVendor.startsWith('$2y$')) {
+    storedHashVendor = '$2a$' + storedHashVendor.slice(4);
+    console.warn('Normalized bcrypt hash prefix $2y -> $2a for vendor login', email.toLowerCase().trim());
+  }
+  const validVendor = await bcrypt.compare(password, storedHashVendor);
+  if (!validVendor) {
+    console.warn('Vendor login bcrypt.compare failed for', email.toLowerCase().trim());
     return next(new AppError('Invalid email or password.', 401));
   }
 
@@ -265,8 +277,13 @@ exports.changePassword = async (req, res, next) => {
     return next(new AppError('User not found.', 404));
   }
 
-  const valid = await bcrypt.compare(req.body.currentPassword, user.password_hash);
-  if (!valid) {
+  let storedHashForChange = user.password_hash;
+  if (typeof storedHashForChange === 'string' && storedHashForChange.startsWith('$2y$')) {
+    storedHashForChange = '$2a$' + storedHashForChange.slice(4);
+    console.warn('Normalized bcrypt hash prefix $2y -> $2a for changePassword (user)');
+  }
+  const validChange = await bcrypt.compare(req.body.currentPassword, storedHashForChange);
+  if (!validChange) {
     return next(new AppError('Current password is incorrect.', 401));
   }
 

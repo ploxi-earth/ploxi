@@ -14,6 +14,7 @@ import {
   SettingsIcon,
   ChevronRightIcon,
 } from '@/components/vendor/VendorIcons';
+import { VendorLogoAvatar } from '@/components/vendor/VendorLogoAvatar';
 
 const STATUS_COLORS: Record<string, string> = {
     New: 'bg-blue-100 text-blue-700',
@@ -56,6 +57,7 @@ export default function VendorPortalDashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [recentProjects, setRecentProjects] = useState<ProjectRow[]>([]);
     const [recentNotifications, setRecentNotifications] = useState<NotificationRow[]>([]);
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const id = user?._id || user?.email;
@@ -84,6 +86,7 @@ export default function VendorPortalDashboard() {
       try {
         const r = await portalService.getDashboard();
         const payload = r.data?.data;
+        setLogoUrl((payload as { logoUrl?: string | null } | undefined)?.logoUrl ?? null);
         setStats(payload?.stats || null);
         setRecentProjects(payload?.recentProjects || []);
         setRecentNotifications(payload?.recentNotifications || []);
@@ -123,11 +126,24 @@ export default function VendorPortalDashboard() {
         )
         .subscribe();
 
+      const vendorId = user?._id;
+      const vendorsChannel = vendorId
+        ? sb
+            .channel(`vendor-portal-logo-${vendorId}`)
+            .on(
+              'postgres_changes',
+              { event: 'UPDATE', schema: 'public', table: 'vendors', filter: `id=eq.${vendorId}` },
+              () => load()
+            )
+            .subscribe()
+        : null;
+
       return () => {
         sb.removeChannel(servicesChannel);
         sb.removeChannel(notificationsChannel);
+        if (vendorsChannel) sb.removeChannel(vendorsChannel);
       };
-    }, []);
+    }, [user?._id]);
 
     const statCards = [
       {
@@ -170,9 +186,20 @@ export default function VendorPortalDashboard() {
                 </div>
             )}
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome back, {user?.name || 'Vendor'}</h1>
-                <p className="text-gray-500 mt-1">Here&apos;s a summary of your vendor portal activity.</p>
+            <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center">
+                {loading ? (
+                    <div className="h-16 w-16 flex-shrink-0 rounded-2xl bg-gray-200 animate-pulse" aria-hidden />
+                ) : (
+                    <VendorLogoAvatar
+                        logoUrl={logoUrl}
+                        label={user?.name || 'Vendor'}
+                        sizeClass="h-16 w-16 sm:h-20 sm:w-20"
+                    />
+                )}
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome back, {user?.name || 'Vendor'}</h1>
+                    <p className="text-gray-500 mt-1">Here&apos;s a summary of your vendor portal activity.</p>
+                </div>
             </div>
 
             {/* Stat cards */}
