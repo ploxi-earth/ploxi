@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabaseClient';
+import { CheckCircleIcon } from '@/components/vendor/VendorIcons';
 
 function parseTokenFromUrl(): { access_token?: string; refresh_token?: string } {
   try {
@@ -66,7 +67,7 @@ export default function ResetPassword() {
 
         // Manual parse
         const tokens = parseTokenFromUrl();
-        if (tokens.access_token) {
+        if (tokens.access_token && tokens.refresh_token) {
           // set session using access_token (and refresh token if present)
           // @ts-ignore
           const { data, error } = await supabaseClient.auth.setSession({
@@ -146,7 +147,7 @@ export default function ResetPassword() {
           ) : success ? (
             <div className="text-center">
               <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary-600 text-xl">✓</span>
+                <CheckCircleIcon className="h-6 w-6 text-primary-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Password updated!</h3>
               <p className="text-sm text-gray-600">Redirecting you to login…</p>

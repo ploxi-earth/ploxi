@@ -63,12 +63,12 @@ const emailTemplates = {
   }),
 
   meetingScheduled: (vendorName, date, time, meetingLink) => ({
-    subject: 'Intro Meeting Scheduled – Ploxi Earth',
+    subject: 'Technical Meeting Scheduled – Ploxi Earth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #16a34a;">Meeting Scheduled</h2>
         <p>Dear ${vendorName},</p>
-        <p>An introductory meeting has been scheduled with the Ploxi Earth team.</p>
+        <p>A technical meeting has been scheduled with the Ploxi Earth team.</p>
         <p><strong>Date:</strong> ${date}</p>
         <p><strong>Time:</strong> ${time}</p>
         ${meetingLink ? `<p><strong>Meeting Link:</strong></p><a href="${meetingLink}" style="background: #16a34a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 6px;">Join Meeting</a>` : '<p>The meeting link will be shared separately.</p>'}

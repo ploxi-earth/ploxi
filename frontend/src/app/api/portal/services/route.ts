@@ -21,20 +21,15 @@ export async function POST(req: NextRequest) {
     const user = await requireRole(req, 'vendor');
     const vendorId = user.vendorId || user.id;
     const body = await req.json();
-    const pricing = Number(body.pricing);
 
     if (!body.name || !String(body.name).trim()) {
       return jsonError('Service name is required.', 400);
     }
 
-    if (!body.pricing || Number.isNaN(pricing) || pricing <= 0) {
-      return jsonError('Service pricing is required and must be greater than 0.', 400);
-    }
-
     const { data, error } = await supabase.from('services').insert({
       vendor_id: vendorId, user_id: user.id, name: body.name, description: body.description,
       category: body.category, sector: body.sector, tags: body.tags || [],
-      status: body.status || 'active', pricing,
+      status: body.status || 'active',
       delivery_timeline: body.deliveryTimeline, cover_image: body.coverImage,
     }).select().single();
 

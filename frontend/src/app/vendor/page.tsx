@@ -31,7 +31,7 @@ const STAGE_LABELS: Record<string, string> = {
   registration: 'Registration Submitted',
   admin_review: 'Admin Review',
   company_details_submitted: 'Complete Profile',
-  intro_meeting_scheduled: 'Intro Meeting Scheduled',
+  intro_meeting_scheduled: 'Technical Meeting Scheduled',
   agreement_sent: 'Agreement Sent',
   agreement_signed: 'Agreement Signed',
   onboarded: 'Vendor Onboarded',
@@ -46,9 +46,11 @@ interface OnboardingData {
   meetingLink?: string;
   agreementStatus?: string;
   agreementSentAt?: string;
+  agreementViewedAt?: string;
   agreementSentToEmail?: string;
   logoUrl?: string | null;
   companyName?: string | null;
+  vendorType?: 'product' | 'service';
 }
 
 export default function VendorDashboard() {
@@ -125,14 +127,28 @@ export default function VendorDashboard() {
     if (data.profileCompletion < 100) {
       pendingActions.push({ label: 'Complete your company profile', href: '/vendor/profile', icon: <EditIcon className="w-5 h-5" /> });
     }
-    if (data.meetingDate) {
-      pendingActions.push({ label: `Meeting scheduled: ${data.meetingDate} at ${data.meetingTime}`, href: data.meetingLink || '/vendor/onboarding', icon: <CalendarIcon className="w-5 h-5" /> });
-    }
-    if (data.agreementStatus === 'sent' && data.onboardingStage !== 'agreement_signed' && data.onboardingStage !== 'onboarded') {
+    if (data.onboardingStage === 'intro_meeting_scheduled' && !data.meetingDate) {
       pendingActions.push({
-        label: data.agreementSentToEmail
-          ? `Agreement sent to ${data.agreementSentToEmail} – Pending your signature`
-          : 'Agreement sent – Pending your signature',
+        label: 'Schedule your technical meeting',
+        href: '/vendor/onboarding',
+        icon: <CalendarIcon className="w-5 h-5" />,
+      });
+    }
+    if (data.meetingDate) {
+      pendingActions.push({ label: `Technical meeting scheduled: ${data.meetingDate} at ${data.meetingTime}`, href: data.meetingLink || '/vendor/onboarding', icon: <CalendarIcon className="w-5 h-5" /> });
+    }
+    if (
+      (data.agreementStatus === 'sent' || data.agreementStatus === 'viewed') &&
+      data.onboardingStage !== 'agreement_signed' &&
+      data.onboardingStage !== 'onboarded'
+    ) {
+      pendingActions.push({
+        label:
+          data.agreementStatus === 'viewed'
+            ? 'Agreement viewed - Pending your signature'
+            : data.agreementSentToEmail
+              ? `Agreement sent to ${data.agreementSentToEmail} - Pending your signature`
+              : 'Agreement sent - Pending your signature',
         href: '/vendor/onboarding',
         icon: <FileIcon className="w-5 h-5" />,
       });
@@ -251,7 +267,7 @@ export default function VendorDashboard() {
                             : 'bg-slate-100 text-slate-400 border border-slate-300'
                         }`}
                       >
-                        {done ? <CheckCircleIcon className="w-5 h-5" /> : cur ? '◉' : i + 1}
+                        {done ? <CheckCircleIcon className="w-5 h-5" /> : cur ? <ClockIcon className="w-5 h-5" /> : i + 1}
                       </div>
                       <div className="min-w-0 md:text-center">
                         <p

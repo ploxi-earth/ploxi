@@ -26,6 +26,13 @@ const vendorSchema = new mongoose.Schema(
     servicesOffered: { type: String, trim: true },
     sector: { type: String, trim: true },
     location: { type: String, trim: true },
+    vendorType: { type: String, enum: ['product', 'service'], default: 'service' },
+    locationsServed: [{ type: String, trim: true }],
+    industryFocus: [{ type: String, trim: true }],
+    corporateProfile: { type: String, maxlength: 2000 },
+    legalEntityName: { type: String, trim: true },
+    gstNumber: { type: String, trim: true },
+    registeredAddress: { type: String, trim: true },
 
     // ── Status & Onboarding ───────────────────────────────────────────────────
     status: {
@@ -56,7 +63,7 @@ const vendorSchema = new mongoose.Schema(
     // ── Agreement ─────────────────────────────────────────────────────────────
     agreementStatus: {
       type: String,
-      enum: ['not_sent', 'sent', 'pending_signature', 'signed'],
+      enum: ['not_sent', 'sent', 'viewed', 'pending_signature', 'signed'],
       default: 'not_sent',
     },
     agreementSentAt: Date,
@@ -95,15 +102,23 @@ vendorSchema.virtual('profileCompletion').get(function () {
   const fields = [
     this.companyName,
     this.contactPerson,
-    this.email,
     this.phone,
     this.website,
     this.companyDescription,
     this.servicesOffered,
     this.sector,
     this.location,
+    this.locationsServed,
+    this.industryFocus,
+    this.corporateProfile,
+    this.legalEntityName,
+    this.gstNumber,
+    this.registeredAddress,
   ];
-  const filled = fields.filter(Boolean).length;
+  const filled = fields.filter((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return Boolean(value);
+  }).length;
   return Math.round((filled / fields.length) * 100);
 });
 

@@ -1,5 +1,6 @@
 const supabase = require('../config/db');
 const AppError = require('../utils/AppError');
+const { normalizeAgreementStatus } = require('../utils/docusignService');
 
 // ── Get My Vendor Profile ─────────────────────────────────────────────────
 exports.getMyProfile = async (req, res, next) => {
@@ -22,7 +23,17 @@ exports.getMyProfile = async (req, res, next) => {
 
   res.json({
     success: true,
-    data: { ...vendor, profile: profile || null },
+    data: {
+      ...vendor,
+      profile: profile || null,
+      vendorType: vendor.vendor_type || 'service',
+      locationsServed: profile?.locations_served || [],
+      industryFocus: profile?.industry_focus || [],
+      corporateProfile: profile?.corporate_profile || '',
+      legalEntityName: profile?.legal_entity_name || '',
+      gstNumber: profile?.gst_number || '',
+      registeredAddress: profile?.registered_address || '',
+    },
   });
 };
 
@@ -62,6 +73,12 @@ exports.upsertProfile = async (req, res, next) => {
     sector: req.body.sector,
     location: req.body.location,
     website: req.body.website,
+    industry_focus: req.body.industryFocus,
+    corporate_profile: req.body.corporateProfile,
+    legal_entity_name: req.body.legalEntityName,
+    gst_number: req.body.gstNumber,
+    registered_address: req.body.registeredAddress,
+    locations_served: req.body.locationsServed,
   };
 
   // Remove undefined values
@@ -94,7 +111,7 @@ exports.upsertProfile = async (req, res, next) => {
       .eq('vendor_id', vendorId)
       .single();
 
-    if (fullProfile && fullProfile.services && fullProfile.sector && fullProfile.location) {
+    if (fullProfile && fullProfile.services && fullProfile.sector && fullProfile.location && fullProfile.gst_number) {
       // Check current onboarding stage
       const { data: currentStage } = await supabase
         .from('onboarding_stages')
@@ -122,7 +139,20 @@ exports.upsertProfile = async (req, res, next) => {
   const { data: updatedVendor } = await supabase.from('vendors').select('*').eq('id', vendorId).single();
   const { data: updatedProfile } = await supabase.from('vendor_profiles').select('*').eq('vendor_id', vendorId).single();
 
-  res.json({ success: true, data: { ...updatedVendor, profile: updatedProfile } });
+  res.json({
+    success: true,
+    data: {
+      ...updatedVendor,
+      profile: updatedProfile,
+      vendorType: updatedVendor.vendor_type || 'service',
+      locationsServed: updatedProfile?.locations_served || [],
+      industryFocus: updatedProfile?.industry_focus || [],
+      corporateProfile: updatedProfile?.corporate_profile || '',
+      legalEntityName: updatedProfile?.legal_entity_name || '',
+      gstNumber: updatedProfile?.gst_number || '',
+      registeredAddress: updatedProfile?.registered_address || '',
+    },
+  });
 };
 
 // ── Get Onboarding Status ──────────────────────────────────────────────────
@@ -131,7 +161,7 @@ exports.getOnboardingStatus = async (req, res, next) => {
 
   const { data: vendor, error } = await supabase
     .from('vendors')
-    .select('id, status, created_at')
+    .select('id, status, created_at, vendor_type, email')
     .eq('id', vendorId)
     .single();
 
@@ -159,7 +189,7 @@ exports.getOnboardingStatus = async (req, res, next) => {
 
   const { data: profile } = await supabase
     .from('vendor_profiles')
-    .select('profile_completed')
+    .select('profile_completed, services, sector, location, website, industry_focus, locations_served, legal_entity_name, gst_number, registered_address')
     .eq('vendor_id', vendorId)
     .single();
 
@@ -185,12 +215,33 @@ exports.getOnboardingStatus = async (req, res, next) => {
   // Map meeting data
   const latestMeeting = meetings?.[0] || null;
   const latestAgreement = agreements?.[0] || null;
+  let meetingStatus = 'scheduled';
+  if (latestMeeting?.status) {
+    meetingStatus = latestMeeting.status;
+  } else if (latestMeeting?.scheduled_date) {
+    meetingStatus = new Date(latestMeeting.scheduled_date) < new Date() ? 'completed' : 'scheduled';
+  }
 
   // Determine agreement status
-  let agreementStatus = 'not_sent';
-  if (latestAgreement) {
-    agreementStatus = latestAgreement.signed ? 'signed' : 'sent';
-  }
+  const agreementStatus = normalizeAgreementStatus(latestAgreement);
+  const completionFields = [
+    profile?.services,
+    profile?.sector,
+    profile?.location,
+    profile?.website,
+    profile?.industry_focus,
+    profile?.locations_served,
+    profile?.legal_entity_name,
+    profile?.gst_number,
+    profile?.registered_address,
+  ];
+  const completionFilled = completionFields.filter((v) => {
+    if (Array.isArray(v)) return v.length > 0;
+    return Boolean(v && String(v).trim());
+  }).length;
+  const profileCompletion = completionFields.length
+    ? Math.round((completionFilled / completionFields.length) * 100)
+    : 0;
 
   res.json({
     success: true,
@@ -205,15 +256,24 @@ exports.getOnboardingStatus = async (req, res, next) => {
       meetingDate: latestMeeting?.scheduled_date || null,
       meetingTime: latestMeeting?.scheduled_time || null,
       meetingLink: latestMeeting?.meeting_link || null,
+      meetingStatus: latestMeeting ? meetingStatus : null,
       agreementStatus,
       agreementSentAt: latestAgreement?.sent_at || null,
+      agreementViewedAt: latestAgreement?.viewed_at || null,
       agreementSignedAt: latestAgreement?.signed_at || null,
       agreementSentToEmail:
         latestAgreement?.recipient_email ||
         latestAgreement?.sent_to_email ||
         latestAgreement?.to_email ||
         vendor.email,
-      profileCompletion: profile?.profile_completed ? 100 : 50,
+      profileCompletion: profile?.profile_completed ? 100 : profileCompletion,
+      vendorType: vendor.vendor_type || 'service',
+      agreementSentToEmail:
+        latestAgreement?.recipient_email ||
+        latestAgreement?.sent_to_email ||
+        latestAgreement?.to_email ||
+        vendor.email ||
+        null,
     },
   });
 };

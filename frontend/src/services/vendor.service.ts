@@ -80,6 +80,13 @@ export const vendorRegistrationService = {
     email: string;
     phone: string;
     password: string;
+    vendorType: 'product' | 'service';
+    locationsServed: string[];
+    industryFocus: string[];
+    corporateProfile?: string;
+    legalEntityName?: string;
+    gstNumber: string;
+    registeredAddress?: string;
   }) => api.post('/vendor/register/send-otp', payload),
   verifyOtp: (email: string, otp: string) => api.post('/vendor/register/verify-otp', { email, otp }),
 };

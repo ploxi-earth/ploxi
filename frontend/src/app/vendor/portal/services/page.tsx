@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { portalService } from '@/services/portal.service';
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser';
+import { PlusIcon, SearchIcon } from '@/components/vendor/VendorIcons';
 
 type ServiceRow = {
   id: string;
@@ -9,7 +10,6 @@ type ServiceRow = {
   description?: string | null;
   sector?: string | null;
   status?: 'active' | 'inactive' | 'draft' | null;
-  pricing?: number | null;
   category?: string | null;
   created_at?: string | null;
 };
@@ -37,7 +37,6 @@ export default function VendorServicesPage() {
       description: '',
       sector: '',
       status: 'active' as 'active' | 'inactive' | 'draft',
-      pricing: '',
     });
 
     const sectors = useMemo(
@@ -94,13 +93,8 @@ export default function VendorServicesPage() {
 
     const createService = async () => {
       const name = draft.name.trim();
-      const pricing = Number(draft.pricing);
       if (!name) {
         setError('Service name is required.');
-        return;
-      }
-      if (!draft.pricing || Number.isNaN(pricing) || pricing <= 0) {
-        setError('Service pricing is required and must be greater than 0.');
         return;
       }
       setSaving(true);
@@ -111,10 +105,9 @@ export default function VendorServicesPage() {
           description: draft.description.trim(),
           sector: draft.sector.trim() || null,
           status: draft.status,
-          pricing,
         });
         setShowAdd(false);
-        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
+        setDraft({ name: '', description: '', sector: '', status: 'active' });
         await load();
       } catch (e: unknown) {
         setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create service.');
@@ -130,7 +123,6 @@ export default function VendorServicesPage() {
         description: service.description || '',
         sector: service.sector || '',
         status: (service.status || 'active') as 'active' | 'inactive' | 'draft',
-        pricing: service.pricing ? String(service.pricing) : '',
       });
       setError('');
     };
@@ -138,17 +130,11 @@ export default function VendorServicesPage() {
     const updateService = async () => {
       if (!editingId) return;
       const name = draft.name.trim();
-      const pricing = Number(draft.pricing);
 
       if (!name) {
         setError('Service name is required.');
         return;
       }
-      if (!draft.pricing || Number.isNaN(pricing) || pricing <= 0) {
-        setError('Service pricing is required and must be greater than 0.');
-        return;
-      }
-
       setSaving(true);
       setError('');
       try {
@@ -157,10 +143,9 @@ export default function VendorServicesPage() {
           description: draft.description.trim(),
           sector: draft.sector.trim() || null,
           status: draft.status,
-          pricing,
         });
         setEditingId(null);
-        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
+        setDraft({ name: '', description: '', sector: '', status: 'active' });
         await load();
       } catch (e: unknown) {
         setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update service.');
@@ -176,7 +161,7 @@ export default function VendorServicesPage() {
       try {
         await portalService.deleteService(editingId);
         setEditingId(null);
-        setDraft({ name: '', description: '', sector: '', status: 'active', pricing: '' });
+        setDraft({ name: '', description: '', sector: '', status: 'active' });
         await load();
       } catch (e: unknown) {
         setError((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete service.');
@@ -207,7 +192,7 @@ export default function VendorServicesPage() {
                   onClick={() => { setShowAdd(true); setError(''); }}
                   className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+                    <PlusIcon className="h-4 w-4" />
                     Add Service
                 </button>
             </div>
@@ -261,17 +246,6 @@ export default function VendorServicesPage() {
                           placeholder="e.g. Renewable Energy"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Pricing (INR)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all"
-                          value={draft.pricing}
-                          onChange={(e) => setDraft(d => ({ ...d, pricing: e.target.value }))}
-                          placeholder="e.g. 150000"
-                        />
-                      </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -315,9 +289,7 @@ export default function VendorServicesPage() {
             {/* Search & Filter */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <div className="relative flex-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-                    </svg>
+                    <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search services…"
@@ -354,9 +326,6 @@ export default function VendorServicesPage() {
                                 {s.sector || '—'}
                             </span>
                             <div className="flex items-center gap-2 sm:gap-3">
-                                <span className="text-xs font-semibold text-gray-700">
-                                  ₹{Number(s.pricing || 0).toLocaleString('en-IN')}
-                                </span>
                                 <button
                                   type="button"
                                   onClick={() => togglePause(s)}

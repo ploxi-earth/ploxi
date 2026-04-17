@@ -19,15 +19,13 @@ export async function GET(req: NextRequest) {
     const limit = 20;
     const offset = (page - 1) * limit;
 
-    const applyStatus = <T extends { eq: (c: string, v: string) => T }>(q: T) =>
-      status ? q.eq('status', status) : q;
-
-    async function countTable(table: string) {
-      let q = supabase.from(table).select('*', { count: 'exact', head: true });
-      if (status) q = q.eq('status', status);
-      const { count } = await q;
+    const applyStatus = (query: any) => (status ? query.eq('status', status) : query);
+    const countTable = async (table: string) => {
+      const { count } = await applyStatus(
+        supabase.from(table).select('*', { count: 'exact', head: true })
+      );
       return count || 0;
-    }
+    };
 
     if (engagementType === 'raise_funding') {
       let q = supabase.from('raise_funding_registrations').select('*', { count: 'exact' });
@@ -76,10 +74,10 @@ export async function GET(req: NextRequest) {
     ]);
 
     const merged: ClimateRegRow[] = [
-      ...(rf.data || []).map((r) => mapRaiseFundingRow(r as Record<string, unknown>)),
-      ...(inv.data || []).map((r) => mapInvestorRow(r as Record<string, unknown>)),
-      ...(part.data || []).map((r) => mapParticipantRow(r as Record<string, unknown>)),
-      ...(leg.data || []).map((r) => mapLegacyClimateRow(r as Record<string, unknown>)),
+      ...(rf.data || []).map((r: Record<string, unknown>) => mapRaiseFundingRow(r)),
+      ...(inv.data || []).map((r: Record<string, unknown>) => mapInvestorRow(r)),
+      ...(part.data || []).map((r: Record<string, unknown>) => mapParticipantRow(r)),
+      ...(leg.data || []).map((r: Record<string, unknown>) => mapLegacyClimateRow(r)),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const slice = merged.slice(0, limit);

@@ -4,7 +4,7 @@ import { requireRole, jsonOk, jsonError } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireRole(req, 'platform_admin');
+    await requireRole(req, 'platform_admin');
 
     const statuses = ['pending', 'approved', 'rejected', 'onboarding', 'onboarded'];
     const vendorCounts: Record<string, number> = {};
@@ -33,13 +33,6 @@ export async function GET(req: NextRequest) {
     const climateCount =
       (climateLegacy || 0) + (climateRaise || 0) + (climateInvestor || 0) + (climateParticipant || 0);
 
-    const { count: pendingMeetingRequests } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('is_read', false)
-      .or('title.ilike.%meeting request%,message.ilike.%meeting request%');
-
     return jsonOk({
       success: true,
       data: {
@@ -48,9 +41,6 @@ export async function GET(req: NextRequest) {
           corporate: corporateCount || 0,
           cleantech: cleantechCount || 0,
           climateFinance: climateCount || 0,
-        },
-        alerts: {
-          pendingMeetingRequests: pendingMeetingRequests || 0,
         },
       },
     });

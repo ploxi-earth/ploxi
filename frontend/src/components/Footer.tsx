@@ -38,6 +38,11 @@ export default function Footer() {
               Bangalore, India • © 2025 Ploxi. All rights reserved.
             </div>
           </div>
+          <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-white/10 pt-4 text-sm text-slate-400">
+            <a href="#" className="hover:text-white transition-colors">Terms & Conditions</a>
+            <a href="#" className="hover:text-white transition-colors">Data Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Legal Policy</a>
+          </div>
         </div>
       </footer>
     </FadeUp>

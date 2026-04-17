@@ -17,6 +17,7 @@ router.patch('/vendors/:id/approve', adminController.approveVendor);
 router.patch('/vendors/:id/reject', adminController.rejectVendor);
 router.patch('/vendors/:id/schedule-meeting', adminController.scheduleMeeting);
 router.patch('/vendors/:id/send-agreement', adminController.sendAgreement);
+router.patch('/vendors/:id/mark-viewed', adminController.markAgreementViewed);
 router.patch('/vendors/:id/mark-signed', adminController.markAgreementSigned);
 router.patch('/vendors/:id/complete-onboarding', adminController.completeOnboarding);
 router.patch('/vendors/:id/portal-access', adminController.setVendorPortalAccess);

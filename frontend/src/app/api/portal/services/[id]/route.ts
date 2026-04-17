@@ -9,16 +9,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json();
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-    if (body.pricing !== undefined) {
-      const pricing = Number(body.pricing);
-      if (Number.isNaN(pricing) || pricing < 0) {
-        return jsonError('Service pricing must be a valid non-negative number.', 400);
-      }
-    }
-
     const map: Record<string, string> = {
       name: 'name', description: 'description', category: 'category',
-      sector: 'sector', tags: 'tags', status: 'status', pricing: 'pricing',
+      sector: 'sector', tags: 'tags', status: 'status',
       deliveryTimeline: 'delivery_timeline', coverImage: 'cover_image',
     };
     for (const [k, v] of Object.entries(map)) if (body[k] !== undefined) updates[v] = body[k];

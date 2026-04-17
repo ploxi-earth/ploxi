@@ -32,6 +32,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const pathname = usePathname();
   const [vendorStatus, setVendorStatus] = useState<string | null>(null);
+  const [vendorType, setVendorType] = useState<'product' | 'service'>('service');
   const [loading, setLoading] = useState(true);
 
   // Allow register page without auth
@@ -50,8 +51,9 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     setLoading(true);
     vendorService
       .getOnboardingStatus()
-      .then((r: { data: { data: { status: string } } }) => {
+      .then((r: { data: { data: { status: string; vendorType?: 'product' | 'service' } } }) => {
         setVendorStatus(r.data.data.status);
+        setVendorType(r.data.data.vendorType || 'service');
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -86,7 +88,24 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   if (!isAuthenticated || user?.role !== 'vendor') return null;
 
   const isOnboarded = vendorStatus === 'onboarded';
-  const nav = isOnboarded ? PORTAL_NAV : ONBOARDING_NAV;
+  const sharedPortalNav = PORTAL_NAV.filter(
+    (item) =>
+      item.href !== '/vendor/portal/services' &&
+      item.href !== '/vendor/portal/projects'
+  );
+  const portalNav =
+    vendorType === 'product'
+      ? [
+          PORTAL_NAV.find((item) => item.href === '/vendor/portal/projects')!,
+          PORTAL_NAV.find((item) => item.href === '/vendor/portal/services')!,
+          ...sharedPortalNav,
+        ]
+      : [
+          PORTAL_NAV.find((item) => item.href === '/vendor/portal/services')!,
+          PORTAL_NAV.find((item) => item.href === '/vendor/portal/projects')!,
+          ...sharedPortalNav,
+        ];
+  const nav = isOnboarded ? portalNav : ONBOARDING_NAV;
 
   return (
     <ShellFrame
@@ -188,7 +207,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         </>
       )}
     >
-      {children}
+      <div className="min-h-[calc(100vh-6rem)]">{children}</div>
     </ShellFrame>
   );
 }

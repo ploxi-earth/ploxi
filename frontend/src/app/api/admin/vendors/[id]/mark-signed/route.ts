@@ -14,7 +14,12 @@ export async function PATCH(
 
     await supabase
       .from('agreements')
-      .update({ signed: true, signed_at: new Date().toISOString() })
+      .update({
+        viewed: true,
+        viewed_at: new Date().toISOString(),
+        signed: true,
+        signed_at: new Date().toISOString(),
+      })
       .eq('vendor_id', vendor.id)
       .is('signed_at', null);
 

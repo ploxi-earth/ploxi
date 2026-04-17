@@ -78,7 +78,7 @@ exports.getServices = async (req, res) => {
 
 exports.createService = async (req, res) => {
   const vendorId = getVendorId(req);
-  const { name, description, category, sector, tags, status, pricing, deliveryTimeline, coverImage } = req.body;
+  const { name, description, category, sector, tags, status, deliveryTimeline, coverImage } = req.body;
 
   const { data: service, error } = await supabase
     .from('services')
@@ -91,7 +91,6 @@ exports.createService = async (req, res) => {
       sector,
       tags: tags || [],
       status: status || 'active',
-      pricing,
       delivery_timeline: deliveryTimeline,
       cover_image: coverImage,
     })
@@ -108,7 +107,7 @@ exports.updateService = async (req, res, next) => {
 
   const fieldMap = {
     name: 'name', description: 'description', category: 'category',
-    sector: 'sector', tags: 'tags', status: 'status', pricing: 'pricing',
+    sector: 'sector', tags: 'tags', status: 'status',
     deliveryTimeline: 'delivery_timeline', coverImage: 'cover_image',
   };
 
@@ -301,7 +300,7 @@ exports.markAllNotificationsRead = async (req, res) => {
 // ╚══════════════════════════════════════════════════════════════════════════╝
 exports.updateSettings = async (req, res) => {
   const vendorId = getVendorId(req);
-  const { contactPerson, phone, email } = req.body;
+  const { contactPerson, phone, email, notificationPreferences } = req.body;
 
   const vendorUpdates = {};
   if (contactPerson) vendorUpdates.contact_person = contactPerson;
@@ -315,6 +314,25 @@ exports.updateSettings = async (req, res) => {
   // Also update user name if contactPerson changed
   if (contactPerson) {
     await supabase.from('users').update({ name: contactPerson }).eq('id', vendorId);
+  }
+
+  if (notificationPreferences) {
+    const { data: existingProfile } = await supabase
+      .from('vendor_profiles')
+      .select('id')
+      .eq('vendor_id', vendorId)
+      .maybeSingle();
+
+    if (existingProfile) {
+      await supabase
+        .from('vendor_profiles')
+        .update({ notification_preferences: notificationPreferences, updated_at: new Date().toISOString() })
+        .eq('vendor_id', vendorId);
+    } else {
+      await supabase
+        .from('vendor_profiles')
+        .insert({ vendor_id: vendorId, notification_preferences: notificationPreferences, updated_at: new Date().toISOString() });
+    }
   }
 
   const { data: vendor } = await supabase.from('vendors').select('*').eq('id', vendorId).single();

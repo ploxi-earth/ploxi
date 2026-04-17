@@ -3,6 +3,11 @@ import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabase';
 import { createSupabaseAnonAuthClient } from '@/lib/supabaseAnonAuth';
 import { jsonOk, jsonError } from '@/lib/auth';
+import {
+  isValidGstNumber,
+  normalizeGstNumber,
+  normalizeStringArray,
+} from '@/lib/vendorProfile';
 
 const ONBOARDING_STAGES = [
   'registration', 'admin_review', 'company_details_submitted',
@@ -11,13 +16,43 @@ const ONBOARDING_STAGES = [
 
 export async function POST(req: NextRequest) {
   try {
-    const { companyName, contactPerson, email, phone, password } = await req.json();
+    const {
+      companyName,
+      contactPerson,
+      email,
+      phone,
+      password,
+      vendorType,
+      locationsServed,
+      industryFocus,
+      corporateProfile,
+      legalEntityName,
+      gstNumber,
+      registeredAddress,
+    } = await req.json();
+    const normalizedVendorType =
+      vendorType === 'product' || vendorType === 'service' ? vendorType : '';
+    const normalizedLocationsServed = normalizeStringArray(locationsServed);
+    const normalizedIndustryFocus = normalizeStringArray(industryFocus);
+    const normalizedGstNumber = normalizeGstNumber(gstNumber);
 
-    if (!companyName || !contactPerson || !email || !phone || !password) {
+    if (
+      !companyName ||
+      !contactPerson ||
+      !email ||
+      !phone ||
+      !password ||
+      !normalizedVendorType ||
+      normalizedLocationsServed.length === 0 ||
+      !normalizedGstNumber
+    ) {
       return jsonError('All fields are required.', 400);
     }
     if (String(password).length < 8) {
       return jsonError('Password must be at least 8 characters.', 400);
+    }
+    if (!isValidGstNumber(normalizedGstNumber)) {
+      return jsonError('GST number format is invalid.', 400);
     }
 
     const em = String(email).toLowerCase().trim();
@@ -38,6 +73,7 @@ export async function POST(req: NextRequest) {
       contact_person: String(contactPerson).trim(),
       email: em,
       phone: String(phone).trim(),
+      vendor_type: normalizedVendorType,
       password_hash,
       status: 'pending' as const,
       email_verified: false,
@@ -78,6 +114,20 @@ export async function POST(req: NextRequest) {
         return jsonError('Failed to initialize onboarding.', 500);
       }
     }
+
+    await supabase.from('vendor_profiles').upsert(
+      {
+        vendor_id: vendorId,
+        locations_served: normalizedLocationsServed,
+        industry_focus: normalizedIndustryFocus,
+        corporate_profile: corporateProfile || null,
+        legal_entity_name: legalEntityName || null,
+        gst_number: normalizedGstNumber || null,
+        registered_address: registeredAddress || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'vendor_id' }
+    );
 
     const auth = createSupabaseAnonAuthClient();
     const { error: otpError } = await auth.auth.signInWithOtp({

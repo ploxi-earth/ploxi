@@ -17,7 +17,6 @@ const serviceSchema = new mongoose.Schema(
             default: 'active',
         },
 
-        pricing: { type: String, trim: true }, // e.g. "₹50K - ₹5L per project"
         deliveryTimeline: { type: String, trim: true },
         coverImage: { type: String },
     },

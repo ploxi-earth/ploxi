@@ -4,6 +4,7 @@ const supabase = require('../config/db');
 const AppError = require('../utils/AppError');
 const { sendTemplatedEmail } = require('../utils/emailService');
 const { MANAGEABLE_VENDOR_STATUSES } = require('../utils/vendorAccess');
+const { normalizeAgreementStatus } = require('../utils/docusignService');
 
 // ── Dashboard Stats ────────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
@@ -157,12 +158,15 @@ exports.getVendor = async (req, res, next) => {
   // ── Flatten latest meeting data ───────────────────────────────────────
   const latestMeeting = meetings?.[0] || null;
   const latestAgreement = agreements?.[0] || null;
+  let meetingStatus = 'scheduled';
+  if (latestMeeting?.status) {
+    meetingStatus = latestMeeting.status;
+  } else if (latestMeeting?.scheduled_date) {
+    meetingStatus = new Date(latestMeeting.scheduled_date) < new Date() ? 'completed' : 'scheduled';
+  }
 
   // ── Determine agreement status ────────────────────────────────────────
-  let agreementStatus = 'not_sent';
-  if (latestAgreement) {
-    agreementStatus = latestAgreement.signed ? 'signed' : 'sent';
-  }
+  const agreementStatus = normalizeAgreementStatus(latestAgreement);
 
   // ── Compute profile completion ────────────────────────────────────────
   let profileCompletion = 0;
@@ -205,10 +209,12 @@ exports.getVendor = async (req, res, next) => {
       meetingTime: latestMeeting?.scheduled_time || null,
       meetingLink: latestMeeting?.meeting_link || null,
       meetingNote: latestMeeting?.notes || null,
+      meetingStatus: latestMeeting ? meetingStatus : null,
 
       // Agreement info (latest)
       agreementStatus,
       agreementSentAt: latestAgreement?.sent_at || null,
+      agreementViewedAt: latestAgreement?.viewed_at || null,
       agreementSignedAt: latestAgreement?.signed_at || null,
 
       // Timestamps
@@ -418,36 +424,35 @@ exports.sendAgreement = async (req, res, next) => {
 
   if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
-  const { note } = req.body;
-
-  // Insert agreement record
-  await supabase.from('agreements').insert({
-    vendor_id: vendor.id,
-    file_name: 'Partnership Agreement',
-    sent_at: new Date().toISOString(),
+  console.warn('[docusign] backend sendAgreement is deprecated; use the Next.js route instead', {
+    vendorId: vendor.id,
+    recipientEmail: vendor.email,
   });
 
-  // Update onboarding stage
-  await supabase
-    .from('onboarding_stages')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('vendor_id', vendor.id)
-    .eq('stage_name', 'intro_meeting_scheduled');
+  return res.status(501).json({
+    success: false,
+    message: 'DocuSign sending is handled by the Next.js app.',
+  });
+};
+
+// ── Mark Agreement Viewed ──────────────────────────────────────────────────
+exports.markAgreementViewed = async (req, res, next) => {
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !vendor) return next(new AppError('Vendor not found.', 404));
 
   await supabase
-    .from('onboarding_stages')
-    .update({ status: 'active' })
+    .from('agreements')
+    .update({ viewed: true, viewed_at: new Date().toISOString() })
     .eq('vendor_id', vendor.id)
-    .eq('stage_name', 'agreement_sent');
-
-  try {
-    await sendTemplatedEmail('agreementSent', vendor.email, vendor.company_name, note);
-  } catch (err) {
-    console.error('Failed to send agreement email:', err.message);
-  }
+    .is('viewed_at', null);
 
   const { data: updated } = await supabase.from('vendors').select('*').eq('id', vendor.id).single();
-  res.json({ success: true, data: updated, message: 'Agreement sent to vendor via email.' });
+  res.json({ success: true, data: updated, message: 'Agreement marked as viewed.' });
 };
 
 // ── Mark Agreement Signed ──────────────────────────────────────────────────

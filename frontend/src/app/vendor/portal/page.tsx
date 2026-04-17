@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { portalService } from '@/services/portal.service';
+import { vendorService } from '@/services/vendor.service';
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser';
 import {
   MessageIcon,
   HandshakeIcon,
-  CurrencyIcon,
   BoltIcon,
   BriefcaseIcon,
   CalendarIcon,
@@ -58,6 +58,7 @@ export default function VendorPortalDashboard() {
     const [recentProjects, setRecentProjects] = useState<ProjectRow[]>([]);
     const [recentNotifications, setRecentNotifications] = useState<NotificationRow[]>([]);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [vendorType, setVendorType] = useState<'product' | 'service'>('service');
 
     useEffect(() => {
         const id = user?._id || user?.email;
@@ -101,6 +102,12 @@ export default function VendorPortalDashboard() {
 
     useEffect(() => {
       load();
+      vendorService
+        .getOnboardingStatus()
+        .then((r: { data: { data: { vendorType?: 'product' | 'service' } } }) =>
+          setVendorType(r.data.data.vendorType || 'service')
+        )
+        .catch(() => {});
     }, []);
 
     // Realtime updates: services + notifications affect dashboard stats/cards.
@@ -147,9 +154,9 @@ export default function VendorPortalDashboard() {
 
     const statCards = [
       {
-        label: 'Total Services',
-        value: stats ? String(stats.totalServices) : '—',
-        icon: <BoltIcon className="w-6 h-6 text-emerald-600" />,
+        label: vendorType === 'product' ? 'Active Projects' : 'Total Services',
+        value: stats ? String(vendorType === 'product' ? stats.activeProjects : stats.totalServices) : '—',
+        icon: vendorType === 'product' ? <HandshakeIcon className="w-6 h-6 text-violet-600" /> : <BoltIcon className="w-6 h-6 text-emerald-600" />,
       },
       {
         label: 'Enquiries',
@@ -157,14 +164,9 @@ export default function VendorPortalDashboard() {
         icon: <MessageIcon className="w-6 h-6 text-blue-600" />,
       },
       {
-        label: 'Active Projects',
-        value: stats ? String(stats.activeProjects) : '—',
-        icon: <HandshakeIcon className="w-6 h-6 text-violet-600" />,
-      },
-      {
-        label: 'Revenue',
-        value: stats ? `₹${Number(stats.totalRevenue || 0).toLocaleString('en-IN')}` : '—',
-        icon: <CurrencyIcon className="w-6 h-6 text-amber-600" />,
+        label: vendorType === 'product' ? 'Total Services' : 'Active Projects',
+        value: stats ? String(vendorType === 'product' ? stats.totalServices : stats.activeProjects) : '—',
+        icon: vendorType === 'product' ? <BoltIcon className="w-6 h-6 text-emerald-600" /> : <HandshakeIcon className="w-6 h-6 text-violet-600" />,
       },
     ];
 
@@ -288,8 +290,12 @@ export default function VendorPortalDashboard() {
                     <h2 className="font-semibold text-gray-900 mb-5">Quick Actions</h2>
                     <div className="space-y-3">
                         {[
-                            { href: '/vendor/portal/services', label: 'Manage Services', icon: <BoltIcon className="w-5 h-5 text-emerald-600" />, desc: 'Add or edit your offerings' },
-                            { href: '/vendor/portal/projects', label: 'View Projects', icon: <BriefcaseIcon className="w-5 h-5 text-blue-600" />, desc: 'Track active opportunities' },
+                            ...(vendorType === 'service'
+                              ? [{ href: '/vendor/portal/services', label: 'Manage Services', icon: <BoltIcon className="w-5 h-5 text-emerald-600" />, desc: 'Add or edit your offerings' }]
+                              : [{ href: '/vendor/portal/projects', label: 'View Projects', icon: <BriefcaseIcon className="w-5 h-5 text-blue-600" />, desc: 'Track active opportunities' }]),
+                            ...(vendorType === 'service'
+                              ? [{ href: '/vendor/portal/projects', label: 'View Projects', icon: <BriefcaseIcon className="w-5 h-5 text-blue-600" />, desc: 'Track active opportunities' }]
+                              : [{ href: '/vendor/portal/services', label: 'Manage Services', icon: <BoltIcon className="w-5 h-5 text-emerald-600" />, desc: 'Add or edit your offerings' }]),
                             { href: '/vendor/portal/meetings', label: 'Meetings', icon: <CalendarIcon className="w-5 h-5 text-purple-600" />, desc: 'Check upcoming schedules' },
                             { href: '/vendor/portal/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5 text-slate-600" />, desc: 'Update your preferences' },
                         ].map((a) => (

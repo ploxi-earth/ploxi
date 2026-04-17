@@ -1,8 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { portalService } from '@/services/portal.service';
 import { authService } from '@/services/auth.service';
+import { AlertIcon, CheckCircleIcon } from '@/components/vendor/VendorIcons';
+
+const DEFAULT_NOTIFICATION_PREFERENCES = {
+    emailEnquiries: true,
+    emailMeetings: true,
+    emailSystem: false,
+    pushAll: true,
+};
 
 export default function VendorSettingsPage() {
     const { user, setUser, setTokens } = useAuthStore();
@@ -25,6 +33,43 @@ export default function VendorSettingsPage() {
     const [savingPassword, setSavingPassword] = useState(false);
     const [accountError, setAccountError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [savingPrefs, setSavingPrefs] = useState(false);
+    const [savedPrefs, setSavedPrefs] = useState(false);
+    const [prefsError, setPrefsError] = useState('');
+    const [loadingSettings, setLoadingSettings] = useState(true);
+
+    useEffect(() => {
+        let alive = true;
+
+        const loadSettings = async () => {
+            setLoadingSettings(true);
+            setAccountError('');
+            try {
+                const r = await portalService.getSettings();
+                const data = r.data?.data;
+                if (!alive) return;
+
+                setAccount({
+                    name: data?.contactPerson || user?.name || '',
+                    email: data?.email || user?.email || '',
+                    phone: data?.phone || '',
+                });
+                setNotifPrefs(data?.notificationPreferences || DEFAULT_NOTIFICATION_PREFERENCES);
+            } catch (err: unknown) {
+                if (!alive) return;
+                const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+                setAccountError(msg || 'Failed to load settings.');
+            } finally {
+                if (alive) setLoadingSettings(false);
+            }
+        };
+
+        void loadSettings();
+
+        return () => {
+            alive = false;
+        };
+    }, [user?.email, user?.name]);
 
     const handleAccountSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,10 +83,15 @@ export default function VendorSettingsPage() {
           });
           const updated = r.data?.data;
           if (updated && user) {
+            setAccount({
+              name: updated.contactPerson ?? account.name,
+              email: updated.email ?? account.email,
+              phone: updated.phone ?? account.phone,
+            });
             // Keep auth store in sync for header greetings etc.
             setUser({
               ...user,
-              name: updated.contact_person ?? account.name,
+              name: updated.contactPerson ?? account.name,
               email: updated.email ?? account.email,
             });
           }
@@ -96,6 +146,7 @@ export default function VendorSettingsPage() {
         <button
             type="button"
             onClick={onChange}
+            disabled={savingPrefs}
             className={`relative w-11 h-6 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-gray-200'}`}
         >
             <span
@@ -103,6 +154,34 @@ export default function VendorSettingsPage() {
             />
         </button>
     );
+
+    const persistPrefs = async (nextPrefs: typeof notifPrefs) => {
+        setSavingPrefs(true);
+        setPrefsError('');
+        setSavedPrefs(false);
+        try {
+            const r = await portalService.updateSettings({ notificationPreferences: nextPrefs });
+            setNotifPrefs(r.data?.data?.notificationPreferences || nextPrefs);
+            setSavedPrefs(true);
+            setTimeout(() => setSavedPrefs(false), 3000);
+        } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setPrefsError(msg || 'Failed to save notification preferences.');
+        } finally {
+            setSavingPrefs(false);
+        }
+    };
+
+    if (loadingSettings) {
+        return (
+            <div className="flex min-h-[320px] items-center justify-center">
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-primary-500" />
+                    Loading settings...
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-2xl">
@@ -116,12 +195,12 @@ export default function VendorSettingsPage() {
                 <h2 className="font-semibold text-gray-900 mb-5">Account Information</h2>
                 {accountError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-4">
-                    {accountError}
+                    <span className="inline-flex items-center gap-2"><AlertIcon className="w-4 h-4" /> {accountError}</span>
                   </div>
                 )}
                 {savedAccount && (
                     <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700 mb-4">
-                        ✓ Account details saved successfully!
+                        <span className="inline-flex items-center gap-2 font-medium"><CheckCircleIcon className="w-4 h-4" /> Account details saved successfully!</span>
                     </div>
                 )}
                 <div className="space-y-4">
@@ -171,12 +250,12 @@ export default function VendorSettingsPage() {
                 <h2 className="font-semibold text-gray-900 mb-5">Change Password</h2>
                 {passwordError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-4">
-                    {passwordError}
+                    <span className="inline-flex items-center gap-2"><AlertIcon className="w-4 h-4" /> {passwordError}</span>
                   </div>
                 )}
                 {savedPassword && (
                     <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700 mb-4">
-                        ✓ Password updated successfully!
+                        <span className="inline-flex items-center gap-2 font-medium"><CheckCircleIcon className="w-4 h-4" /> Password updated successfully!</span>
                     </div>
                 )}
                 <div className="space-y-4">
@@ -223,6 +302,16 @@ export default function VendorSettingsPage() {
             {/* Notification Preferences */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
                 <h2 className="font-semibold text-gray-900 mb-5">Notification Preferences</h2>
+                {prefsError && (
+                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <span className="inline-flex items-center gap-2"><AlertIcon className="w-4 h-4" /> {prefsError}</span>
+                    </div>
+                )}
+                {savedPrefs && (
+                    <div className="mb-4 rounded-lg border border-primary-200 bg-primary-50 p-3 text-sm text-primary-700">
+                        <span className="inline-flex items-center gap-2 font-medium"><CheckCircleIcon className="w-4 h-4" /> Notification preferences saved successfully!</span>
+                    </div>
+                )}
                 <div className="space-y-4">
                     {[
                         { key: 'emailEnquiries' as const, label: 'Email – New Enquiries', desc: 'Receive an email when a new enquiry is submitted' },
@@ -237,11 +326,12 @@ export default function VendorSettingsPage() {
                             </div>
                             <Toggle
                                 checked={notifPrefs[pref.key]}
-                                onChange={() => setNotifPrefs((p) => ({ ...p, [pref.key]: !p[pref.key] }))}
+                                onChange={() => persistPrefs({ ...notifPrefs, [pref.key]: !notifPrefs[pref.key] })}
                             />
                         </div>
                     ))}
                 </div>
+                {savingPrefs && <p className="mt-3 text-xs text-gray-500">Saving notification preferences...</p>}
             </div>
 
             <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs text-gray-500">

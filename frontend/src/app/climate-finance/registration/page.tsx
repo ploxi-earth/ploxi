@@ -1,10 +1,17 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { climateFinanceService } from '@/services/vendor.service';
 import FormPageHeader from '@/components/FormPageHeader';
 import OTPModal from '@/components/OTPModal';
+import {
+  CheckCircleIcon,
+  ChevronRightIcon,
+  CurrencyIcon,
+  HandshakeIcon,
+  RocketIcon,
+} from '@/components/vendor/VendorIcons';
 
 type EngagementType = 'raise_funding' | 'investor' | 'participate' | '';
 
@@ -94,7 +101,9 @@ function ClimateFinanceRegistrationForm() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-sm p-8 text-center">
-          <div className="text-5xl mb-4">🌍</div>
+          <div className="mb-4 flex justify-center text-primary-600">
+            <CheckCircleIcon className="h-12 w-12" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Submitted!</h2>
           <p className="text-gray-500 mb-6">Thank you for your interest in climate finance. Our team will reach out shortly.</p>
           <Link href="/" className="btn-primary w-full justify-center">Back to Home</Link>
@@ -103,10 +112,25 @@ function ClimateFinanceRegistrationForm() {
     );
   }
 
-  const typeOptions: { type: EngagementType; emoji: string; title: string; desc: string }[] = [
-    { type: 'raise_funding', emoji: '🚀', title: 'Raise Funding', desc: 'Seeking investment for your clean tech venture' },
-    { type: 'investor', emoji: '💰', title: "I'm an Investor", desc: 'Looking to invest in climate solutions' },
-    { type: 'participate', emoji: '🤝', title: 'Participate', desc: 'Join events and seek consultation' },
+  const typeOptions: { type: EngagementType; icon: ReactNode; title: string; desc: string }[] = [
+    {
+      type: 'raise_funding',
+      icon: <RocketIcon className="h-8 w-8" />,
+      title: 'Raise Funding',
+      desc: 'Seeking investment for your clean tech venture',
+    },
+    {
+      type: 'investor',
+      icon: <CurrencyIcon className="h-8 w-8" />,
+      title: "I'm an Investor",
+      desc: 'Looking to invest in climate solutions',
+    },
+    {
+      type: 'participate',
+      icon: <HandshakeIcon className="h-8 w-8" />,
+      title: 'Participate',
+      desc: 'Join events and seek consultation',
+    },
   ];
 
   return (
@@ -122,7 +146,7 @@ function ClimateFinanceRegistrationForm() {
               {typeOptions.map((opt) => (
                 <button key={opt.type} onClick={() => setEngagementType(opt.type)}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all text-left">
-                  <span className="text-3xl">{opt.emoji}</span>
+                  <span className="text-primary-600">{opt.icon}</span>
                   <div>
                     <p className="font-bold text-gray-900">{opt.title}</p>
                     <p className="text-sm text-gray-500">{opt.desc}</p>
@@ -218,33 +242,6 @@ function ClimateFinanceRegistrationForm() {
               </div>
             )}
 
-            {/* Investor */}
-            {engagementType === 'investor' && (
-              <div className="space-y-4 border-t border-gray-100 pt-6">
-                <div>
-                  <label className="label">Investment Focus</label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {['Solar', 'Wind', 'EV & Mobility', 'Green Hydrogen', 'Carbon Markets', 'Agri-Tech', 'Water', 'Waste'].map((f) => (
-                      <button key={f} type="button" onClick={() => toggleArray('investmentFocus', f)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${form.investmentFocus.includes(f) ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'}`}>
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Ticket Size</label>
-                  <select className="input-field" value={form.ticketSize} onChange={(e) => update('ticketSize', e.target.value)}>
-                    <option value="">Select range</option>
-                    <option>₹50L – ₹2 Cr</option>
-                    <option>₹2–10 Cr</option>
-                    <option>₹10–50 Cr</option>
-                    <option>₹50 Cr+</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
             {/* Participate */}
             {engagementType === 'participate' && (
               <div className="space-y-4 border-t border-gray-100 pt-6">
@@ -277,7 +274,7 @@ function ClimateFinanceRegistrationForm() {
                 onClick={() => void sendClimateOtp()}
                 disabled={loading || !form.fullName || !form.email}
               >
-                {loading ? 'Sending code…' : <>{engagementType === 'investor' ? 'Verify email & continue' : 'Verify email & submit'} <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></>}
+                {loading ? 'Sending code...' : <>Verify email & submit <ChevronRightIcon className="h-4 w-4" /></>}
               </button>
             </div>
           </div>

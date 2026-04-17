@@ -13,7 +13,20 @@ const ONBOARDING_STAGES = [
 // ── Register (vendor self-registration) ────────────────────────────────────
 // Matches v1 vendor register pattern: insert into vendors + onboarding_stages
 exports.register = async (req, res, next) => {
-  const { companyName, contactPerson, email, phone, password } = req.body;
+  const {
+    companyName,
+    contactPerson,
+    email,
+    phone,
+    password,
+    vendorType,
+    locationsServed,
+    industryFocus,
+    corporateProfile,
+    legalEntityName,
+    gstNumber,
+    registeredAddress,
+  } = req.body;
 
   // Check if vendor email already exists
   const { data: existing } = await supabase
@@ -40,6 +53,7 @@ exports.register = async (req, res, next) => {
       contact_person: contactPerson,
       email: email.toLowerCase().trim(),
       phone,
+      vendor_type: vendorType || 'service',
       password_hash,
       status: 'pending',
     })
@@ -59,6 +73,17 @@ exports.register = async (req, res, next) => {
     completed_at: idx === 0 ? new Date().toISOString() : null,
   }));
   await supabase.from('onboarding_stages').insert(stages);
+
+  await supabase.from('vendor_profiles').upsert({
+    vendor_id: vendor.id,
+    locations_served: locationsServed || [],
+    industry_focus: industryFocus || [],
+    corporate_profile: corporateProfile || null,
+    legal_entity_name: legalEntityName || null,
+    gst_number: gstNumber || null,
+    registered_address: registeredAddress || null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'vendor_id' });
 
   // Also create a user record for the protect middleware lookup
   await supabase.from('users').insert({

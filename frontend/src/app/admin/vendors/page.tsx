@@ -3,6 +3,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { adminService } from '@/services/admin.service';
+import {
+  ChevronRightIcon,
+  PlusIcon,
+  SearchIcon,
+  UserIcon,
+  XIcon,
+} from '@/components/vendor/VendorIcons';
 
 interface Vendor {
   id: string;
@@ -13,7 +20,6 @@ interface Vendor {
   onboarding_stage: string;
   created_at: string;
   contact_person: string;
-  hasPendingMeetingRequest?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -51,7 +57,6 @@ export default function AdminVendorsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [pendingRequestsOnly, setPendingRequestsOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -70,7 +75,6 @@ export default function AdminVendorsPage() {
       const res = await adminService.getVendors({
         search,
         status: status || undefined,
-        pendingRequests: pendingRequestsOnly || undefined,
         page,
         limit: 20,
       });
@@ -85,7 +89,7 @@ export default function AdminVendorsPage() {
 
   useEffect(() => {
     fetchVendors();
-  }, [search, status, pendingRequestsOnly, page]);
+  }, [search, status, page]);
 
   const closeInviteDialog = () => {
     setShowInviteDialog(false);
@@ -138,7 +142,7 @@ export default function AdminVendorsPage() {
           onClick={() => setShowInviteDialog(true)}
           className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          <PlusIcon className="h-4 w-4" />
           Invite Vendor
         </button>
       </div>
@@ -146,7 +150,7 @@ export default function AdminVendorsPage() {
       {/* Filters */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 mb-5 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
             placeholder="Search company or email…"
@@ -172,24 +176,11 @@ export default function AdminVendorsPage() {
           <option value="onboarding">Onboarding</option>
           <option value="onboarded">Completed</option>
         </select>
-        <label className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600">
-          <input
-            type="checkbox"
-            checked={pendingRequestsOnly}
-            onChange={(e) => {
-              setPendingRequestsOnly(e.target.checked);
-              setPage(1);
-            }}
-            className="h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-200"
-          />
-          Notifications only
-        </label>
-        {(search || status || pendingRequestsOnly) && (
+        {(search || status) && (
           <button
             onClick={() => {
               setSearch('');
               setStatus('');
-              setPendingRequestsOnly(false);
               setPage(1);
             }}
             className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
@@ -208,7 +199,7 @@ export default function AdminVendorsPage() {
           </div>
         ) : vendors.length === 0 ? (
           <div className="p-12 text-center">
-            <svg className="mx-auto mb-3 text-gray-300" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+            <UserIcon className="mx-auto mb-3 h-8 w-8 text-gray-300" />
             <p className="text-sm text-gray-400">No vendors found.</p>
           </div>
         ) : (
@@ -221,12 +212,7 @@ export default function AdminVendorsPage() {
                   <Link key={v.id} href={`/admin/vendors/${v.id}`} className="block rounded-2xl border border-gray-100 bg-gray-50/70 p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900 flex items-center gap-2">
-                          <span>{v.company_name || '—'}</span>
-                          {v.hasPendingMeetingRequest && (
-                            <span className="inline-block w-2 h-2 rounded-full bg-red-500" aria-label="Pending meeting request" title="Pending meeting request" />
-                          )}
-                        </p>
+                        <p className="truncate text-sm font-semibold text-gray-900">{v.company_name || '—'}</p>
                         <p className="mt-1 text-sm text-gray-600">{v.contact_person || '—'}</p>
                       </div>
                       <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[v.status] || STATUS_STYLES.pending}`}>
@@ -273,12 +259,7 @@ export default function AdminVendorsPage() {
                         className="group cursor-pointer transition-colors hover:bg-gray-50/70"
                       >
                         <td className="px-5 py-3.5 font-semibold text-gray-900">
-                          <div className="inline-flex items-center gap-2">
-                            <span>{v.company_name || '—'}</span>
-                            {v.hasPendingMeetingRequest && (
-                              <span className="inline-block w-2 h-2 rounded-full bg-red-500" aria-label="Pending meeting request" title="Pending meeting request" />
-                            )}
-                          </div>
+                          <span>{v.company_name || '—'}</span>
                         </td>
                         <td className="px-5 py-3.5 text-gray-600">{v.contact_person || '—'}</td>
                         <td className="px-5 py-3.5 text-gray-500">{v.email}</td>
@@ -302,7 +283,7 @@ export default function AdminVendorsPage() {
                             className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 transition-colors group-hover:text-emerald-600"
                           >
                             View
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                            <ChevronRightIcon className="h-3 w-3" />
                           </Link>
                         </td>
                       </tr>
@@ -350,7 +331,7 @@ export default function AdminVendorsPage() {
                 className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
                 aria-label="Close invite vendor dialog"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <XIcon className="h-4 w-4" />
               </button>
             </div>
 

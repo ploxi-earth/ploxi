@@ -47,9 +47,9 @@ export async function sendVendorMeetingScheduledEmail(
 ) {
   const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #16a34a;">Meeting Scheduled</h2>
+        <h2 style="color: #16a34a;">Technical Meeting Scheduled</h2>
         <p>Dear ${escapeHtml(vendorName)},</p>
-        <p>An introductory meeting has been scheduled with the Ploxi Earth team.</p>
+        <p>A technical meeting has been scheduled with the Ploxi Earth team.</p>
         <p><strong>Date:</strong> ${escapeHtml(date)}</p>
         <p><strong>Time:</strong> ${escapeHtml(time)}</p>
         ${
@@ -62,7 +62,7 @@ export async function sendVendorMeetingScheduledEmail(
 
   await sendBrevoTransactional({
     to: [{ email: toEmail }],
-    subject: 'Intro Meeting Scheduled – Ploxi Earth',
+    subject: 'Technical Meeting Scheduled – Ploxi Earth',
     htmlContent: html,
   });
 }

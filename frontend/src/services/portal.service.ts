@@ -26,5 +26,6 @@ export const portalService = {
     markAllRead: () => api.patch('/portal/notifications/read-all'),
 
     // Settings
+    getSettings: () => api.get('/portal/settings'),
     updateSettings: (data: Record<string, unknown>) => api.patch('/portal/settings', data),
 };

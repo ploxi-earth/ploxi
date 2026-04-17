@@ -2,8 +2,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { vendorService } from '@/services/vendor.service';
 import { VendorLogoAvatar } from '@/components/vendor/VendorLogoAvatar';
+import { AlertIcon, CheckCircleIcon } from '@/components/vendor/VendorIcons';
 import { ALLOWED_VENDOR_LOGO_ACCEPT } from '@/lib/vendorLogoConstants';
 import { validateVendorLogoFile } from '@/lib/vendorLogoValidation';
+import {
+  calculateVendorProfileCompletion,
+  countCompletedVendorProfileFields,
+  VENDOR_PROFILE_COMPLETION_FIELD_COUNT,
+} from '@/lib/vendorProfile';
 
 interface Profile {
   companyName?: string;
@@ -14,6 +20,13 @@ interface Profile {
   servicesOffered?: string;
   sector?: string;
   location?: string;
+  vendorType?: 'product' | 'service';
+  locationsServed?: string[];
+  industryFocus?: string[];
+  corporateProfile?: string;
+  legalEntityName?: string;
+  gstNumber?: string;
+  registeredAddress?: string;
   logoUrl?: string | null;
 }
 
@@ -42,7 +55,7 @@ export default function VendorProfilePage() {
     };
   }, [logoLocalUrl]);
 
-  const update = (k: keyof Profile, v: string) => setProfile((p) => ({ ...p, [k]: v }));
+  const update = (k: keyof Profile, v: string | string[]) => setProfile((p) => ({ ...p, [k]: v }));
 
   const onLogoPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -120,18 +133,9 @@ export default function VendorProfilePage() {
   ];
 
   // Compute profile completion
-  const allFields = [
-    profile.companyName,
-    profile.contactPerson,
-    profile.phone,
-    profile.website,
-    profile.companyDescription,
-    profile.servicesOffered,
-    profile.sector,
-    profile.location,
-  ];
-  const filled = allFields.filter(Boolean).length;
-  const completion = Math.round((filled / allFields.length) * 100);
+  const completion = calculateVendorProfileCompletion(profile);
+  const totalFields = VENDOR_PROFILE_COMPLETION_FIELD_COUNT;
+  const filled = countCompletedVendorProfileFields(profile);
 
   return (
     <div>
@@ -166,7 +170,7 @@ export default function VendorProfilePage() {
         </div>
         {completion < 100 && (
           <p className="text-xs text-emerald-700 mt-3 font-medium">
-            ✓ {completion}% complete – {allFields.length - filled} field{allFields.length - filled !== 1 ? 's' : ''} remaining
+            {completion}% complete - {totalFields - filled} field{totalFields - filled !== 1 ? 's' : ''} remaining
           </p>
         )}
       </div>
@@ -178,7 +182,7 @@ export default function VendorProfilePage() {
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-6">
               <div className="flex items-start gap-3">
-                <span className="text-lg mt-0.5">⚠️</span>
+                <AlertIcon className="w-4 h-4 mt-0.5" />
                 <div>{error}</div>
               </div>
             </div>
@@ -186,7 +190,7 @@ export default function VendorProfilePage() {
           {saved && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 mb-6">
               <div className="flex items-center gap-3">
-                <span className="text-lg">✓</span>
+                <CheckCircleIcon className="w-4 h-4" />
                 <span className="font-medium">Profile saved successfully!</span>
               </div>
             </div>
@@ -248,6 +252,15 @@ export default function VendorProfilePage() {
             <h2 className="text-lg font-bold text-slate-900 mb-6">Services & Operations</h2>
             <div className="space-y-6">
               <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Vendor Type</label>
+                <input
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-600"
+                  value={profile.vendorType === 'product' ? 'Product Vendor' : 'Service Vendor'}
+                  disabled
+                />
+                <p className="text-xs text-slate-500 mt-2">Vendor type is fixed after registration. Contact support if changes are required.</p>
+              </div>
+              <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Services Offered</label>
                 <input
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
@@ -268,6 +281,64 @@ export default function VendorProfilePage() {
                 />
                 <p className="text-xs text-slate-500 mt-2">Share your company&apos;s vision and key achievements</p>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Locations Served</label>
+                  <input
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    value={(profile.locationsServed || []).join(', ')}
+                    onChange={(e) => update('locationsServed', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))}
+                    placeholder="Bengaluru, Mumbai"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Industry Focus</label>
+                  <input
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    value={(profile.industryFocus || []).join(', ')}
+                    onChange={(e) => update('industryFocus', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))}
+                    placeholder="Renewable Energy, EV"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Corporate Profile</label>
+                <textarea
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-vertical min-h-[100px]"
+                  value={profile.corporateProfile || ''}
+                  onChange={(e) => update('corporateProfile', e.target.value)}
+                  placeholder="Brief corporate profile..."
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Legal Entity Name</label>
+                  <input
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    value={profile.legalEntityName || ''}
+                    onChange={(e) => update('legalEntityName', e.target.value)}
+                    placeholder="Acme Pvt Ltd"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">GST Number</label>
+                  <input
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    value={profile.gstNumber || ''}
+                    onChange={(e) => update('gstNumber', e.target.value.toUpperCase())}
+                    placeholder="27ABCDE1234F1Z5"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Registered Address</label>
+                <textarea
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-vertical min-h-[90px]"
+                  value={profile.registeredAddress || ''}
+                  onChange={(e) => update('registeredAddress', e.target.value)}
+                  placeholder="Registered office address"
+                />
+              </div>
             </div>
           </div>
 
@@ -284,7 +355,7 @@ export default function VendorProfilePage() {
               </>
             ) : (
               <>
-                <span>✓ Save Profile</span>
+                <span>Save Profile</span>
               </>
             )}
           </button>

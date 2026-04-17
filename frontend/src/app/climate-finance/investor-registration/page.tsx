@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FormPageHeader from '@/components/FormPageHeader';
@@ -90,7 +90,7 @@ function initialForm(email = ''): InvestorForm {
   };
 }
 
-export default function InvestorRegistrationPage() {
+function InvestorRegistrationPageContent() {
   const router = useRouter();
   const search = useSearchParams();
   const prefilledEmail = (search.get('email') || '').trim();
@@ -397,6 +397,14 @@ export default function InvestorRegistrationPage() {
         isVerifying={isVerifyingOtp}
       />
     </div>
+  );
+}
+
+export default function InvestorRegistrationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>}>
+      <InvestorRegistrationPageContent />
+    </Suspense>
   );
 }
 

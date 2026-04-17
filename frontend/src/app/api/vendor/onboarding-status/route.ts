@@ -2,13 +2,13 @@ import { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireRole, jsonOk, jsonError } from '@/lib/auth';
 import {
+  calculateProfileCompletion,
   buildOnboardingHistory,
   computeOnboardingStage,
+  normalizeAgreementStatus,
+  normalizeMeetingStatus,
 } from '@/lib/vendorLifecycle';
-
-function isFilled(v: unknown): boolean {
-  return typeof v === 'string' ? v.trim().length > 0 : v !== null && v !== undefined;
-}
+import { fetchEnvelopeRecipientDiagnostics } from '@/lib/docusign';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const { data: vendor } = await supabase
       .from('vendors')
-      .select('id, status, company_name, contact_person, email, phone, created_at, logo_url')
+      .select('id, status, company_name, contact_person, email, phone, created_at, logo_url, vendor_type')
       .eq('id', vendorId)
       .single();
     if (!vendor) return jsonError('Vendor not found.', 404);
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('vendor_profiles')
-      .select('services, sector, location, website, description, profile_completed')
+      .select('services, sector, location, website, description, profile_completed, locations_served, industry_focus, corporate_profile, legal_entity_name, gst_number, registered_address')
       .eq('vendor_id', vendorId)
       .maybeSingle();
 
@@ -52,30 +52,28 @@ export async function GET(req: NextRequest) {
     const onboardingHistory = buildOnboardingHistory(stages || []);
     const latestMeeting = meetings?.[0] || null;
     const latestAgreement = agreements?.[0] || null;
-
-    let agreementStatus: 'not_sent' | 'sent' | 'signed' = 'not_sent';
-    if (latestAgreement) {
-      agreementStatus = latestAgreement.signed ? 'signed' : 'sent';
-    }
-
-    // Profile completion: compute percent based on required fields.
-    const required = [
-      vendor.company_name,
-      vendor.contact_person,
-      vendor.phone,
-      profile?.website,
-      profile?.services,
-      profile?.sector,
-      profile?.location,
-      profile?.description,
-    ];
-    const filled = required.filter(isFilled).length;
-    const profileCompletion = Math.round((filled / required.length) * 100);
+    const agreementStatus = normalizeAgreementStatus(latestAgreement);
+    const meetingStatus = normalizeMeetingStatus(latestMeeting);
+    const profileCompletion = profile?.profile_completed
+      ? 100
+      : calculateProfileCompletion(vendor, profile);
+    const agreementRecipientDiagnostics = latestAgreement?.docusign_envelope_id
+      ? await fetchEnvelopeRecipientDiagnostics({
+          vendorId,
+          envelopeId: latestAgreement.docusign_envelope_id,
+          recipientEmail:
+            latestAgreement?.recipient_email ||
+            latestAgreement?.sent_to_email ||
+            latestAgreement?.to_email ||
+            vendor.email,
+        }).catch(() => null)
+      : null;
 
     return jsonOk({
       success: true,
       data: {
         status: vendor.status,
+        vendorType: vendor.vendor_type || 'service',
         onboardingStage,
         onboardingHistory,
         onboardingStages: stages || [],
@@ -84,14 +82,26 @@ export async function GET(req: NextRequest) {
         meetingDate: latestMeeting?.scheduled_date || null,
         meetingTime: latestMeeting?.scheduled_time || null,
         meetingLink: latestMeeting?.meeting_link || null,
+        meetingStatus,
+        meetingTimezone: latestMeeting?.vendor_timezone || null,
         agreementStatus,
         agreementSentAt: latestAgreement?.sent_at || null,
+        agreementViewedAt: latestAgreement?.viewed_at || null,
         agreementSignedAt: latestAgreement?.signed_at || null,
+        agreementEnvelopeId: latestAgreement?.docusign_envelope_id || null,
+        agreementDeliveryStatus:
+          latestAgreement?.docusign_status ||
+          (latestAgreement?.docusign_envelope_id ? 'sent' : null),
         agreementSentToEmail:
           latestAgreement?.recipient_email ||
           latestAgreement?.sent_to_email ||
           latestAgreement?.to_email ||
           vendor.email,
+        agreementRecipientStatus: agreementRecipientDiagnostics?.recipientStatus || null,
+        agreementRecipientDeliveredAt: agreementRecipientDiagnostics?.recipientDeliveredAt || null,
+        agreementRecipientSentAt: agreementRecipientDiagnostics?.recipientSentAt || null,
+        agreementRecipientName: agreementRecipientDiagnostics?.recipientName || null,
+        agreementRecipientEmail: agreementRecipientDiagnostics?.recipientEmail || null,
         profileCompletion: profile?.profile_completed ? 100 : profileCompletion,
         logoUrl: vendor.logo_url ?? null,
         companyName: vendor.company_name ?? null,
