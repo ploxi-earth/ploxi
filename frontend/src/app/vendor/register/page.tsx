@@ -1,14 +1,18 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { vendorRegistrationService } from '@/services/vendor.service';
 import OTPModal from '@/components/OTPModal';
+import Footer from '@/components/Footer';
 import {
     ArrowLeftIcon,
     CheckCircleIcon,
     XCircleIcon,
 } from '@/components/vendor/VendorIcons';
+
+const ALLOWED_CORPORATE_PROFILE_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_CORPORATE_PROFILE_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
 export default function VendorRegisterPage() {
     const [form, setForm] = useState({
@@ -19,13 +23,12 @@ export default function VendorRegisterPage() {
         vendorType: 'service' as 'product' | 'service',
         locationsServed: '',
         industryFocus: '',
-        corporateProfile: '',
-        legalEntityName: '',
-        gstNumber: '',
-        registeredAddress: '',
         password: '',
         confirmPassword: '',
     });
+    const [corporateProfileFile, setCorporateProfileFile] = useState<File | null>(null);
+    const [corporateProfileError, setCorporateProfileError] = useState('');
+    const corporateFileInputRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -34,19 +37,52 @@ export default function VendorRegisterPage() {
 
     const update = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
+    // Validate corporate profile file
+    const validateCorporateProfileFile = (file: File): { ok: boolean; message: string } => {
+        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+        if (!ALLOWED_CORPORATE_PROFILE_EXTENSIONS.includes(ext)) {
+            return { ok: false, message: 'File must be PDF, DOC, or DOCX format.' };
+        }
+        if (!ALLOWED_CORPORATE_PROFILE_TYPES.includes(file.type) && 
+            !ALLOWED_CORPORATE_PROFILE_EXTENSIONS.some(e => file.name.toLowerCase().endsWith(e))) {
+            return { ok: false, message: 'Invalid file type. Allowed: PDF, DOC, DOCX' };
+        }
+        // 10MB limit
+        if (file.size > 10 * 1024 * 1024) {
+            return { ok: false, message: 'File size must be less than 10MB.' };
+        }
+        return { ok: true, message: '' };
+    };
+
+    // Handle corporate profile file selection
+    const onCorporateProfilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        setCorporateProfileError('');
+        if (!f) return;
+        const validation = validateCorporateProfileFile(f);
+        if (!validation.ok) {
+            setCorporateProfileError(validation.message);
+            e.target.value = '';
+            return;
+        }
+        setCorporateProfileFile(f);
+    };
+
+    // Clear corporate profile file selection
+    const clearCorporateProfileSelection = () => {
+        setCorporateProfileFile(null);
+        setCorporateProfileError('');
+        if (corporateFileInputRef.current) corporateFileInputRef.current.value = '';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const gstRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d][Z][A-Z\d]$/;
         if (form.password !== form.confirmPassword) {
             setError('Passwords do not match.');
             return;
         }
-        if (!form.vendorType || !form.locationsServed.trim() || !form.gstNumber.trim()) {
-            setError('Vendor type, locations served, and GST number are required.');
-            return;
-        }
-        if (!gstRegex.test(form.gstNumber.trim().toUpperCase())) {
-            setError('GST number format is invalid.');
+        if (!form.vendorType || !form.locationsServed.trim()) {
+            setError('Vendor type and locations served are required.');
             return;
         }
         if (form.password.length < 8) {
@@ -65,10 +101,6 @@ export default function VendorRegisterPage() {
                 vendorType: form.vendorType,
                 locationsServed: form.locationsServed.split(',').map((v) => v.trim()).filter(Boolean),
                 industryFocus: form.industryFocus.split(',').map((v) => v.trim()).filter(Boolean),
-                corporateProfile: form.corporateProfile,
-                legalEntityName: form.legalEntityName,
-                gstNumber: form.gstNumber.toUpperCase(),
-                registeredAddress: form.registeredAddress,
             });
             setShowOTPModal(true);
         } catch (err: unknown) {
@@ -103,10 +135,6 @@ export default function VendorRegisterPage() {
             vendorType: form.vendorType,
             locationsServed: form.locationsServed.split(',').map((v) => v.trim()).filter(Boolean),
             industryFocus: form.industryFocus.split(',').map((v) => v.trim()).filter(Boolean),
-            corporateProfile: form.corporateProfile,
-            legalEntityName: form.legalEntityName,
-            gstNumber: form.gstNumber.toUpperCase(),
-            registeredAddress: form.registeredAddress,
         });
     };
 
@@ -142,12 +170,14 @@ export default function VendorRegisterPage() {
                         </Link>
                     </div>
                 </div>
+                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-sky-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex flex-col">
+            <div className="flex-grow bg-gradient-to-br from-gray-50 to-sky-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-lg">
                 <div className="mb-6 flex justify-center">
                     <Link
@@ -249,10 +279,6 @@ export default function VendorRegisterPage() {
                                     <option value="service">Service Vendor</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="label">GST Number *</label>
-                                <input className="input-field" required value={form.gstNumber} onChange={(e) => update('gstNumber', e.target.value.toUpperCase())} placeholder="27ABCDE1234F1Z5" />
-                            </div>
                         </div>
                         <div>
                             <label className="label">Locations Served * (comma-separated)</label>
@@ -263,18 +289,32 @@ export default function VendorRegisterPage() {
                             <input className="input-field" value={form.industryFocus} onChange={(e) => update('industryFocus', e.target.value)} placeholder="Renewable Energy, E-Mobility" />
                         </div>
                         <div>
-                            <label className="label">Corporate Profile</label>
-                            <textarea className="input-field min-h-[96px]" value={form.corporateProfile} onChange={(e) => update('corporateProfile', e.target.value)} placeholder="Share your company profile..." />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="label">Legal Entity Name</label>
-                                <input className="input-field" value={form.legalEntityName} onChange={(e) => update('legalEntityName', e.target.value)} placeholder="Acme Clean Energy Pvt Ltd" />
-                            </div>
-                            <div>
-                                <label className="label">Registered Address</label>
-                                <input className="input-field" value={form.registeredAddress} onChange={(e) => update('registeredAddress', e.target.value)} placeholder="Registered office address" />
-                            </div>
+                            <label className="label">Corporate Profile (PDF, DOC, DOCX)</label>
+                            <p className="text-xs text-gray-500 mb-2">Upload your corporate profile document (optional, max 10MB)</p>
+                            <input
+                                ref={corporateFileInputRef}
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                className="block w-full max-w-md text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-800 hover:file:bg-emerald-100"
+                                onChange={onCorporateProfilePick}
+                                disabled={loading}
+                            />
+                            {corporateProfileFile && (
+                                <div className="mt-2 flex items-center justify-between p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                    <span className="text-sm text-emerald-800 truncate">{corporateProfileFile.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={clearCorporateProfileSelection}
+                                        className="text-sm font-medium text-emerald-600 hover:text-emerald-800"
+                                        disabled={loading}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
+                            {corporateProfileError && (
+                                <p className="mt-2 text-sm text-red-600" role="alert">{corporateProfileError}</p>
+                            )}
                         </div>
                         <div>
                             <label className="label">Confirm Password *</label>
@@ -314,5 +354,7 @@ export default function VendorRegisterPage() {
                 isVerifying={isVerifying}
             />
         </div>
-    );
+
+        <Footer />
+    </div>
 }

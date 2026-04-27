@@ -18,11 +18,30 @@ async function uploadVendorLogoRequest(file: File) {
   return json.data?.logoUrl ?? '';
 }
 
+async function uploadCorporateProfileRequest(file: File) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/vendor/corporate-profile', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+  const json = (await res.json().catch(() => ({}))) as { success?: boolean; data?: { fileUrl?: string }; message?: string };
+  if (!res.ok) {
+    const err = new Error(json?.message || 'Corporate profile upload failed.') as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+  return json.data?.fileUrl ?? '';
+}
+
 export const vendorService = {
   getProfile: () => api.get('/vendor/profile'),
   updateProfile: (data: Record<string, unknown> | object) => api.put('/vendor/profile', data),
   getOnboardingStatus: () => api.get('/vendor/onboarding-status'),
   uploadLogo: (file: File) => uploadVendorLogoRequest(file),
+  uploadCorporateProfile: (file: File) => uploadCorporateProfileRequest(file),
 };
 
 export const corporateService = {
@@ -83,10 +102,6 @@ export const vendorRegistrationService = {
     vendorType: 'product' | 'service';
     locationsServed: string[];
     industryFocus: string[];
-    corporateProfile?: string;
-    legalEntityName?: string;
-    gstNumber: string;
-    registeredAddress?: string;
   }) => api.post('/vendor/register/send-otp', payload),
   verifyOtp: (email: string, otp: string) => api.post('/vendor/register/verify-otp', { email, otp }),
 };

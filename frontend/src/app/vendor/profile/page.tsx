@@ -11,6 +11,9 @@ import {
   VENDOR_PROFILE_COMPLETION_FIELD_COUNT,
 } from '@/lib/vendorProfile';
 
+const ALLOWED_CORPORATE_PROFILE_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_CORPORATE_PROFILE_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+
 interface Profile {
   companyName?: string;
   contactPerson?: string;
@@ -24,6 +27,7 @@ interface Profile {
   locationsServed?: string[];
   industryFocus?: string[];
   corporateProfile?: string;
+  corporateProfileFileUrl?: string | null;
   legalEntityName?: string;
   gstNumber?: string;
   registeredAddress?: string;
@@ -39,7 +43,10 @@ export default function VendorProfilePage() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoLocalUrl, setLogoLocalUrl] = useState<string | null>(null);
   const [logoError, setLogoError] = useState('');
+  const [corporateProfileFile, setCorporateProfileFile] = useState<File | null>(null);
+  const [corporateProfileError, setCorporateProfileError] = useState('');
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const corporateFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     vendorService
@@ -84,22 +91,75 @@ export default function VendorProfilePage() {
     if (logoInputRef.current) logoInputRef.current.value = '';
   };
 
+  // Validate corporate profile file
+  const validateCorporateProfileFile = (file: File): { ok: boolean; message: string } => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ALLOWED_CORPORATE_PROFILE_EXTENSIONS.includes(ext)) {
+      return { ok: false, message: 'File must be PDF, DOC, or DOCX format.' };
+    }
+    if (!ALLOWED_CORPORATE_PROFILE_TYPES.includes(file.type) && 
+        !ALLOWED_CORPORATE_PROFILE_EXTENSIONS.some(e => file.name.toLowerCase().endsWith(e))) {
+      return { ok: false, message: 'Invalid file type. Allowed: PDF, DOC, DOCX' };
+    }
+    // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
+      return { ok: false, message: 'File size must be less than 10MB.' };
+    }
+    return { ok: true, message: '' };
+  };
+
+  // Handle corporate profile file selection
+  const onCorporateProfilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    setCorporateProfileError('');
+    if (!f) return;
+    const validation = validateCorporateProfileFile(f);
+    if (!validation.ok) {
+      setCorporateProfileError(validation.message);
+      e.target.value = '';
+      return;
+    }
+    setCorporateProfileFile(f);
+  };
+
+  // Clear corporate profile file selection
+  const clearCorporateProfileSelection = () => {
+    setCorporateProfileFile(null);
+    setCorporateProfileError('');
+    if (corporateFileInputRef.current) corporateFileInputRef.current.value = '';
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
     setLogoError('');
+    setCorporateProfileError('');
     setSaved(false);
     try {
       if (logoFile) {
         const v = validateVendorLogoFile(logoFile);
         if (!v.ok) {
           setLogoError(v.message);
+          setSaving(false);
           return;
         }
         const publicUrl = await vendorService.uploadLogo(logoFile);
         setProfile((p) => ({ ...p, logoUrl: publicUrl || p.logoUrl }));
         clearLogoSelection();
+      }
+
+      // Handle corporate profile file upload
+      if (corporateProfileFile) {
+        const validation = validateCorporateProfileFile(corporateProfileFile);
+        if (!validation.ok) {
+          setCorporateProfileError(validation.message);
+          setSaving(false);
+          return;
+        }
+        const fileUrl = await vendorService.uploadCorporateProfile(corporateProfileFile);
+        setProfile((p) => ({ ...p, corporateProfileFileUrl: fileUrl || p.corporateProfileFileUrl }));
+        clearCorporateProfileSelection();
       }
 
       const res = await vendorService.updateProfile(profile);
@@ -302,13 +362,54 @@ export default function VendorProfilePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Corporate Profile</label>
-                <textarea
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-vertical min-h-[100px]"
-                  value={profile.corporateProfile || ''}
-                  onChange={(e) => update('corporateProfile', e.target.value)}
-                  placeholder="Brief corporate profile..."
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Corporate Profile Document</label>
+                <p className="text-xs text-slate-500 mb-2">Upload your corporate profile document (PDF, DOC, DOCX - max 10MB)</p>
+                <input
+                  ref={corporateFileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="block w-full max-w-md text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-800 hover:file:bg-emerald-100"
+                  onChange={onCorporateProfilePick}
+                  disabled={saving}
                 />
+                {corporateProfileFile && (
+                  <div className="mt-2 flex items-center justify-between p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <span className="text-sm text-emerald-800 truncate">{corporateProfileFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={clearCorporateProfileSelection}
+                      className="text-sm font-medium text-emerald-600 hover:text-emerald-800"
+                      disabled={saving}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {profile.corporateProfileFileUrl && !corporateProfileFile && (
+                  <div className="mt-2 flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                    <a 
+                      href={profile.corporateProfileFileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-sky-600 hover:text-sky-700 truncate"
+                    >
+                      View uploaded document
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfile((p) => ({ ...p, corporateProfileFileUrl: null }));
+                      }}
+                      className="text-sm font-medium text-slate-500 hover:text-slate-700"
+                      disabled={saving}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+                {corporateProfileError && (
+                  <p className="mt-2 text-sm text-red-600" role="alert">{corporateProfileError}</p>
+                )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>

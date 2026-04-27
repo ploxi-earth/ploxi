@@ -9,6 +9,7 @@ import { useAuthHydrated } from '@/hooks/useAuthHydrated';
 import { vendorService } from '@/services/vendor.service';
 import { Icons } from '@/components/vendor/Icons';
 import ShellFrame from '@/components/ui/ShellFrame';
+import Footer from '@/components/Footer';
 
 const ONBOARDING_NAV = [
   { href: '/vendor', label: 'Dashboard', icon: Icons.Dashboard },
@@ -208,6 +209,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       )}
     >
       <div className="min-h-[calc(100vh-6rem)]">{children}</div>
+      <Footer />
     </ShellFrame>
   );
 }

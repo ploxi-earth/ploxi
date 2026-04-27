@@ -28,6 +28,7 @@ function buildVendorProfilePayload(vendor: any, profile: any) {
     locationsServed: normalizeStringArray(profile?.locations_served),
     industryFocus: normalizeStringArray(profile?.industry_focus),
     corporateProfile: profile?.corporate_profile ?? null,
+    corporateProfileFileUrl: profile?.corporate_profile_file_url ?? null,
     legalEntityName: profile?.legal_entity_name ?? null,
     gstNumber: profile?.gst_number ?? null,
     registeredAddress: profile?.registered_address ?? null,

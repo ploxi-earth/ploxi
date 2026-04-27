@@ -4,8 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { createSupabaseAnonAuthClient } from '@/lib/supabaseAnonAuth';
 import { jsonOk, jsonError } from '@/lib/auth';
 import {
-  isValidGstNumber,
-  normalizeGstNumber,
   normalizeStringArray,
 } from '@/lib/vendorProfile';
 
@@ -25,16 +23,11 @@ export async function POST(req: NextRequest) {
       vendorType,
       locationsServed,
       industryFocus,
-      corporateProfile,
-      legalEntityName,
-      gstNumber,
-      registeredAddress,
     } = await req.json();
     const normalizedVendorType =
       vendorType === 'product' || vendorType === 'service' ? vendorType : '';
     const normalizedLocationsServed = normalizeStringArray(locationsServed);
     const normalizedIndustryFocus = normalizeStringArray(industryFocus);
-    const normalizedGstNumber = normalizeGstNumber(gstNumber);
 
     if (
       !companyName ||
@@ -43,16 +36,12 @@ export async function POST(req: NextRequest) {
       !phone ||
       !password ||
       !normalizedVendorType ||
-      normalizedLocationsServed.length === 0 ||
-      !normalizedGstNumber
+      normalizedLocationsServed.length === 0
     ) {
       return jsonError('All fields are required.', 400);
     }
     if (String(password).length < 8) {
       return jsonError('Password must be at least 8 characters.', 400);
-    }
-    if (!isValidGstNumber(normalizedGstNumber)) {
-      return jsonError('GST number format is invalid.', 400);
     }
 
     const em = String(email).toLowerCase().trim();
@@ -120,10 +109,6 @@ export async function POST(req: NextRequest) {
         vendor_id: vendorId,
         locations_served: normalizedLocationsServed,
         industry_focus: normalizedIndustryFocus,
-        corporate_profile: corporateProfile || null,
-        legal_entity_name: legalEntityName || null,
-        gst_number: normalizedGstNumber || null,
-        registered_address: registeredAddress || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'vendor_id' }
