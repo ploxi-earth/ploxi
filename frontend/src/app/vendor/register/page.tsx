@@ -357,4 +357,5 @@ export default function VendorRegisterPage() {
 
         <Footer />
     </div>
+);
 }
