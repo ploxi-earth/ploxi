@@ -34,7 +34,9 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/" className="flex justify-center mb-6">
-          <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={120} height={48} className="h-12 w-auto object-contain brightness-0 invert" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg ring-2 ring-emerald-500/30">
+            <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={52} height={52} className="rounded-full" />
+          </div>
         </Link>
         <h2 className="text-center text-2xl font-bold text-white">Admin Console</h2>
         <p className="mt-2 text-center text-sm text-gray-400">

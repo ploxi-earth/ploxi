@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X, Calendar } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { HeroFadeDown, HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
@@ -86,50 +86,68 @@ export default function HomePage() {
       <HeroFadeDown delay={0} className="sticky top-0 z-50">
         <header className="border-b border-white/10 bg-white/80 backdrop-blur-xl">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <Link href="/" className="flex min-w-0 items-center gap-3">
-              <Image
-                src="/images/logo.jpeg"
-                alt="Ploxi Earth"
-                width={42}
-                height={42}
-                className="rounded-full ring-2 ring-primary-500/10"
-              />
-              <div className="min-w-0">
-                <span className="block truncate text-lg font-bold text-gray-900">Ploxi Earth</span>
-                <span className="hidden text-xs uppercase tracking-[0.22em] text-gray-400 sm:block">
-                  Decarbonisation Marketplace
-                </span>
-              </div>
-            </Link>
+            {/* Logo Section */}
+            <div className="flex flex-1 items-center justify-start min-w-0">
+              <Link href="/" className="flex min-w-0 items-center gap-3">
+                <Image
+                  src="/images/logo.jpeg"
+                  alt="Ploxi Earth"
+                  width={42}
+                  height={42}
+                  className="flex-shrink-0 rounded-full ring-2 ring-primary-500/10"
+                />
+                <div className="min-w-0">
+                  <span className="block truncate text-lg font-bold text-gray-900">Ploxi Earth</span>
+                  <span className="hidden text-xs uppercase tracking-[0.22em] text-gray-400 xl:block">
+                    Decarbonisation Marketplace
+                  </span>
+                </div>
+              </Link>
+            </div>
 
-            <nav className="hidden items-center gap-3 lg:flex">
+            {/* Navigation Links */}
+            <nav className="hidden lg:flex flex-shrink-0 items-center justify-center gap-1 xl:gap-4">
               {NAV_LINKS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600"
+                  className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600 xl:px-4"
                 >
                   {item.label}
                 </Link>
               ))}
-              <a
-                href="https://www.ploxiconsult.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary px-4 py-2 text-sm"
-              >
-                Visit Website
-              </a>
             </nav>
 
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50 lg:hidden"
-              aria-label="Open navigation"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+            {/* CTA Buttons & Mobile Menu Toggle */}
+            <div className="flex flex-1 items-center justify-end gap-3">
+              <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+                <a
+                  href="https://www.ploxiconsult.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary whitespace-nowrap px-3 py-2 text-sm xl:px-4"
+                >
+                  Visit Website
+                </a>
+                <a
+                  href="https://calendly.com/dhwani-sg/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary flex whitespace-nowrap items-center gap-2 px-3 py-2 text-sm transition-transform hover:-translate-y-0.5 xl:px-4"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Book a Demo
+                </a>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(true)}
+                className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50 lg:hidden"
+                aria-label="Open navigation"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </header>
       </HeroFadeDown>
@@ -185,14 +203,25 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <a
-                href="https://www.ploxiconsult.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary mt-4 w-full"
-              >
-                Visit Website
-              </a>
+              <div className="mt-4 flex flex-col gap-3">
+                <a
+                  href="https://calendly.com/dhwani-sg/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary flex w-full items-center justify-center gap-2 transition-transform hover:-translate-y-0.5"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Book a Demo
+                </a>
+                <a
+                  href="https://www.ploxiconsult.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary flex w-full items-center justify-center py-2"
+                >
+                  Visit Website
+                </a>
+              </div>
             </motion.div>
           </>
         )}

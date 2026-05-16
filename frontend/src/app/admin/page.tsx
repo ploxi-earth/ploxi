@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { adminService } from '@/services/admin.service';
 import {
@@ -119,10 +120,42 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Admin Console</p>
-        <h1 className="text-2xl font-extrabold text-gray-900">Platform Overview</h1>
-        <p className="text-gray-500 text-sm mt-1">Real-time summary of all registrations and vendor activity</p>
+      {/* Ploxi Branding Banner */}
+      <div className="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 p-6 shadow-lg sm:p-8">
+        {/* Decorative orbs */}
+        <div className="pointer-events-none absolute -left-8 -top-8 h-40 w-40 rounded-full bg-emerald-500/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-10 -right-10 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl" />
+
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          {/* Logo + Wordmark */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-md" />
+              <Image
+                src="/images/logo.jpeg"
+                alt="Ploxi Earth Logo"
+                width={56}
+                height={56}
+                className="relative rounded-full ring-2 ring-emerald-500/30"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Ploxi</h1>
+                <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-emerald-400 ring-1 ring-emerald-500/20">
+                  Admin
+                </span>
+              </div>
+              <p className="mt-0.5 text-sm text-gray-400">Sustainability Platform · Admin Console</p>
+            </div>
+          </div>
+
+          {/* Right side — Platform Overview label */}
+          <div className="text-right">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Platform Overview</p>
+            <p className="mt-0.5 text-sm text-gray-400">Real-time registrations &amp; vendor activity</p>
+          </div>
+        </div>
       </div>
 
       {loading ? (

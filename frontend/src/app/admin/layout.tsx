@@ -70,13 +70,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       mobileHeader={({ open }) => (
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <Image
-              src="/images/logo.jpeg"
-              alt="Ploxi Earth"
-              width={34}
-              height={34}
-              className="rounded-full ring-2 ring-emerald-500/10"
-            />
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-emerald-500/20 shadow-sm">
+              <Image
+                src="/images/logo.jpeg"
+                alt="Ploxi Earth"
+                width={30}
+                height={30}
+                className="rounded-full"
+              />
+            </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-slate-900">Ploxi Earth</p>
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Admin Console</p>
@@ -97,13 +99,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="border-b border-gray-800 px-5 py-5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">
-                <Image
-                  src="/images/logo.jpeg"
-                  alt="Ploxi Earth"
-                  width={32}
-                  height={32}
-                  className="rounded-full ring-2 ring-white/10 brightness-0 invert"
-                />
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-emerald-500/20 shadow-sm">
+                  <Image
+                    src="/images/logo.jpeg"
+                    alt="Ploxi Earth"
+                    width={28}
+                    height={28}
+                    className="rounded-full"
+                  />
+                </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold leading-none text-white">Ploxi Earth</p>
                   <p className="mt-0.5 text-[10px] uppercase tracking-wider text-gray-500">Admin Console</p>
