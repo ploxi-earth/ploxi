@@ -79,4 +79,4 @@ npm run dev
 
 **Frontend:** Next.js 14 · TypeScript · Tailwind CSS · Zustand · Axios  
 **Backend:** Node.js · Express · MongoDB/Mongoose · JWT · Nodemailer · Winston · Multer  
-**Infra:** Docker Compose · MongoDB Atlas compatible
+**Infra:** Docker Compose · MongoDB Atlas compatible.
