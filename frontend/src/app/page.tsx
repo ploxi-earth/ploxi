@@ -1,20 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Menu, X, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, BarChart2, Leaf, TrendingUp } from 'lucide-react';
+import SiteNavbar from '@/components/SiteNavbar';
 import Footer from '@/components/Footer';
-import { HeroFadeDown, HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { SOLUTION_CATEGORIES } from '@/lib/navData';
 
-const NAV_LINKS = [
-  { href: '/corporate', label: 'Corporate' },
-  { href: '/cleantech', label: 'Clean Tech' },
-  { href: '/climate-finance', label: 'Climate Finance' },
-  { href: '/tools/ghg-calculator', label: 'GHG Calculator' },
-];
+// ─── Icon resolver for category cards ────────────────────────────────────────
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  BarChart2: <BarChart2 className="h-8 w-8" />,
+  Leaf: <Leaf className="h-8 w-8" />,
+  TrendingUp: <TrendingUp className="h-8 w-8" />,
+};
 
+const CATEGORY_GRADIENT: Record<string, string> = {
+  'esg-strategy': 'from-emerald-500 to-green-600',
+  'carbon-compliance': 'from-blue-500 to-cyan-600',
+  'markets-financing': 'from-purple-500 to-indigo-600',
+};
+
+const CATEGORY_HOVER_SHADOW: Record<string, string> = {
+  'esg-strategy': 'hover:shadow-emerald-100',
+  'carbon-compliance': 'hover:shadow-blue-100',
+  'markets-financing': 'hover:shadow-purple-100',
+};
+
+const CATEGORY_ACCENT_TEXT: Record<string, string> = {
+  'esg-strategy': 'text-emerald-600',
+  'carbon-compliance': 'text-blue-600',
+  'markets-financing': 'text-purple-600',
+};
+
+// ─── Original platform solution cards (unchanged) ────────────────────────────
 const SOLUTION_CARDS = [
   {
     href: '/corporate',
@@ -29,10 +48,7 @@ const SOLUTION_CARDS = [
         <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
         <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
         <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
-        <path d="M10 6h4" />
-        <path d="M10 10h4" />
-        <path d="M10 14h4" />
-        <path d="M10 18h4" />
+        <path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" />
       </svg>
     ),
   },
@@ -60,173 +76,18 @@ const SOLUTION_CARDS = [
     items: ['Carbon Credits', 'Green Bonds', 'Impact Investment', 'ESG Funds'],
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 text-white sm:h-8 sm:w-8" aria-hidden="true">
-        <path d="M16 7h6v6" />
-        <path d="m22 7-8.5 8.5-5-5L2 17" />
+        <path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" />
       </svg>
     ),
   },
 ];
 
 export default function HomePage() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  useEffect(() => {
-    if (!mobileNavOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [mobileNavOpen]);
-
   return (
     <div className="page-shell min-h-screen bg-white">
-      <HeroFadeDown delay={0} className="sticky top-0 z-50">
-        <header className="border-b border-white/10 bg-white/80 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            {/* Logo Section */}
-            <div className="flex flex-1 items-center justify-start min-w-0">
-              <Link href="/" className="flex min-w-0 items-center gap-3">
-                <Image
-                  src="/images/logo.jpeg"
-                  alt="Ploxi Earth"
-                  width={42}
-                  height={42}
-                  className="flex-shrink-0 rounded-full ring-2 ring-primary-500/10"
-                />
-                <div className="min-w-0">
-                  <span className="block truncate text-lg font-bold text-gray-900">Ploxi Earth</span>
-                  <span className="hidden text-xs uppercase tracking-[0.22em] text-gray-400 xl:block">
-                    Decarbonisation Marketplace
-                  </span>
-                </div>
-              </Link>
-            </div>
+      <SiteNavbar />
 
-            {/* Navigation Links */}
-            <nav className="hidden lg:flex flex-shrink-0 items-center justify-center gap-1 xl:gap-4">
-              {NAV_LINKS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600 xl:px-4"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* CTA Buttons & Mobile Menu Toggle */}
-            <div className="flex flex-1 items-center justify-end gap-3">
-              <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-                <a
-                  href="https://www.ploxiconsult.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary whitespace-nowrap px-3 py-2 text-sm xl:px-4"
-                >
-                  Visit Website
-                </a>
-                <a
-                  href="https://calendly.com/dhwani-sg/30min"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary flex whitespace-nowrap items-center gap-2 px-3 py-2 text-sm transition-transform hover:-translate-y-0.5 xl:px-4"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a Demo
-                </a>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMobileNavOpen(true)}
-                className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50 lg:hidden"
-                aria-label="Open navigation"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </header>
-      </HeroFadeDown>
-
-      <AnimatePresence>
-        {mobileNavOpen && (
-          <>
-            <motion.button
-              type="button"
-              aria-label="Close navigation"
-              className="fixed inset-0 z-[60] bg-slate-950/45 backdrop-blur-sm lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileNavOpen(false)}
-            />
-            <motion.div
-              className="fixed inset-x-4 top-4 z-[70] overflow-hidden rounded-[28px] border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl lg:hidden"
-              initial={{ opacity: 0, y: -24, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -18, scale: 0.98 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={38} height={38} className="rounded-full" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">Ploxi Earth</p>
-                    <p className="text-xs text-slate-500">Explore the platform</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMobileNavOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50"
-                  aria-label="Close navigation"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {NAV_LINKS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
-                  >
-                    <span>{item.label}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3">
-                <a
-                  href="https://calendly.com/dhwani-sg/30min"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary flex w-full items-center justify-center gap-2 transition-transform hover:-translate-y-0.5"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a Demo
-                </a>
-                <a
-                  href="https://www.ploxiconsult.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary flex w-full items-center justify-center py-2"
-                >
-                  Visit Website
-                </a>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
         <div className="hero-orb left-[-8rem] top-10 h-56 w-56 bg-primary-500/35 sm:h-72 sm:w-72" />
         <div className="hero-orb bottom-[-4rem] right-[-3rem] h-72 w-72 bg-cyan-500/20 sm:h-96 sm:w-96" />
@@ -250,20 +111,14 @@ export default function HomePage() {
           </HeroFadeUp>
           <HeroFadeUp delay={0.34}>
             <p className="mx-auto mt-6 max-w-3xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8 lg:text-xl">
-              Transform your sustainability journey with an integrated platform connecting
-              corporations, technology providers, and climate-focused financial solutions.
+              Transform your sustainability journey with an integrated platform connecting corporations, technology providers, and climate-focused financial solutions.
             </p>
           </HeroFadeUp>
           <HeroFadeUp delay={0.46}>
             <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-              <a
-                href="https://www.ploxiconsult.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary px-8 py-4 text-base"
-              >
-                Visit Our Website
-              </a>
+              <Link href="/solutions" className="btn-primary px-8 py-4 text-base">
+                Explore Our Solutions
+              </Link>
               <Link
                 href="/tools/ghg-calculator"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
@@ -272,19 +127,82 @@ export default function HomePage() {
               </Link>
             </div>
           </HeroFadeUp>
-
         </div>
       </section>
 
+      {/* ── Our Sustainability Solutions (3 category cards) ──────────────── */}
+      <section className="bg-slate-50 py-20 sm:py-24 lg:py-28">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <FadeUp className="mx-auto mb-16 max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 mb-5">
+              Consulting Services
+            </div>
+            <h2 className="text-balance text-3xl font-bold text-gray-900 sm:text-4xl">
+              Our Sustainability Solutions
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-500 sm:text-lg">
+              End-to-end advisory for enterprises navigating ESG reporting, carbon accounting, regulatory compliance, and climate finance.
+            </p>
+          </FadeUp>
+
+          <StaggerContainer className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            {SOLUTION_CATEGORIES.map((cat) => (
+              <StaggerItem key={cat.slug}>
+                <Link
+                  href={cat.href}
+                  className={`group flex flex-col bg-white rounded-3xl border border-gray-200 p-8 shadow-sm hover:shadow-xl ${CATEGORY_HOVER_SHADOW[cat.slug]} transition-all duration-300 hover:-translate-y-1.5 ring-2 ring-transparent hover:ring-gray-100 h-full`}
+                >
+                  {/* Icon */}
+                  <div className={`mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${CATEGORY_GRADIENT[cat.slug]} text-white shadow-lg`}>
+                    {CATEGORY_ICONS[cat.icon]}
+                  </div>
+
+                  {/* Title + tagline */}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{cat.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-6">{cat.tagline}</p>
+
+                  {/* Service names as tags */}
+                  <div className="flex-1 flex flex-col justify-end">
+                    <ul className="space-y-2 mb-8">
+                      {cat.services.map((svc) => (
+                        <li key={svc.href} className="flex items-center gap-2.5 text-sm text-gray-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                          {svc.title}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className={`flex items-center gap-2 font-semibold ${CATEGORY_ACCENT_TEXT[cat.slug]} text-sm group-hover:gap-3 transition-all`}>
+                      Explore Services
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                </Link>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+
+          <FadeUp className="mt-12 text-center">
+            <Link
+              href="/solutions"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:border-primary-300 hover:text-primary-700 transition"
+            >
+              View All 9 Services
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </FadeUp>
+        </div>
+      </section>
+
+      {/* ── Platform Solutions (original section, preserved) ─────────────── */}
       <section className="bg-white py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="mx-auto mb-12 max-w-3xl text-center sm:mb-16">
             <h2 className="text-balance text-3xl font-bold text-gray-900 sm:text-4xl">
-              Comprehensive ESG Solutions
+              Comprehensive ESG Platform
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-500 sm:text-lg">
-              Explore tailored experiences for enterprises, clean technology innovators, and
-              climate finance participants in one connected ecosystem.
+              Explore tailored experiences for enterprises, clean technology innovators, and climate finance participants in one connected ecosystem.
             </p>
           </FadeUp>
 
@@ -324,6 +242,35 @@ export default function HomePage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
+        </div>
+      </section>
+
+      {/* ── Why Ploxi Earth strip ─────────────────────────────────────────── */}
+      <section className="bg-slate-950 py-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <FadeUp className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-white sm:text-3xl">Why Leading Enterprises Choose Ploxi Earth</h2>
+          </FadeUp>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+            {[
+              { stat: '9+', label: 'Integrated sustainability services' },
+              { stat: '3', label: 'Consulting practice areas' },
+              { stat: '100%', label: 'Framework-aligned reporting' },
+            ].map((item) => (
+              <FadeUp key={item.label} className="flex flex-col items-center">
+                <motion.div
+                  className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300 mb-2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {item.stat}
+                </motion.div>
+                <p className="text-slate-400 text-sm font-medium">{item.label}</p>
+              </FadeUp>
+            ))}
+          </div>
         </div>
       </section>
 
