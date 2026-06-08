@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, BarChart2, Leaf, TrendingUp } from 'lucide-react';
-import SiteNavbar from '@/components/SiteNavbar';
+
 import Footer from '@/components/Footer';
 import { HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { SOLUTION_CATEGORIES } from '@/lib/navData';
@@ -85,8 +85,6 @@ const SOLUTION_CARDS = [
 export default function HomePage() {
   return (
     <div className="page-shell min-h-screen bg-white">
-      <SiteNavbar />
-
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
         <div className="hero-orb left-[-8rem] top-10 h-56 w-56 bg-primary-500/35 sm:h-72 sm:w-72" />

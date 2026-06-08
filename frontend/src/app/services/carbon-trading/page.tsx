@@ -1,64 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowRight,
-  Menu,
-  X,
-  Calendar,
-  CheckCircle2,
-  ChevronDown,
-  LineChart,
-  Globe,
-  Zap,
-  BarChart3,
-  TrendingUp,
-  Coins,
-  ShieldCheck,
-  FileText,
-  Wallet
+  ArrowRight, CheckCircle2, ChevronDown, LineChart, Globe,
+  Zap, BarChart3, TrendingUp, Coins, ShieldCheck, FileText, Wallet, Calendar
 } from 'lucide-react';
 import Footer from '@/components/Footer';
-import { HeroFadeDown, HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
-const NAV_LINKS = [
-  { href: '/corporate', label: 'Corporate' },
-  { href: '/cleantech', label: 'Clean Tech' },
-  { href: '/climate-finance', label: 'Climate Finance' },
-  { href: '/tools/ghg-calculator', label: 'GHG Calculator' },
-];
+const CALENDLY_URL = 'https://calendly.com/dhwani-sg/30min';
 
 const MARKET_INSTRUMENTS = [
-  {
-    title: 'I-REC',
-    fullname: 'International Renewable Energy Certificates',
-    description: 'A global standard used to track and verify the origins of electricity generated from renewable sources. Purchasing I-RECs allows companies to claim Scope 2 emissions reductions.',
-    icon: <Zap className="h-8 w-8" />,
-    accent: 'text-amber-500',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20'
-  },
-  {
-    title: 'Carbon Credits',
-    fullname: 'Voluntary Carbon Market Offsets',
-    description: 'Tradable certificates representing the removal or avoidance of one tonne of CO2e. Vital for neutralizing unavoidable Scope 1 and Scope 3 emissions on your path to Net Zero.',
-    icon: <Globe className="h-8 w-8" />,
-    accent: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20'
-  },
-  {
-    title: 'Compliance Trading',
-    fullname: 'Cap-and-Trade / ETS Mechanisms',
-    description: 'Advisory on navigating mandatory compliance markets, managing allowances, and optimizing your carbon trading portfolio to minimize tax liabilities.',
-    icon: <BarChart3 className="h-8 w-8" />,
-    accent: 'text-blue-500',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20'
-  },
+  { title: 'I-REC', fullname: 'International Renewable Energy Certificates', description: 'A global standard used to track and verify the origins of electricity generated from renewable sources. Purchasing I-RECs allows companies to claim Scope 2 emissions reductions.', icon: <Zap className="h-8 w-8" />, accent: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  { title: 'Carbon Credits', fullname: 'Voluntary Carbon Market Offsets', description: 'Tradable certificates representing the removal or avoidance of one tonne of CO2e. Vital for neutralizing unavoidable Scope 1 and Scope 3 emissions on your path to Net Zero.', icon: <Globe className="h-8 w-8" />, accent: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  { title: 'Compliance Trading', fullname: 'Cap-and-Trade / ETS Mechanisms', description: 'Advisory on navigating mandatory compliance markets, managing allowances, and optimizing your carbon trading portfolio to minimize tax liabilities.', icon: <BarChart3 className="h-8 w-8" />, accent: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
 ];
 
 const PROCESS_STEPS = [
@@ -69,273 +26,92 @@ const PROCESS_STEPS = [
 ];
 
 const REVENUE_OPPS = [
-  {
-    title: 'Monetize Renewable Assets',
-    description: 'If you generate captive solar or wind energy, we help you register the plant and sell the resulting I-RECs to companies seeking Scope 2 reductions, creating a new revenue stream.',
-    icon: <Coins className="h-6 w-6 text-emerald-400" />
-  },
-  {
-    title: 'Optimize Offset Procurement',
-    description: 'Avoid price volatility. Our advisory ensures you procure high-quality carbon credits at the best market rates, safeguarding against greenwashing risks.',
-    icon: <TrendingUp className="h-6 w-6 text-emerald-400" />
-  },
-  {
-    title: 'Project Development Financing',
-    description: 'Leverage future carbon credit issuance to secure upfront financing for new sustainable infrastructure and energy efficiency projects.',
-    icon: <Wallet className="h-6 w-6 text-emerald-400" />
-  }
+  { title: 'Monetize Renewable Assets', description: 'If you generate captive solar or wind energy, we help you register the plant and sell the resulting I-RECs to companies seeking Scope 2 reductions, creating a new revenue stream.', icon: <Coins className="h-6 w-6 text-emerald-400" /> },
+  { title: 'Optimize Offset Procurement', description: 'Avoid price volatility. Our advisory ensures you procure high-quality carbon credits at the best market rates, safeguarding against greenwashing risks.', icon: <TrendingUp className="h-6 w-6 text-emerald-400" /> },
+  { title: 'Build a Trading Portfolio', description: 'For sophisticated organizations, we advise on building a diversified portfolio of carbon assets — balancing nature-based, technology, and compliance instruments.', icon: <Wallet className="h-6 w-6 text-emerald-400" /> },
+];
+
+const DELIVERABLES = [
+  { title: 'Market Advisory Report', description: 'A comprehensive analysis of which instruments best fit your corporate decarbonisation strategy.', icon: <FileText className="h-6 w-6" />, accent: 'from-emerald-500 to-green-600' },
+  { title: 'Trading Execution', description: 'End-to-end facilitation of credit procurement or issuance — from registration to final settlement.', icon: <LineChart className="h-6 w-6" />, accent: 'from-blue-500 to-cyan-600' },
+  { title: 'Registry & Retirement Records', description: 'Complete audit trail documentation of all credits issued or retired for your sustainability reports.', icon: <ShieldCheck className="h-6 w-6" />, accent: 'from-primary-500 to-primary-700' },
 ];
 
 const FAQS = [
-  {
-    question: 'What is the difference between an I-REC and a Carbon Credit?',
-    answer: 'An I-REC specifically tracks the generation of 1 MWh of renewable electricity and is used solely to reduce Scope 2 (purchased electricity) emissions. A Carbon Credit represents 1 metric tonne of CO2 avoided or removed from the atmosphere and can be used to offset Scope 1, 2, or 3 emissions.',
-  },
-  {
-    question: 'How do I know the carbon credits I buy are legitimate?',
-    answer: 'We exclusively source and trade credits verified by internationally recognized standard bodies like Verra (VCS), Gold Standard, and the American Carbon Registry, ensuring additionality, permanence, and no double counting.',
-  },
-  {
-    question: 'Can my company sell I-RECs if we have rooftop solar?',
-    answer: 'Yes. If you own the renewable generation asset and consume the power, you can register the installation to generate I-RECs. You can then sell these certificates, though you can no longer claim that specific renewable energy usage for your own sustainability reporting.',
-  },
-  {
-    question: 'How transparent is the pricing?',
-    answer: 'Our advisory provides full market transparency. We share current index prices, historical trends, and bid/ask spreads to ensure you are buying or selling at fair market value.',
-  }
+  { question: 'What is the difference between I-RECs and Carbon Credits?', answer: 'I-RECs (International Renewable Energy Certificates) specifically track and attribute renewable electricity generation, allowing companies to claim Scope 2 reductions. Carbon credits (or offsets) represent avoided or removed CO2 emissions and are used to neutralize Scope 1 and Scope 3 emissions.' },
+  { question: 'How do I ensure my carbon credits are high-quality?', answer: 'We only source credits from projects registered under globally recognized standards such as Verra (VCS), Gold Standard, ACR, and CAR. These standards ensure credits are real, additional, permanent, and independently verified.' },
+  { question: 'Can we sell I-RECs if we have a captive solar plant?', answer: 'Yes. If you have a captive or on-site renewable energy facility, you can register the plant with a recognized I-REC registry and issue certificates for the electricity generated, which can then be sold to other companies.' },
+  { question: 'What is the current market price for carbon credits?', answer: 'Carbon credit prices vary significantly depending on project type, vintage, co-benefits, and geography. We provide real-time market intelligence to help you procure or sell at the optimal price point.' },
 ];
 
 export default function CarbonTradingPage() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    if (!mobileNavOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previousOverflow; };
-  }, [mobileNavOpen]);
-
-  const scrollToLeadCapture = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    document.getElementById('lead-capture')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="page-shell min-h-screen bg-slate-50">
-      {/* Navbar */}
-      <HeroFadeDown delay={0} className="sticky top-0 z-50">
-        <header className="border-b border-white/10 bg-white/80 backdrop-blur-xl shadow-sm">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <div className="flex flex-1 items-center justify-start min-w-0">
-              <Link href="/" className="flex min-w-0 items-center gap-3">
-                <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={42} height={42} className="flex-shrink-0 rounded-full ring-2 ring-primary-500/10" />
-                <div className="min-w-0">
-                  <span className="block truncate text-lg font-bold text-gray-900">Ploxi Earth</span>
-                  <span className="hidden text-xs uppercase tracking-[0.22em] text-gray-400 xl:block">
-                    Decarbonisation Marketplace
-                  </span>
-                </div>
-              </Link>
-            </div>
-            <nav className="hidden lg:flex flex-shrink-0 items-center justify-center gap-1 xl:gap-4">
-              {NAV_LINKS.map((item) => (
-                <Link key={item.href} href={item.href} className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600 xl:px-4">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="flex flex-1 items-center justify-end gap-3">
-              <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-                <a href="#lead-capture" onClick={scrollToLeadCapture} className="btn-primary flex whitespace-nowrap items-center gap-2 px-4 py-2 text-sm transition-transform hover:-translate-y-0.5">
-                  <LineChart className="h-4 w-4" />
-                  Advisory
-                </a>
-              </div>
-              <button type="button" onClick={() => setMobileNavOpen(true)} className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50 lg:hidden" aria-label="Open navigation">
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </header>
-      </HeroFadeDown>
-
-      {/* Mobile Nav */}
-      <AnimatePresence>
-        {mobileNavOpen && (
-          <>
-            <motion.button type="button" aria-label="Close navigation" className="fixed inset-0 z-[60] bg-slate-950/45 backdrop-blur-sm lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileNavOpen(false)} />
-            <motion.div className="fixed inset-x-4 top-4 z-[70] overflow-hidden rounded-[28px] border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl lg:hidden" initial={{ opacity: 0, y: -24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -18, scale: 0.98 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={38} height={38} className="rounded-full" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">Ploxi Earth</p>
-                  </div>
-                </div>
-                <button type="button" onClick={() => setMobileNavOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="space-y-2">
-                {NAV_LINKS.map((item) => (
-                  <Link key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">
-                    <span>{item.label}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-col gap-3">
-                <a href="#lead-capture" onClick={(e) => { setMobileNavOpen(false); scrollToLeadCapture(e); }} className="btn-primary flex w-full items-center justify-center gap-2 transition-transform hover:-translate-y-0.5">
-                  <LineChart className="h-4 w-4" />
-                  Explore Advisory
-                </a>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-slate-950 text-white pb-24 pt-20 lg:pt-28">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-primary-900/30 via-slate-950 to-slate-950" />
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-96 w-full max-w-2xl rounded-full bg-cyan-500/10 blur-[120px]" />
-
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-slate-950 text-white pb-20 pt-20 lg:pt-28">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-emerald-950/30" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
         <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 z-10">
-          <HeroFadeUp delay={0.1}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-              Environmental Commodities
-            </div>
-          </HeroFadeUp>
-          <HeroFadeUp delay={0.2}>
-            <h1 className="mt-8 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-7xl text-balance">
-              Turn Sustainability Action Into <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300">Market Value.</span>
-            </h1>
-          </HeroFadeUp>
-          <HeroFadeUp delay={0.3}>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-              Navigate renewable certificates, voluntary carbon markets, and compliance offsets with our expert trading advisory and registration services.
-            </p>
-          </HeroFadeUp>
+          <HeroFadeUp delay={0.1}><div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Carbon Markets & I-REC Advisory</div></HeroFadeUp>
+          <HeroFadeUp delay={0.2}><h1 className="mt-8 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-balance">Navigate Carbon Markets with <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300">Confidence.</span></h1></HeroFadeUp>
+          <HeroFadeUp delay={0.3}><p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">From I-REC issuance to voluntary carbon offset procurement, we help you build a credible, cost-efficient carbon trading strategy.</p></HeroFadeUp>
           <HeroFadeUp delay={0.4}>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <a href="#lead-capture" onClick={scrollToLeadCapture} className="btn-primary px-8 py-4 text-base font-semibold shadow-lg shadow-emerald-600/20">
-                Explore Carbon Market Advisory
-              </a>
-              <a href="#markets" onClick={(e) => { e.preventDefault(); document.getElementById('markets')?.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">
-                View Instruments
-              </a>
+              <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="btn-primary px-8 py-4 text-base font-semibold shadow-lg flex items-center gap-2 justify-center" id="hero-cta-carbon-trading"><Calendar className="h-5 w-5" />Book a Market Advisory Call</a>
+              <Link href="/solutions/markets-financing" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">View Markets Services <ArrowRight className="h-4 w-4" /></Link>
             </div>
           </HeroFadeUp>
         </div>
       </section>
 
       {/* Market Instruments */}
-      <section id="markets" className="bg-slate-50 py-24 border-b border-gray-100">
+      <section className="bg-slate-50 py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <FadeUp className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              The Tools of Decarbonization
-            </h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              Understand the key environmental commodities driving the global transition to Net Zero.
-            </p>
-          </FadeUp>
-
+          <FadeUp className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Carbon Market Instruments</h2><p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">We help you understand, access, and leverage the full spectrum of carbon and renewable energy certificate markets.</p></FadeUp>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {MARKET_INSTRUMENTS.map((inst) => (
-              <StaggerItem key={inst.title} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition">
-                <div className={`mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl ${inst.bg} border ${inst.border} ${inst.accent}`}>
-                  {inst.icon}
-                </div>
-                <h3 className="text-2xl font-black text-gray-900 mb-1">{inst.title}</h3>
-                <div className="text-sm font-semibold text-gray-400 mb-4">{inst.fullname}</div>
-                <p className="text-gray-600 leading-relaxed">{inst.description}</p>
+            {MARKET_INSTRUMENTS.map((item) => (
+              <StaggerItem key={item.title} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <div className={`mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl ${item.bg} border ${item.border} ${item.accent}`}>{item.icon}</div>
+                <h3 className="text-2xl font-black text-gray-900 mb-1">{item.title}</h3>
+                <div className="text-sm font-semibold text-gray-400 mb-4">{item.fullname}</div>
+                <p className="text-gray-600 leading-relaxed">{item.description}</p>
               </StaggerItem>
             ))}
           </StaggerContainer>
         </div>
       </section>
 
-      {/* Dynamic Carbon Market Graphics / Trading Process */}
-      <section className="bg-white py-24 overflow-hidden">
+      {/* Process + Mock Dashboard */}
+      <section className="bg-white py-20 overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            
             <FadeUp>
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-6">
-                Trading Process & Market Workflow
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Carbon markets are complex and highly regulated. We provide end-to-end support, acting as your trusted intermediary whether you are seeking to retire credits for claims, or monetize your own green assets.
-              </p>
-              
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">Our Trading <span className="text-primary-600">Process</span></h2>
               <div className="space-y-6">
                 {PROCESS_STEPS.map((step, idx) => (
                   <div key={idx} className="flex gap-4">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="w-10 h-10 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center shadow-md">
-                        {step.step}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-gray-900">{step.title}</h4>
-                      <p className="text-gray-600 mt-1">{step.desc}</p>
-                    </div>
+                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-slate-900 text-white font-bold flex items-center justify-center shadow-md text-sm">{step.step}</div>
+                    <div><h4 className="text-lg font-bold text-gray-900">{step.title}</h4><p className="text-gray-600 mt-1 text-sm">{step.desc}</p></div>
                   </div>
                 ))}
               </div>
             </FadeUp>
-
-            {/* Mock Trading Dashboard UI */}
             <FadeUp delay={0.2} className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-100 to-cyan-100 rounded-[2.5rem] transform rotate-2 opacity-50" />
-              <div className="relative bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl p-6 text-white overflow-hidden">
-                <div className="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-emerald-400" />
-                    <span className="font-semibold text-slate-200">Market Index Live</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  </div>
+              <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-100 to-cyan-100 rounded-[2.5rem] transform -rotate-2 opacity-50" />
+              <div className="relative bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl p-6 text-white">
+                <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-emerald-400" /><span className="font-semibold text-slate-100">Carbon Portfolio</span></div>
+                  <div className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full font-medium border border-emerald-500/30">Live</div>
                 </div>
-                
-                {/* Mock Chart Area */}
-                <div className="mb-6 h-40 flex items-end gap-2 px-2 relative">
-                  {/* Grid Lines */}
-                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
-                    <div className="w-full h-px bg-white" />
-                    <div className="w-full h-px bg-white" />
-                    <div className="w-full h-px bg-white" />
-                    <div className="w-full h-px bg-white" />
-                  </div>
-                  {/* Bars */}
-                  {[40, 55, 45, 70, 65, 80, 95, 85].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-emerald-900 to-emerald-400 rounded-t-sm" style={{ height: `${h}%` }} />
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 rounded-2xl bg-slate-800 border border-slate-700"><p className="text-xs text-slate-400 mb-1">I-RECs Issued</p><p className="text-2xl font-bold text-white">12,450 <span className="text-xs font-normal text-slate-400">MWh</span></p></div>
+                  <div className="p-4 rounded-2xl bg-slate-800 border border-slate-700"><p className="text-xs text-slate-400 mb-1">Credits Retired</p><p className="text-2xl font-bold text-emerald-400">3,200 <span className="text-xs font-normal text-slate-400">tCO2e</span></p></div>
+                </div>
+                <div className="space-y-3">
+                  {[{ label: 'Nature-Based', pct: '45%', w: 'w-[45%]', color: 'bg-emerald-500' }, { label: 'Renewable Energy', pct: '35%', w: 'w-[35%]', color: 'bg-amber-500' }, { label: 'Technology', pct: '20%', w: 'w-[20%]', color: 'bg-blue-500' }].map((s) => (
+                    <div key={s.label} className="flex items-center gap-3"><div className="w-28 text-xs text-slate-400">{s.label}</div><div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden"><div className={`h-full ${s.color} ${s.w} rounded-full`} /></div><div className="w-10 text-right text-xs font-medium text-slate-300">{s.pct}</div></div>
                   ))}
-                  {/* Line Overlay */}
-                  <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                    <path d="M0,60 L14,45 L28,55 L42,30 L56,35 L70,20 L84,5 L100,15" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-
-                {/* Mock Tickers */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                    <div className="text-xs text-slate-400 mb-1">I-REC (India Wind)</div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-xl font-bold text-white">₹ 145.00</div>
-                      <div className="text-xs text-emerald-400 font-medium">+2.4%</div>
-                    </div>
-                  </div>
-                  <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                    <div className="text-xs text-slate-400 mb-1">VCS (Nature Based)</div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-xl font-bold text-white">$ 8.50</div>
-                      <div className="text-xs text-emerald-400 font-medium">+1.1%</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </FadeUp>
@@ -344,20 +120,14 @@ export default function CarbonTradingPage() {
       </section>
 
       {/* Revenue Opportunities */}
-      <section className="bg-slate-900 py-24 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-900/20 rounded-full blur-[100px] pointer-events-none" />
+      <section className="bg-slate-900 py-20 text-white relative overflow-hidden">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary-900/20 rounded-full blur-[100px] pointer-events-none" />
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <FadeUp className="text-center mb-16">
-            <h2 className="text-3xl font-bold">Revenue & Value Opportunities</h2>
-            <p className="mt-4 text-slate-400 text-lg">It's not just about compliance; it's about capitalizing on the green economy.</p>
-          </FadeUp>
-          
+          <FadeUp className="text-center mb-12"><h2 className="text-3xl font-bold">Revenue Opportunities</h2><p className="mt-4 text-slate-400 text-lg">Carbon markets are not just a compliance tool — they are a financial opportunity.</p></FadeUp>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {REVENUE_OPPS.map((item) => (
-              <StaggerItem key={item.title} className="bg-slate-800 rounded-3xl p-8 border border-slate-700 hover:-translate-y-1 transition duration-300">
-                <div className="mb-6 w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center border border-slate-700 shadow-inner">
-                  {item.icon}
-                </div>
+              <StaggerItem key={item.title} className="bg-slate-800/50 backdrop-blur-sm rounded-3xl p-8 border border-slate-700 hover:bg-slate-800 transition duration-300">
+                <div className="mb-6 w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center border border-slate-700 shadow-inner">{item.icon}</div>
                 <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
                 <p className="text-slate-400">{item.description}</p>
               </StaggerItem>
@@ -366,114 +136,59 @@ export default function CarbonTradingPage() {
         </div>
       </section>
 
+      {/* Deliverables */}
+      <section className="bg-slate-50 py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <FadeUp className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-900">What We Deliver</h2></FadeUp>
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {DELIVERABLES.map((item) => (
+              <StaggerItem key={item.title} className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:-translate-y-1 transition duration-300">
+                <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${item.accent} text-white shadow-inner`}>{item.icon}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
+      </section>
+
       {/* FAQs */}
-      <section className="bg-slate-50 py-20 border-y border-gray-100">
+      <section className="bg-white py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <FadeUp className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Carbon Trading FAQ</h2>
-          </FadeUp>
+          <FadeUp className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-900">Carbon Markets FAQ</h2></FadeUp>
           <div className="space-y-4">
             {FAQS.map((faq, idx) => (
-              <div key={idx} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <button
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full px-6 py-5 flex items-center justify-between font-semibold text-gray-900 hover:bg-gray-50 transition"
-                >
-                  <span className="text-left">{faq.question}</span>
-                  <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`} />
+              <div key={idx} className="bg-slate-50 border border-gray-200 rounded-2xl overflow-hidden">
+                <button onClick={() => setOpenFaq(openFaq === idx ? null : idx)} className="w-full px-6 py-5 flex items-center justify-between font-semibold text-gray-900 hover:bg-gray-100 transition" id={`faq-carbon-trading-${idx}`}>
+                  <span className="text-left">{faq.question}</span><ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`} />
                 </button>
-                <AnimatePresence>
-                  {openFaq === idx && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-6 pb-5 text-gray-600 text-sm"
-                    >
-                      {faq.answer}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <AnimatePresence>{openFaq === idx && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="px-6 pb-5 text-gray-600 text-sm">{faq.answer}</motion.div>}</AnimatePresence>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Lead Capture Form Section */}
-      <section id="lead-capture" className="bg-white py-24 relative overflow-hidden">
-        <div className="absolute left-0 top-0 h-full w-1/3 bg-gradient-to-r from-emerald-50 to-white pointer-events-none" />
-        
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col lg:flex-row-reverse">
-            {/* Right Info */}
-            <div className="lg:w-5/12 p-10 sm:p-14 bg-gradient-to-bl from-emerald-900 to-slate-900 text-white flex flex-col justify-center">
-              <LineChart className="h-12 w-12 text-emerald-400 mb-6" />
-              <h2 className="text-3xl font-bold mb-4">Explore Market Advisory</h2>
-              <p className="text-emerald-100/80 mb-8">
-                Whether you need to offset emissions or monetize renewable assets, our trading experts are ready to guide your strategy.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-sm text-emerald-100">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" /> Transparent pricing
-                </div>
-                <div className="flex items-center gap-3 text-sm text-emerald-100">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" /> Verified global standards
-                </div>
-                <div className="flex items-center gap-3 text-sm text-emerald-100">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" /> End-to-end registration
-                </div>
-              </div>
+      {/* CTA */}
+      <section className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-950 py-20 relative overflow-hidden">
+        <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-emerald-500/10 blur-[120px]" />
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center z-10">
+          <FadeUp>
+            <Globe className="h-14 w-14 text-emerald-400 mx-auto mb-6" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Enter Carbon Markets?</h2>
+            <p className="text-emerald-100/80 text-lg mb-10 max-w-2xl mx-auto">Book a free advisory call. Our experts will assess your portfolio and recommend the right market instruments for your Net Zero strategy.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="btn-primary px-8 py-4 text-base font-semibold shadow-lg flex items-center gap-2 justify-center" id="bottom-cta-carbon-trading"><Calendar className="h-5 w-5" />Book a Free Consultation</a>
+              <Link href="/solutions" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">View All Services <ArrowRight className="h-4 w-4" /></Link>
             </div>
-
-            {/* Left Form */}
-            <div className="lg:w-7/12 p-10 sm:p-14 bg-white">
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" id="name" className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition" placeholder="John Doe" />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium text-gray-700">Work Email</label>
-                    <input type="email" id="email" className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition" placeholder="john@company.com" />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="company" className="text-sm font-medium text-gray-700">Company Name</label>
-                  <input type="text" id="company" className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition" placeholder="Acme Renewables" />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="interest" className="text-sm font-medium text-gray-700">Primary Interest</label>
-                  <select id="interest" className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm bg-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition text-gray-700">
-                    <option value="">Select your goal...</option>
-                    <option value="buy_irec">Procure I-RECs (Scope 2)</option>
-                    <option value="buy_carbon">Procure Carbon Credits (Offsets)</option>
-                    <option value="sell_irec">Register & Monetize Renewable Assets</option>
-                    <option value="compliance">Compliance Trading (ETS)</option>
-                    <option value="advisory">General Market Advisory</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="volume" className="text-sm font-medium text-gray-700">Estimated Volume (Optional)</label>
-                  <input type="text" id="volume" className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition" placeholder="e.g., 50,000 MWh or 10,000 tCO2e" />
-                </div>
-
-                <button type="submit" className="btn-primary w-full py-4 text-base font-semibold shadow-md">
-                  Request Market Consultation
-                </button>
-                <p className="text-xs text-center text-gray-500 mt-4">
-                  By submitting this form, you agree to our privacy policy.
-                </p>
-              </form>
+            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-emerald-200/70">
+              <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />Verra & Gold Standard</span>
+              <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />I-REC issuance support</span>
+              <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />Portfolio management</span>
             </div>
-          </div>
+          </FadeUp>
         </div>
       </section>
-
       <Footer />
     </div>
   );

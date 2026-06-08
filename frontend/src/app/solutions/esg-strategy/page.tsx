@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Target, FileText, Globe, CheckCircle2, Users, Building2, Factory, Package, Pill } from 'lucide-react';
-import SiteNavbar from '@/components/SiteNavbar';
+
 import Footer from '@/components/Footer';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 
@@ -65,8 +65,6 @@ const INDUSTRIES = [
 export default function ESGStrategyPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <SiteNavbar />
-
       {/* Hero */}
       <section className="bg-slate-950 text-white py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/40 via-slate-950 to-slate-950" />

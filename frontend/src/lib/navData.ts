@@ -1,5 +1,7 @@
 // ─── Ploxi Earth Navigation Data ─────────────────────────────────────────────
-// Single source of truth for all Solutions navigation architecture.
+// Single source of truth for all navigation architecture.
+
+// ─── Legacy: Solutions (kept for /solutions page usage) ───────────────────────
 
 export interface ServiceItem {
   title: string;
@@ -132,9 +134,214 @@ export const SOLUTION_CATEGORIES: SolutionCategory[] = [
   },
 ];
 
-export const FLAT_NAV_LINKS = [
-  { href: '/corporate', label: 'Platform' },
-  { href: '/cleantech', label: 'Clean Tech' },
-  { href: '/climate-finance', label: 'Climate Finance' },
-  { href: '/tools/ghg-calculator', label: 'GHG Calculator' },
+// ─── New Enterprise Navigation Architecture ────────────────────────────────────
+
+export interface MegaMenuItem {
+  title: string;
+  /** If undefined, item is text-only (non-clickable, linkable later) */
+  href?: string;
+  description?: string;
+  /** Opens in new tab */
+  external?: boolean;
+}
+
+export interface MegaMenuColumn {
+  heading: string;
+  items: MegaMenuItem[];
+}
+
+// ─── Partners Menu ─────────────────────────────────────────────────────────────
+export const PARTNERS_MENU: MegaMenuItem[] = [
+  {
+    title: 'Clean-Tech',
+    href: '/cleantech',
+    description: 'Connect with leading cleantech solution providers and innovators.',
+  },
+  {
+    title: 'Carbon Market',
+    description: 'Access verified carbon market participants and trading networks.',
+    // href: '/partners/carbon-market',
+  },
+  {
+    title: 'Climate Finance',
+    href: '/climate-finance',
+    description: 'Engage with climate finance institutions and impact investors.',
+  },
+];
+
+// ─── Tools Menu ────────────────────────────────────────────────────────────────
+export const TOOLS_MENU: MegaMenuColumn[] = [
+  {
+    heading: 'Tools & Calculators',
+    items: [
+      { title: 'GHG', href: '/tools/ghg-calculator', description: 'GHG Emissions Calculator — GHG Protocol aligned' },
+      { title: 'LCA', description: 'Life Cycle Assessment tool' /* href: '/tools/lca' */ },
+    ],
+  },
+  {
+    heading: 'Compliance',
+    items: [
+      { title: 'CBAM' /* href: '/tools/cbam' */ },
+      { title: 'CCTS' /* href: '/tools/ccts' */ },
+      { title: 'EPR' /* href: '/tools/epr' */ },
+      { title: 'EIA' /* href: '/tools/eia' */ },
+      { title: 'RPO' /* href: '/tools/rpo' */ },
+    ],
+  },
+  {
+    heading: 'ESG Reporting',
+    items: [
+      { title: 'BRSR' /* href: '/tools/brsr' */ },
+      { title: 'GRI' /* href: '/tools/gri' */ },
+      { title: 'IFRS' /* href: '/tools/ifrs' */ },
+      { title: 'SASB' /* href: '/tools/sasb' */ },
+    ],
+  },
+  {
+    heading: 'Certifications',
+    items: [
+      { title: 'IGBC' /* href: '/tools/igbc' */ },
+      { title: 'LEED' /* href: '/tools/leed' */ },
+      { title: 'GRIHA' /* href: '/tools/griha' */ },
+      { title: 'GNFZ' /* href: '/tools/gnfz' */ },
+      { title: 'ISO Standards' /* href: '/tools/iso' */ },
+    ],
+  },
+];
+
+// ─── Services Menu (Lead-Generation Cards) ─────────────────────────────────────
+// CTA labels are declared here so content admins can update them without
+// touching component code. This shape also maps 1-to-1 to a future CMS schema.
+
+export type ServiceCategory =
+  | 'ESG & Reporting'
+  | 'Carbon & Compliance'
+  | 'Markets & Financing'
+  | 'Green Assets'
+  | 'Platform';
+
+export interface ServiceCard {
+  /** Primary display name of the service */
+  name: string;
+  /** Optional parenthetical subtitle (e.g. "LCA Reports & EPD Documentation") */
+  subtitle?: string;
+  /** CTA button label — editable by content admins */
+  ctaText: string;
+  /** CTA destination URL; '#' until a real page exists */
+  ctaHref: string;
+  /** Opens in new tab? */
+  ctaExternal?: boolean;
+  /** Groups cards visually inside the mega-panel */
+  category: ServiceCategory;
+}
+
+export const SERVICES_MENU: ServiceCard[] = [
+  // ── ESG & Reporting ─────────────────────────────────────────────────────────
+  {
+    name: 'ESG Baseline & Gap Analysis',
+    ctaText: 'Book ESG Baseline Assessment',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'ESG & Reporting',
+  },
+  {
+    name: 'BRSR Core Reporting',
+    ctaText: 'Book BRSR Consultation',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'ESG & Reporting',
+  },
+
+  // ── Carbon & Compliance ─────────────────────────────────────────────────────
+  {
+    name: 'GHG Audit & Baseline',
+    ctaText: 'Schedule Emissions Inventory',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'Carbon & Compliance',
+  },
+  {
+    name: 'Compliance Support',
+    ctaText: 'Request Compliance Consultation',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'Carbon & Compliance',
+  },
+  {
+    name: 'Carbon Footprint Assessment',
+    subtitle: 'LCA Reports & EPD Documentation',
+    ctaText: 'Request Lifecycle Assessment',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'Carbon & Compliance',
+  },
+
+  // ── Markets & Financing ─────────────────────────────────────────────────────
+  {
+    name: 'Carbon Credit Registration',
+    ctaText: 'Explore Carbon Market Advisory',
+    ctaHref: '/services/carbon-trading',
+    category: 'Markets & Financing',
+  },
+  {
+    name: 'Carbon Project Financing',
+    ctaText: 'Connect with Climate Investors',
+    ctaHref: '/services/carbon-project-financing',
+    category: 'Markets & Financing',
+  },
+  {
+    name: 'Renewable Energy Financing',
+    ctaText: 'Discuss Project Financing',
+    ctaHref: '/services/renewable-financing',
+    category: 'Markets & Financing',
+  },
+  {
+    name: 'IREC & Carbon Trading',
+    ctaText: 'Learn Renewable Procurement Strategies',
+    ctaHref: '/services/carbon-trading',
+    category: 'Markets & Financing',
+  },
+
+  // ── Green Assets ────────────────────────────────────────────────────────────
+  {
+    name: 'Green Building Certification',
+    ctaText: 'Explore Certification Support',
+    ctaHref: '/solutions',
+    category: 'Green Assets',
+  },
+
+  // ── Platform ────────────────────────────────────────────────────────────────
+  {
+    name: 'Ploxi Earth Marketplace',
+    ctaText: 'Book Platform Demo',
+    ctaHref: 'https://calendly.com/dhwani-sg/30min',
+    ctaExternal: true,
+    category: 'Platform',
+  },
+  {
+    name: 'Download Document',
+    ctaText: 'Download Event Videos, Whitepapers & Reports',
+    ctaHref: '/resources',
+    category: 'Platform',
+  },
+];
+
+// ─── Events Menu ───────────────────────────────────────────────────────────────
+export const EVENTS_MENU: MegaMenuItem[] = [
+  {
+    title: 'Upcoming Events',
+    description: 'Discover sustainability conferences, workshops and webinars.',
+    // href: '/events/upcoming',
+  },
+  {
+    title: 'Completed Events',
+    description: 'Browse past events and access recorded sessions.',
+    // href: '/events/completed',
+  },
+  {
+    title: 'Blogs',
+    href: 'https://www.ploxiconsult.com/blog.html',
+    description: 'Insights, research and sustainability thought leadership.',
+    external: true,
+  },
 ];

@@ -115,39 +115,6 @@ export default function GHGCalculatorPage() {
   return (
     <div className="min-h-screen bg-[#f5f6f8]">
 
-      {/* ── Sticky nav ── */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          {/* Left — Ploxi brand identity */}
-          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <Image src="/images/logo.jpeg" alt="Ploxi Earth" width={32} height={32} className="rounded-full ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/50 transition-all" />
-            <div className="leading-none">
-              <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">Ploxi Earth</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Decarbonisation Platform</p>
-            </div>
-          </Link>
-
-          {/* Centre — tool name as a Ploxi product */}
-          <div className="order-3 flex w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 sm:order-none sm:w-auto">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">GHG Calculator</span>
-            <span className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 border-l border-gray-200 pl-2 ml-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />S1
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-1" />S2
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1" />S3
-            </span>
-          </div>
-
-          {/* Right — platform context link */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Link href="/" className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-emerald-600 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-              Back to Platform
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* ── Hero banner ── */}
       <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-950 text-white py-16 px-4">
         <div className="mx-auto max-w-4xl text-center">

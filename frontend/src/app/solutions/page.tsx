@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, BarChart2, Leaf, TrendingUp } from 'lucide-react';
-import SiteNavbar from '@/components/SiteNavbar';
+
 import Footer from '@/components/Footer';
 import { SOLUTION_CATEGORIES } from '@/lib/navData';
 
@@ -32,8 +32,6 @@ const HOVER_RINGS: Record<string, string> = {
 export default function SolutionsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <SiteNavbar />
-
       {/* Hero */}
       <section className="bg-slate-950 text-white py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary-900/30 via-slate-950 to-slate-950" />

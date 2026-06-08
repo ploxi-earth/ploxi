@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Activity, Layers, ShieldCheck, CheckCircle2, Truck, Package, FlaskConical, Car, ShoppingBag } from 'lucide-react';
-import SiteNavbar from '@/components/SiteNavbar';
+
 import Footer from '@/components/Footer';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 
@@ -62,8 +62,6 @@ const INDUSTRIES = [
 export default function CarbonCompliancePage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <SiteNavbar />
-
       {/* Hero */}
       <section className="bg-slate-950 text-white py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/40 via-slate-950 to-slate-950" />
