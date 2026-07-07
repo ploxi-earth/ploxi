@@ -159,8 +159,8 @@ export const PARTNERS_MENU: MegaMenuItem[] = [
   },
   {
     title: 'Carbon Market',
+    href: '/partners/carbon-market',
     description: 'Access verified carbon market participants and trading networks.',
-    // href: '/partners/carbon-market',
   },
   {
     title: 'Climate Finance',
