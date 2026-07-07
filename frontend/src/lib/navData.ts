@@ -239,6 +239,7 @@ export const SERVICES_MENU: ServiceCard[] = [
   // ── ESG & Reporting ─────────────────────────────────────────────────────────
   {
     name: 'ESG Baseline & Gap Analysis',
+    subtitle: 'ESG Data Management',
     ctaText: 'Book ESG Baseline Assessment',
     ctaHref: 'https://calendly.com/dhwani-sg/30min',
     ctaExternal: true,
@@ -246,6 +247,7 @@ export const SERVICES_MENU: ServiceCard[] = [
   },
   {
     name: 'BRSR Core Reporting',
+    subtitle: 'GRI, BRSR, CDP, IFRS',
     ctaText: 'Book BRSR Consultation',
     ctaHref: 'https://calendly.com/dhwani-sg/30min',
     ctaExternal: true,
@@ -255,6 +257,7 @@ export const SERVICES_MENU: ServiceCard[] = [
   // ── Carbon & Compliance ─────────────────────────────────────────────────────
   {
     name: 'GHG Audit & Baseline',
+    subtitle: 'ISHRAE, ISO & Others',
     ctaText: 'Schedule Emissions Inventory',
     ctaHref: 'https://calendly.com/dhwani-sg/30min',
     ctaExternal: true,
@@ -262,6 +265,7 @@ export const SERVICES_MENU: ServiceCard[] = [
   },
   {
     name: 'Compliance Support',
+    subtitle: 'CBAM, EPR, PAT',
     ctaText: 'Request Compliance Consultation',
     ctaHref: 'https://calendly.com/dhwani-sg/30min',
     ctaExternal: true,

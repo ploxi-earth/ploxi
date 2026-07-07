@@ -2,13 +2,10 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { HeroFadeUp, FadeUp } from '@/components/ui/Motion';
-import SubpageHeader from '@/components/SubpageHeader';
 
 export default function CleantechPage() {
   return (
     <div className="page-shell min-h-screen bg-white">
-      <SubpageHeader subtitle="Decarbonisation and Net-Zero Marketplace" />
-
       <section className="bg-gradient-to-br from-sky-900 via-cyan-800 to-blue-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <HeroFadeUp delay={0.1}>

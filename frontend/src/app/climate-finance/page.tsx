@@ -2,13 +2,10 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import SubpageHeader from '@/components/SubpageHeader';
 
 export default function ClimateFinancePage() {
   return (
     <div className="page-shell min-h-screen bg-white">
-      <SubpageHeader subtitle="Investment &amp; Funding" />
-
       <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-zinc-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
           <HeroFadeUp delay={0.1}>

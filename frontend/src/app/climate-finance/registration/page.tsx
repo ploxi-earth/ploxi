@@ -3,7 +3,6 @@ import { Suspense, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { climateFinanceService } from '@/services/vendor.service';
-import FormPageHeader from '@/components/FormPageHeader';
 import OTPModal from '@/components/OTPModal';
 import {
   CheckCircleIcon,
@@ -135,8 +134,6 @@ function ClimateFinanceRegistrationForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <FormPageHeader backHref="/climate-finance" subtitle="Investment &amp; Funding" />
-
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-12">
         {!engagementType && (
           <div className="bg-white rounded-2xl shadow-sm p-8">

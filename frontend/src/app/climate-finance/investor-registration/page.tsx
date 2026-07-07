@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import FormPageHeader from '@/components/FormPageHeader';
 import { climateFinanceService } from '@/services/vendor.service';
 import OTPModal from '@/components/OTPModal';
 
@@ -287,7 +286,6 @@ function InvestorRegistrationPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <FormPageHeader backHref="/climate-finance/registration?type=investor" subtitle="Investor Registration" />
       <div className="mx-auto max-w-4xl px-4 py-8">
         {!emailVerified && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">

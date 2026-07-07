@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { cleantechService } from '@/services/vendor.service';
-import FormPageHeader from '@/components/FormPageHeader';
 
 const SOLUTION_TYPES = [
   'Solar Energy', 'Wind Energy', 'Energy Storage', 'Green Hydrogen',
@@ -72,8 +71,6 @@ export default function CleantechRegistrationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <FormPageHeader backHref="/cleantech" subtitle="Vendor Registration" />
-
       <div className="mx-auto max-w-3xl px-4 pt-8">
         {/* Step indicators */}
         <div className="flex items-center gap-4 mb-8">

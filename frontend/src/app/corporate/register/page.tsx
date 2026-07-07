@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { corporateService } from '@/services/vendor.service';
-import FormPageHeader from '@/components/FormPageHeader';
 import OTPModal from '@/components/OTPModal';
 
 const INDUSTRY_SECTORS = [
@@ -158,8 +157,6 @@ export default function CorporateRegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <FormPageHeader backHref="/corporate" subtitle="Corporate Sustainability Solutions" />
-
       {/* Progress Steps */}
       <div className="mx-auto max-w-3xl px-4 pt-8">
         <div className="flex items-center gap-2 mb-8">

@@ -2,14 +2,10 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { HeroFadeUp, FadeUp, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import SubpageHeader from '@/components/SubpageHeader';
 
 export default function CorporatePage() {
   return (
     <div className="page-shell min-h-screen bg-white">
-      {/* ── Header ── */}
-      <SubpageHeader subtitle="Decarbonisation and Net-Zero Marketplace" />
-
       {/* ── Hero ── */}
       <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-gray-900 px-4 py-20 text-white sm:py-24 lg:py-28">
         <div className="mx-auto max-w-4xl text-center">
