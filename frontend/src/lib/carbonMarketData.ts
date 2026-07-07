@@ -245,6 +245,7 @@ export const CARBON_PROJECTS: CarbonProject[] = [
     category: 'Reduction',
     vintage: '2023',
     volume: 369,
+    issuanceStatus: 'Unknown',
     technology: 'AWD',
   },
   {
@@ -1045,7 +1046,7 @@ export function computePortfolioStats(projects: CarbonProject[]) {
 
 // ─── Filter Option Extractors ────────────────────────────────────────────────
 export function getFilterOptions(projects: CarbonProject[]) {
-  const uniq = <T,>(arr: T[]) => [...new Set(arr)].filter(Boolean).sort() as T[];
+  const uniq = <T,>(arr: T[]) => arr.filter((v, i, a) => a.indexOf(v) === i).filter(Boolean).sort() as T[];
   return {
     categories: uniq(projects.map(p => p.category)),
     creditTypes: uniq(projects.map(p => p.creditType)),
